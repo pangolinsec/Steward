@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import * as api from '../api';
+import ImportPreviewModal from '../components/ImportPreviewModal';
 
 export default function EncountersPage({ campaignId, campaign }) {
   const [encounters, setEncounters] = useState([]);
@@ -7,6 +8,7 @@ export default function EncountersPage({ campaignId, campaign }) {
   const [showForm, setShowForm] = useState(false);
   const [editEnc, setEditEnc] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
+  const [showImport, setShowImport] = useState(false);
 
   const load = async () => {
     if (!campaignId) return;
@@ -36,7 +38,10 @@ export default function EncountersPage({ campaignId, campaign }) {
     <div className="page">
       <div className="page-header">
         <h2>Encounters Library</h2>
-        <button className="btn btn-primary" onClick={() => { setEditEnc(null); setShowForm(true); }}>+ New Encounter</button>
+        <div className="inline-flex gap-sm">
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowImport(true)}>Import</button>
+          <button className="btn btn-primary" onClick={() => { setEditEnc(null); setShowForm(true); }}>+ New Encounter</button>
+        </div>
       </div>
       <div className="search-bar">
         <input type="text" placeholder="Search encounters..." value={search} onChange={e => setSearch(e.target.value)} />
@@ -93,6 +98,15 @@ export default function EncountersPage({ campaignId, campaign }) {
           encounter={editEnc}
           onClose={() => { setShowForm(false); setEditEnc(null); }}
           onSave={() => { setShowForm(false); setEditEnc(null); load(); }}
+        />
+      )}
+      {showImport && (
+        <ImportPreviewModal
+          campaignId={campaignId}
+          onClose={() => setShowImport(false)}
+          onComplete={load}
+          initialEntityTypes={['encounters']}
+          lockEntityTypes={true}
         />
       )}
     </div>

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import * as api from '../api';
+import ImportPreviewModal from './ImportPreviewModal';
 
 export default function CampaignModal({ campaigns, activeCampaignId, onClose, onSelect, onRefresh }) {
   const [newName, setNewName] = useState('');
   const [creating, setCreating] = useState(false);
+  const [showMergeImport, setShowMergeImport] = useState(false);
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
@@ -100,11 +102,23 @@ export default function CampaignModal({ campaigns, activeCampaignId, onClose, on
             />
             <button className="btn btn-primary" onClick={handleCreate} disabled={creating || !newName.trim()}>Create</button>
           </div>
-          <div style={{ marginTop: 8 }}>
+          <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
             <button className="btn btn-secondary btn-sm" onClick={handleImport}>Import Campaign from JSON</button>
+            {activeCampaignId && (
+              <button className="btn btn-secondary btn-sm" onClick={() => setShowMergeImport(true)}>Merge into Current Campaign</button>
+            )}
           </div>
         </div>
       </div>
+      {showMergeImport && (
+        <ImportPreviewModal
+          campaignId={activeCampaignId}
+          onClose={() => setShowMergeImport(false)}
+          onComplete={onRefresh}
+          initialEntityTypes={['status_effects', 'items', 'characters', 'encounters']}
+          lockEntityTypes={false}
+        />
+      )}
     </div>
   );
 }

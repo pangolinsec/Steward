@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as api from '../api';
+import ImportPreviewModal from '../components/ImportPreviewModal';
 
 export default function CharactersPage({ campaignId, campaign }) {
   const [characters, setCharacters] = useState([]);
@@ -8,6 +9,7 @@ export default function CharactersPage({ campaignId, campaign }) {
   const [typeFilter, setTypeFilter] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editChar, setEditChar] = useState(null);
+  const [showImport, setShowImport] = useState(false);
   const navigate = useNavigate();
 
   const load = async () => {
@@ -27,7 +29,10 @@ export default function CharactersPage({ campaignId, campaign }) {
     <div className="page">
       <div className="page-header">
         <h2>Characters</h2>
-        <button className="btn btn-primary" onClick={() => { setEditChar(null); setShowForm(true); }}>+ New Character</button>
+        <div className="inline-flex gap-sm">
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowImport(true)}>Import</button>
+          <button className="btn btn-primary" onClick={() => { setEditChar(null); setShowForm(true); }}>+ New Character</button>
+        </div>
       </div>
       <div className="search-bar">
         <input type="text" placeholder="Search characters..." value={search} onChange={e => setSearch(e.target.value)} />
@@ -82,6 +87,15 @@ export default function CharactersPage({ campaignId, campaign }) {
           character={editChar}
           onClose={() => setShowForm(false)}
           onSave={() => { setShowForm(false); load(); }}
+        />
+      )}
+      {showImport && (
+        <ImportPreviewModal
+          campaignId={campaignId}
+          onClose={() => setShowImport(false)}
+          onComplete={load}
+          initialEntityTypes={['characters']}
+          lockEntityTypes={true}
         />
       )}
     </div>

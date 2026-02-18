@@ -1,6 +1,15 @@
 const express = require('express');
 const router = express.Router({ mergeParams: true });
 const db = require('../db');
+const { ENTITY_CONFIG, IMPORT_ORDER } = require('../entityConfig');
+const {
+  fetchEntities,
+  fetchRelations,
+  insertEntity,
+  remapEncounterNpcs,
+  buildImportPreview,
+  executeMergeImport,
+} = require('../importExportUtils');
 
 // GET export full campaign
 router.get('/export', (req, res) => {
@@ -9,24 +18,7 @@ router.get('/export', (req, res) => {
   const campaign = db.prepare('SELECT * FROM campaigns WHERE id = ?').get(campaignId);
   if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
 
-  const characters = db.prepare('SELECT * FROM characters WHERE campaign_id = ?').all(campaignId);
-  const statusEffects = db.prepare('SELECT * FROM status_effect_definitions WHERE campaign_id = ?').all(campaignId);
-  const items = db.prepare('SELECT * FROM item_definitions WHERE campaign_id = ?').all(campaignId);
-  const encounters = db.prepare('SELECT * FROM encounter_definitions WHERE campaign_id = ?').all(campaignId);
-  const environment = db.prepare('SELECT * FROM environment_state WHERE campaign_id = ?').get(campaignId);
-  const sessionLog = db.prepare('SELECT * FROM session_log WHERE campaign_id = ?').all(campaignId);
-
-  // Get applied effects and character items
-  const charIds = characters.map(c => c.id);
-  let appliedEffects = [];
-  let characterItems = [];
-
-  if (charIds.length > 0) {
-    const placeholders = charIds.map(() => '?').join(',');
-    appliedEffects = db.prepare(`SELECT * FROM applied_effects WHERE character_id IN (${placeholders})`).all(...charIds);
-    characterItems = db.prepare(`SELECT * FROM character_items WHERE character_id IN (${placeholders})`).all(...charIds);
-  }
-
+  // Fetch all entity types via config
   const exportData = {
     version: 1,
     exported_at: new Date().toISOString(),
@@ -37,31 +29,29 @@ router.get('/export', (req, res) => {
       calendar_config: JSON.parse(campaign.calendar_config),
       weather_options: JSON.parse(campaign.weather_options),
     },
-    characters: characters.map(c => ({ ...c, base_attributes: JSON.parse(c.base_attributes) })),
-    status_effects: statusEffects.map(e => ({ ...e, tags: JSON.parse(e.tags), modifiers: JSON.parse(e.modifiers) })),
-    items: items.map(i => ({
-      ...i,
-      properties: JSON.parse(i.properties),
-      modifiers: JSON.parse(i.modifiers),
-      stackable: !!i.stackable,
-    })),
-    encounters: encounters.map(e => ({
-      ...e,
-      npcs: JSON.parse(e.npcs),
-      environment_overrides: JSON.parse(e.environment_overrides),
-      loot_table: JSON.parse(e.loot_table),
-    })),
-    applied_effects: appliedEffects,
-    character_items: characterItems,
-    environment,
-    session_log: sessionLog,
   };
+
+  for (const entityKey of IMPORT_ORDER) {
+    const config = ENTITY_CONFIG[entityKey];
+    exportData[config.exportKey] = fetchEntities(db, campaignId, entityKey);
+  }
+
+  // Fetch relations (applied_effects, character_items)
+  const charConfig = ENTITY_CONFIG.characters;
+  const charIds = exportData[charConfig.exportKey].map(c => c.id);
+  for (const relation of charConfig.relations) {
+    exportData[relation.exportKey] = fetchRelations(db, charIds, relation);
+  }
+
+  // Environment & session log (not entity-config driven)
+  exportData.environment = db.prepare('SELECT * FROM environment_state WHERE campaign_id = ?').get(campaignId);
+  exportData.session_log = db.prepare('SELECT * FROM session_log WHERE campaign_id = ?').all(campaignId);
 
   res.setHeader('Content-Disposition', `attachment; filename="almanac-${campaign.name.replace(/\s+/g, '-')}.json"`);
   res.json(exportData);
 });
 
-// POST import campaign
+// POST import campaign (full — creates new campaign)
 router.post('/import', (req, res) => {
   const data = req.body;
   if (!data || !data.campaign) return res.status(400).json({ error: 'Invalid import data' });
@@ -80,67 +70,51 @@ router.post('/import', (req, res) => {
     );
     const newCampaignId = campaignResult.lastInsertRowid;
 
-    // ID mappings for references
-    const charIdMap = {};
-    const effectIdMap = {};
-    const itemIdMap = {};
+    // ID maps for cross-entity references
+    const idMaps = {};
 
-    // Import status effects
-    for (const e of (data.status_effects || [])) {
-      const result = db.prepare(`
-        INSERT INTO status_effect_definitions (campaign_id, name, description, tags, modifiers, duration_type, duration_value)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `).run(newCampaignId, e.name, e.description || '', JSON.stringify(e.tags || []), JSON.stringify(e.modifiers || []), e.duration_type || 'indefinite', e.duration_value || 0);
-      effectIdMap[e.id] = result.lastInsertRowid;
-    }
+    // Import entities in order using shared config
+    for (const entityKey of IMPORT_ORDER) {
+      const config = ENTITY_CONFIG[entityKey];
+      const entities = data[config.exportKey] || [];
+      idMaps[config.idMapKey] = {};
 
-    // Import items
-    for (const i of (data.items || [])) {
-      const result = db.prepare(`
-        INSERT INTO item_definitions (campaign_id, name, description, item_type, properties, stackable, modifiers)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `).run(newCampaignId, i.name, i.description || '', i.item_type || 'misc', JSON.stringify(i.properties || {}), i.stackable ? 1 : 0, JSON.stringify(i.modifiers || []));
-      itemIdMap[i.id] = result.lastInsertRowid;
-    }
-
-    // Import characters
-    for (const c of (data.characters || [])) {
-      const result = db.prepare(`
-        INSERT INTO characters (campaign_id, name, type, description, portrait_url, base_attributes)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `).run(newCampaignId, c.name, c.type, c.description || '', c.portrait_url || '', JSON.stringify(c.base_attributes || {}));
-      charIdMap[c.id] = result.lastInsertRowid;
-    }
-
-    // Import applied effects
-    for (const ae of (data.applied_effects || [])) {
-      const newCharId = charIdMap[ae.character_id];
-      const newEffectId = effectIdMap[ae.status_effect_definition_id];
-      if (newCharId && newEffectId) {
-        db.prepare(`
-          INSERT INTO applied_effects (character_id, status_effect_definition_id, applied_at, remaining_rounds, remaining_hours)
-          VALUES (?, ?, ?, ?, ?)
-        `).run(newCharId, newEffectId, ae.applied_at, ae.remaining_rounds, ae.remaining_hours);
+      for (const entity of entities) {
+        const oldId = entity.id;
+        const newId = insertEntity(db, newCampaignId, entityKey, entity);
+        idMaps[config.idMapKey][oldId] = newId;
       }
-    }
 
-    // Import character items
-    for (const ci of (data.character_items || [])) {
-      const newCharId = charIdMap[ci.character_id];
-      const newItemId = itemIdMap[ci.item_definition_id];
-      if (newCharId && newItemId) {
-        db.prepare(`
-          INSERT INTO character_items (character_id, item_definition_id, quantity) VALUES (?, ?, ?)
-        `).run(newCharId, newItemId, ci.quantity || 1);
+      // Import relations
+      for (const relation of config.relations) {
+        const relData = data[relation.exportKey] || [];
+        for (const rel of relData) {
+          const newOwnerId = idMaps[config.idMapKey]?.[rel[relation.foreignKey]];
+          const otherMap = idMaps[relation.otherIdMapKey] || {};
+          const newOtherId = otherMap[rel[relation.otherForeignKey]];
+          if (newOwnerId && newOtherId) {
+            const colNames = [relation.foreignKey, relation.otherForeignKey, ...relation.columns.map(c => c.name)];
+            const placeholders = colNames.map(() => '?').join(', ');
+            const values = [
+              newOwnerId,
+              newOtherId,
+              ...relation.columns.map(c => rel[c.name] ?? c.default),
+            ];
+            db.prepare(`INSERT INTO ${relation.table} (${colNames.join(', ')}) VALUES (${placeholders})`).run(...values);
+          }
+        }
       }
-    }
 
-    // Import encounters
-    for (const e of (data.encounters || [])) {
-      db.prepare(`
-        INSERT INTO encounter_definitions (campaign_id, name, description, notes, npcs, environment_overrides, loot_table)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `).run(newCampaignId, e.name, e.description || '', e.notes || '', JSON.stringify(e.npcs || []), JSON.stringify(e.environment_overrides || {}), JSON.stringify(e.loot_table || []));
+      // Post-process hook (encounter NPC remapping)
+      if (config.postProcess === 'remapEncounterNpcs') {
+        const charIdMap = idMaps.charIdMap || {};
+        for (const entity of entities) {
+          const newId = idMaps[config.idMapKey]?.[entity.id];
+          if (newId && entity.npcs) {
+            remapEncounterNpcs(db, newCampaignId, newId, entity.npcs, charIdMap);
+          }
+        }
+      }
     }
 
     // Import environment
@@ -168,6 +142,57 @@ router.post('/import', (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: 'Import failed: ' + err.message });
+  }
+});
+
+// POST import preview — conflict detection + attribute warnings
+router.post('/import/preview', (req, res) => {
+  const campaignId = req.params.id;
+  const { data, entityTypes } = req.body;
+  if (!data || !entityTypes || !Array.isArray(entityTypes)) {
+    return res.status(400).json({ error: 'Missing data or entityTypes' });
+  }
+  const campaign = db.prepare('SELECT * FROM campaigns WHERE id = ?').get(campaignId);
+  if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
+
+  // Validate entity types
+  const validTypes = entityTypes.filter(t => ENTITY_CONFIG[t]);
+  if (validTypes.length === 0) {
+    return res.status(400).json({ error: 'No valid entity types specified' });
+  }
+
+  try {
+    const result = buildImportPreview(db, campaignId, data, validTypes);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Preview failed: ' + err.message });
+  }
+});
+
+// POST import merge — execute partial import with conflict resolution
+router.post('/import/merge', (req, res) => {
+  const campaignId = req.params.id;
+  const { data, entityTypes, decisions } = req.body;
+  if (!data || !entityTypes || !Array.isArray(entityTypes) || !decisions) {
+    return res.status(400).json({ error: 'Missing data, entityTypes, or decisions' });
+  }
+  const campaign = db.prepare('SELECT * FROM campaigns WHERE id = ?').get(campaignId);
+  if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
+
+  const validTypes = entityTypes.filter(t => ENTITY_CONFIG[t]);
+  if (validTypes.length === 0) {
+    return res.status(400).json({ error: 'No valid entity types specified' });
+  }
+
+  const mergeTransaction = db.transaction(() => {
+    return executeMergeImport(db, campaignId, data, decisions, validTypes);
+  });
+
+  try {
+    const result = mergeTransaction();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Merge import failed: ' + err.message });
   }
 });
 

@@ -70,3 +70,5 @@ export const clearSessionLog = (cId) => request(`/campaigns/${cId}/session-log`,
 // Export / Import
 export const exportCampaign = (cId) => request(`/campaigns/${cId}/export`);
 export const importCampaign = (cId, data) => request(`/campaigns/${cId}/import`, { method: 'POST', body: JSON.stringify(data) });
+export const previewImport = (cId, data, entityTypes) => request(`/campaigns/${cId}/import/preview`, { method: 'POST', body: JSON.stringify({ data, entityTypes }) });
+export const mergeImport = (cId, data, entityTypes, decisions) => request(`/campaigns/${cId}/import/merge`, { method: 'POST', body: JSON.stringify({ data, entityTypes, decisions }) });

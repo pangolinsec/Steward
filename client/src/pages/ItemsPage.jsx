@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import * as api from '../api';
 import { ModifierSummary } from '../components/ModifierDisplay';
+import ImportPreviewModal from '../components/ImportPreviewModal';
 
 export default function ItemsPage({ campaignId, campaign }) {
   const [items, setItems] = useState([]);
@@ -8,6 +9,7 @@ export default function ItemsPage({ campaignId, campaign }) {
   const [typeFilter, setTypeFilter] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState(null);
+  const [showImport, setShowImport] = useState(false);
 
   const load = async () => {
     if (!campaignId) return;
@@ -34,7 +36,10 @@ export default function ItemsPage({ campaignId, campaign }) {
     <div className="page">
       <div className="page-header">
         <h2>Items Library</h2>
-        <button className="btn btn-primary" onClick={() => { setEditItem(null); setShowForm(true); }}>+ New Item</button>
+        <div className="inline-flex gap-sm">
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowImport(true)}>Import</button>
+          <button className="btn btn-primary" onClick={() => { setEditItem(null); setShowForm(true); }}>+ New Item</button>
+        </div>
       </div>
       <div className="search-bar">
         <input type="text" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} />
@@ -86,6 +91,15 @@ export default function ItemsPage({ campaignId, campaign }) {
           attrs={attrs}
           onClose={() => { setShowForm(false); setEditItem(null); }}
           onSave={() => { setShowForm(false); setEditItem(null); load(); }}
+        />
+      )}
+      {showImport && (
+        <ImportPreviewModal
+          campaignId={campaignId}
+          onClose={() => setShowImport(false)}
+          onComplete={load}
+          initialEntityTypes={['items']}
+          lockEntityTypes={true}
         />
       )}
     </div>
