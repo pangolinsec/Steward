@@ -65,3 +65,4 @@ All data lives in a single SQLite file. No external database server required.
 | [User Guide](user-guide.md) | Complete feature guide for DMs |
 | [Rules Engine](rules-engine.md) | Building automation rules, conditions, actions, and templates |
 | [Administration](administration.md) | Deployment, backup, API reference, and troubleshooting |
+| [LLM Content Generation](llm-generation.md) | Use AI to generate characters, items, encounters, and more |

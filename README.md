@@ -57,3 +57,4 @@ PORT=8080 docker compose up -d
 | [User Guide](docs/user-guide.md) | Complete feature guide for DMs |
 | [Rules Engine](docs/rules-engine.md) | Building automation rules, conditions, actions, and templates |
 | [Administration](docs/administration.md) | Deployment, database, backup, API reference, and troubleshooting |
+| [LLM Content Generation](docs/llm-generation.md) | Use AI to generate characters, items, encounters, and more |
