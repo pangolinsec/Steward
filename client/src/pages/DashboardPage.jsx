@@ -123,7 +123,7 @@ export default function DashboardPage({ campaignId, campaign }) {
                   {compactAttrs.map(a => {
                     const val = c.base_attributes?.[a.key];
                     const cat = a.category || 'stat';
-                    const maxVal = a.has_max ? c.max_attributes?.[a.key] : null;
+                    const maxVal = a.has_max ? (c.max_attributes?.[a.key] ?? val) : null;
                     const resStyle = cat === 'resource' && maxVal != null ? getResourceStyle(val ?? 0, maxVal) : {};
                     return (
                       <span key={a.key} className={`attr-chip attr-chip-${cat} attr-chip-sm`} style={resStyle}>

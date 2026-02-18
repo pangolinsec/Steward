@@ -143,7 +143,7 @@ export default function CharacterDetailPage({ campaignId, campaign }) {
               {attrs.filter(a => a.type !== 'tag').map(a => {
                 const b = base[a.key] ?? 0;
                 const e = effective[a.key] ?? 0;
-                const maxVal = a.has_max ? (max_attributes?.[a.key] ?? null) : null;
+                const maxVal = a.has_max ? (max_attributes?.[a.key] ?? b) : null;
                 const diff = e - b;
                 const breakdown = getAttrBreakdown(a.key);
                 return (

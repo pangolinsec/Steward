@@ -261,7 +261,7 @@ export function CombatTracker({ campaignId, campaign, combatState, onUpdate, onE
                   const val = c.effective_attributes?.[a.key];
                   const base = c.base_attributes?.[a.key];
                   const cat = a.category || 'stat';
-                  const maxVal = a.has_max ? c.max_attributes?.[a.key] : null;
+                  const maxVal = a.has_max ? (c.max_attributes?.[a.key] ?? val) : null;
                   const resStyle = cat === 'resource' && maxVal != null ? getResourceStyle(val ?? 0, maxVal) : {};
                   const flashKey = `${c.character_id}-${a.key}`;
                   const flashType = flashCells[flashKey];
