@@ -227,7 +227,8 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
           <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>These are the attributes all characters in this campaign use.</p>
 
           {/* Numeric Attributes */}
-          <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6, display: 'block' }}>Numeric Attributes</label>
+          <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2, display: 'block' }}>Numeric Attributes</label>
+          <p style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>&#x2605; Pin attributes to show them in compact views (character cards, combat tracker, dashboard).</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
             {attrs.filter(a => a.type !== 'tag').map((a, i) => {
               const realIdx = attrs.indexOf(a);
@@ -239,6 +240,9 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
                   <input type="text" value={a.label} onChange={e => {
                     const updated = [...attrs]; updated[realIdx] = { ...a, label: e.target.value }; setAttrs(updated);
                   }} style={{ flex: 1 }} />
+                  <button className={`btn btn-sm attr-pin-btn${a.pinned ? ' pinned' : ''}`} title={a.pinned ? 'Unpin from compact views' : 'Pin to compact views'} onClick={() => {
+                    const updated = [...attrs]; updated[realIdx] = { ...a, pinned: !a.pinned }; setAttrs(updated);
+                  }}>&#x2605;</button>
                   <RuleRefBadge campaignId={campaignId} entityType="attribute" entityName={a.key} />
                   <button className="btn btn-danger btn-sm" onClick={() => setAttrs(attrs.filter((_, idx) => idx !== realIdx))}>&#x2715;</button>
                 </div>

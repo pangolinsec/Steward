@@ -35,7 +35,8 @@ export default function DashboardPage({ campaignId, campaign }) {
 
   useEffect(() => { load(); }, [load]);
 
-  const attrs = campaign?.attribute_definitions?.filter(a => a.type !== 'tag') || [];
+  const numericAttrs = campaign?.attribute_definitions?.filter(a => a.type !== 'tag') || [];
+  const compactAttrs = numericAttrs.some(a => a.pinned) ? numericAttrs.filter(a => a.pinned) : numericAttrs;
   const pcs = characters.filter(c => c.type === 'PC');
 
   const weatherIcons = {
@@ -107,7 +108,7 @@ export default function DashboardPage({ campaignId, campaign }) {
                 )}
                 <span style={{ fontWeight: 500, fontSize: 13, flex: 1 }}>{c.name}</span>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  {attrs.slice(0, 4).map(a => (
+                  {compactAttrs.map(a => (
                     <span key={a.key} style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>
                       {a.label.substring(0, 3).toUpperCase()} {c.base_attributes[a.key] ?? '\u2014'}
                     </span>

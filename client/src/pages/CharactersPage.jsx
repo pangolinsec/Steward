@@ -50,7 +50,9 @@ export default function CharactersPage({ campaignId, campaign }) {
     }
   }, [location.state]);
 
-  const attrs = campaign?.attribute_definitions || [];
+  const allAttrs = campaign?.attribute_definitions || [];
+  const numericAttrs = allAttrs.filter(a => a.type !== 'tag');
+  const compactAttrs = numericAttrs.some(a => a.pinned) ? numericAttrs.filter(a => a.pinned) : numericAttrs;
 
   const handleExport = async () => {
     const data = await api.getCharacters(campaignId);
@@ -124,12 +126,11 @@ export default function CharactersPage({ campaignId, campaign }) {
                 </p>
               )}
               <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {attrs.slice(0, 4).map(a => (
+                {compactAttrs.map(a => (
                   <span key={a.key} style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>
                     {a.label.substring(0, 3).toUpperCase()} {c.base_attributes[a.key] ?? '—'}
                   </span>
                 ))}
-                {attrs.length > 4 && <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>...</span>}
               </div>
             </div>
           ))}
@@ -138,7 +139,7 @@ export default function CharactersPage({ campaignId, campaign }) {
       {showForm && (
         <CharacterForm
           campaignId={campaignId}
-          attrs={attrs}
+          attrs={allAttrs}
           character={editChar}
           onClose={() => setShowForm(false)}
           onSave={() => { setShowForm(false); load(); }}

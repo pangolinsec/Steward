@@ -14,6 +14,33 @@ export function CombatSetupModal({ campaignId, characters, onStart, onClose, pre
     characters.forEach(c => { map[c.id] = ''; });
     return map;
   });
+  // Sync selected state when characters load after modal mount (race condition fix)
+  useEffect(() => {
+    setSelected(prev => {
+      // Only update entries for characters not already in the map
+      const next = { ...prev };
+      let changed = false;
+      characters.forEach(c => {
+        if (!(c.id in next)) {
+          next[c.id] = preselectedCharacterIds ? preselectedCharacterIds.includes(c.id) : c.type === 'PC';
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+    setInitiatives(prev => {
+      const next = { ...prev };
+      let changed = false;
+      characters.forEach(c => {
+        if (!(c.id in next)) {
+          next[c.id] = '';
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [characters, preselectedCharacterIds]);
+
   const [advanceTime, setAdvanceTime] = useState(true);
   const [secondsPerRound, setSecondsPerRound] = useState(6);
   const [starting, setStarting] = useState(false);
@@ -101,7 +128,8 @@ export function CombatTracker({ campaignId, campaign, combatState, onUpdate, onE
   const [flashCells, setFlashCells] = useState({});
   const [expandedNotes, setExpandedNotes] = useState({});
 
-  const attrs = campaign?.attribute_definitions?.filter(a => a.type !== 'tag') || [];
+  const numericAttrs = campaign?.attribute_definitions?.filter(a => a.type !== 'tag') || [];
+  const attrs = numericAttrs.some(a => a.pinned) ? numericAttrs.filter(a => a.pinned) : numericAttrs;
   const currentCombatant = combatState.combatants[combatState.turn_index];
 
   const handleNextTurn = async () => {
@@ -129,12 +157,13 @@ export function CombatTracker({ campaignId, campaign, combatState, onUpdate, onE
     onUpdate();
   };
 
-  const handleDeltaApply = async () => {
-    if (!deltaAttr || !deltaValue.trim()) return;
+  const applyDelta = async (inputOverride) => {
+    if (!deltaAttr) return;
+    const input = (inputOverride ?? deltaValue).trim();
+    if (!input) return;
     const { charId, attrKey, currentBase } = deltaAttr;
     const char = combatState.combatants.find(c => c.character_id === charId);
     if (!char) return;
-    const input = deltaValue.trim();
     let newBase;
     let delta;
     if (input.startsWith('+') || input.startsWith('-')) {
@@ -216,7 +245,7 @@ export function CombatTracker({ campaignId, campaign, combatState, onUpdate, onE
 
               {/* Attributes with delta popover */}
               <div className="combatant-attrs">
-                {attrs.slice(0, 6).map(a => {
+                {attrs.map(a => {
                   const val = c.effective_attributes?.[a.key];
                   const base = c.base_attributes?.[a.key];
                   const flashKey = `${c.character_id}-${a.key}`;
@@ -246,18 +275,18 @@ export function CombatTracker({ campaignId, campaign, combatState, onUpdate, onE
                             placeholder="-5 or +3 or 15"
                             autoFocus
                             onKeyDown={e => {
-                              if (e.key === 'Enter') handleDeltaApply();
+                              if (e.key === 'Enter') applyDelta();
                               if (e.key === 'Escape') { setDeltaAttr(null); setDeltaValue(''); }
                             }}
                           />
                           <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
                             <button className="btn btn-sm delta-btn-damage" onClick={() => {
                               const v = Math.abs(Number(deltaValue) || 0);
-                              if (v) { setDeltaValue(`-${v}`); setTimeout(handleDeltaApply, 0); }
+                              if (v) applyDelta(`-${v}`);
                             }}>Damage</button>
                             <button className="btn btn-sm delta-btn-heal" onClick={() => {
                               const v = Math.abs(Number(deltaValue) || 0);
-                              if (v) { setDeltaValue(`+${v}`); setTimeout(handleDeltaApply, 0); }
+                              if (v) applyDelta(`+${v}`);
                             }}>Heal</button>
                           </div>
                         </div>
