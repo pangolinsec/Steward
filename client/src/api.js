@@ -88,6 +88,8 @@ export const deleteRule = (cId, id) => request(`/campaigns/${cId}/rules/${id}`, 
 export const toggleRule = (cId, id) => request(`/campaigns/${cId}/rules/${id}/toggle`, { method: 'PATCH' });
 export const getRuleTemplates = (cId) => request(`/campaigns/${cId}/rules/templates`);
 export const importRuleTemplate = (cId, templateName) => request(`/campaigns/${cId}/rules/templates/${templateName}`, { method: 'POST' });
+export const getTagPresets = (cId) => request(`/campaigns/${cId}/rules/tag-presets`);
+export const importTagPreset = (cId, presetName) => request(`/campaigns/${cId}/rules/tag-presets/${presetName}`, { method: 'POST' });
 export const testRule = (cId, ruleId, characterId) => request(`/campaigns/${cId}/rules/${ruleId}/test`, { method: 'POST', body: JSON.stringify({ character_id: characterId || null }) });
 export const getRuleReferences = (cId, entityType, entityName, entityId) => {
   const params = new URLSearchParams();

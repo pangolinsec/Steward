@@ -3,6 +3,7 @@ const router = express.Router({ mergeParams: true });
 const db = require('../db');
 
 const { RULE_TEMPLATES, TEMPLATE_CATEGORIES } = require('../ruleTemplates');
+const { TAG_PRESETS, TAG_PRESET_CATEGORIES } = require('../tagPresets');
 const { extractAllConditions } = require('../importExportUtils');
 
 function parseRule(rule) {
@@ -110,6 +111,71 @@ function scanForReferences(conditions, actions, targetConfig, entityType, entity
 
   return refs;
 }
+
+// GET tag presets
+router.get('/tag-presets', (req, res) => {
+  const presets = Object.entries(TAG_PRESETS).map(([key, preset]) => ({
+    key, ...preset, category_label: TAG_PRESET_CATEGORIES[preset.category] || preset.category,
+  }));
+  res.json({ presets, categories: TAG_PRESET_CATEGORIES });
+});
+
+// POST import tag preset
+router.post('/tag-presets/:name', (req, res) => {
+  const preset = TAG_PRESETS[req.params.name];
+  if (!preset) return res.status(404).json({ error: 'Preset not found' });
+
+  const campaignId = req.params.id;
+  const campaign = db.prepare('SELECT * FROM campaigns WHERE id = ?').get(campaignId);
+  if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
+
+  // Update attribute definitions
+  const attrDefs = JSON.parse(campaign.attribute_definitions || '[]');
+  const existing = attrDefs.find(a => a.key === preset.attribute.key);
+  let attribute_added = false;
+  let options_merged = false;
+
+  if (existing) {
+    const existingOpts = new Set(existing.options || []);
+    const newOpts = (preset.attribute.options || []).filter(o => !existingOpts.has(o));
+    if (newOpts.length > 0) {
+      existing.options = [...(existing.options || []), ...newOpts];
+      options_merged = true;
+    }
+  } else {
+    attrDefs.push({ ...preset.attribute });
+    attribute_added = true;
+  }
+
+  db.prepare('UPDATE campaigns SET attribute_definitions = ? WHERE id = ?')
+    .run(JSON.stringify(attrDefs), campaignId);
+
+  // Create bundled rules
+  let rules_created = 0;
+  for (const rule of preset.rules) {
+    db.prepare(`
+      INSERT INTO rule_definitions (campaign_id, name, description, trigger_type, trigger_config,
+        conditions, actions, action_mode, priority, tags, target_mode, target_config)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      campaignId,
+      rule.name,
+      rule.description || '',
+      rule.trigger_type,
+      JSON.stringify(rule.trigger_config || {}),
+      JSON.stringify(rule.conditions || { all: [] }),
+      JSON.stringify(rule.actions || []),
+      rule.action_mode || 'auto',
+      rule.priority ?? 100,
+      JSON.stringify(rule.tags || []),
+      rule.target_mode || 'environment',
+      JSON.stringify(rule.target_config || {}),
+    );
+    rules_created++;
+  }
+
+  res.status(201).json({ attribute_added, options_merged, rules_created });
+});
 
 // GET templates
 router.get('/templates', (req, res) => {

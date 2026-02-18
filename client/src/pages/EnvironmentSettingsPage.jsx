@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useContext } from 'rea
 import { UNSAFE_NavigationContext as NavigationContext } from 'react-router-dom';
 import * as api from '../api';
 import RuleRefBadge from '../components/RuleRefBadge';
+import TagPresetBrowser from '../components/TagPresetBrowser';
 
 export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate }) {
   const [env, setEnv] = useState(null);
@@ -30,6 +31,9 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
   // Season options
   const [seasonOptions, setSeasonOptions] = useState([]);
   const [newSeason, setNewSeason] = useState('');
+
+  // Tag preset browser
+  const [showTagPresets, setShowTagPresets] = useState(false);
 
   // Property key registry — normalized to {key, values}[] format
   const [propertyKeyRegistry, setPropertyKeyRegistry] = useState([]);
@@ -175,7 +179,10 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
         {/* Attribute Definitions */}
         <div className="card">
-          <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 12 }}>Attribute Definitions</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-secondary)', margin: 0 }}>Attribute Definitions</h3>
+            <button className="btn btn-ghost btn-sm" onClick={() => setShowTagPresets(true)}>Presets</button>
+          </div>
           <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>These are the attributes all characters in this campaign use.</p>
 
           {/* Numeric Attributes */}
@@ -556,6 +563,13 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
           }}>+ Add Month</button>
         </div>
       </div>
+      {showTagPresets && (
+        <TagPresetBrowser
+          campaignId={campaignId}
+          onClose={() => setShowTagPresets(false)}
+          onImported={() => { setShowTagPresets(false); onUpdate(); }}
+        />
+      )}
       {pendingNavigation && (
         <div className="modal-overlay" onClick={() => setPendingNavigation(null)}>
           <div className="modal" style={{ maxWidth: 420 }} onClick={e => e.stopPropagation()}>
