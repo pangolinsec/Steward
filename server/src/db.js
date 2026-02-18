@@ -280,6 +280,7 @@ const migrations = [
   `ALTER TABLE session_log ADD COLUMN game_time TEXT DEFAULT NULL`,
   `ALTER TABLE encounter_definitions ADD COLUMN starts_combat INTEGER DEFAULT 0`,
   `ALTER TABLE characters ADD COLUMN spawned_from_encounter_id INTEGER DEFAULT NULL`,
+  `ALTER TABLE characters ADD COLUMN archived INTEGER DEFAULT 0`,
 ];
 
 for (const sql of migrations) {

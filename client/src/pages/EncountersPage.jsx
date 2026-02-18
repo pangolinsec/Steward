@@ -215,7 +215,7 @@ function EncounterForm({ campaignId, campaign, encounter, onClose, onSave }) {
       setLocations(data.locations || []);
       setEdges(data.edges || []);
     }).catch(() => {});
-    api.getCharacters(campaignId).then(setCharacters).catch(() => {});
+    api.getCharacters(campaignId, 'include_archived=1').then(setCharacters).catch(() => {});
     api.getItems(campaignId).then(setItems).catch(() => {});
   }, [campaignId]);
 
@@ -344,7 +344,7 @@ function EncounterForm({ campaignId, campaign, encounter, onClose, onSave }) {
                           style={{ flex: 2, fontSize: 12 }}
                         >
                           <option value="">Select character...</option>
-                          {characters.map(c => <option key={c.id} value={c.id}>{c.name} ({c.type})</option>)}
+                          {characters.map(c => <option key={c.id} value={c.id}>{c.name} ({c.type}){c.archived ? ' (archived)' : ''}</option>)}
                         </select>
                       )}
                       <select

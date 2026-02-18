@@ -9,6 +9,7 @@ export default function CharactersPage({ campaignId, campaign }) {
   const [characters, setCharacters] = useState([]);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [showArchived, setShowArchived] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editChar, setEditChar] = useState(null);
   const [showImport, setShowImport] = useState(false);
@@ -31,11 +32,12 @@ export default function CharactersPage({ campaignId, campaign }) {
     const params = new URLSearchParams();
     if (typeFilter) params.set('type', typeFilter);
     if (search) params.set('search', search);
+    if (showArchived) params.set('include_archived', '1');
     const data = await api.getCharacters(campaignId, params.toString());
     setCharacters(data);
   };
 
-  useEffect(() => { load(); loadCombat(); }, [campaignId, typeFilter, search]);
+  useEffect(() => { load(); loadCombat(); }, [campaignId, typeFilter, search, showArchived]);
 
   // Encounter→Combat bridge: auto-open combat setup from navigation state
   useEffect(() => {
@@ -99,6 +101,12 @@ export default function CharactersPage({ campaignId, campaign }) {
           <option value="PC">PCs</option>
           <option value="NPC">NPCs</option>
         </select>
+        {typeFilter !== 'PC' && (
+          <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, whiteSpace: 'nowrap' }}>
+            <input type="checkbox" checked={showArchived} onChange={e => setShowArchived(e.target.checked)} />
+            Show Archived
+          </label>
+        )}
       </div>
       {combatState ? (
         <CombatTracker
@@ -115,7 +123,7 @@ export default function CharactersPage({ campaignId, campaign }) {
       ) : (
         <div className="card-grid">
           {characters.map(c => (
-            <div key={c.id} className="card" style={{ cursor: 'pointer' }} onClick={() => navigate(`/characters/${c.id}`)}>
+            <div key={c.id} className="card" style={{ cursor: 'pointer', opacity: c.archived ? 0.6 : 1 }} onClick={() => navigate(`/characters/${c.id}`)}>
               <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                 {c.portrait_url ? (
                   <img src={c.portrait_url} alt="" style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border)' }} />
@@ -130,6 +138,7 @@ export default function CharactersPage({ campaignId, campaign }) {
                     <RuleRefBadge campaignId={campaignId} entityType="character" entityId={c.id} />
                   </div>
                   <span className={`tag ${c.type === 'PC' ? 'tag-buff' : ''}`}>{c.type}</span>
+                  {c.archived && <span className="tag" style={{ fontSize: 10 }}>Archived</span>}
                 </div>
               </div>
               {c.description && (
@@ -212,6 +221,7 @@ function CharacterForm({ campaignId, attrs, character, onClose, onSave }) {
   const [description, setDescription] = useState(character?.description || '');
   const [portraitUrl, setPortraitUrl] = useState(character?.portrait_url || '');
   const [dmNotes, setDmNotes] = useState(character?.dm_notes || '');
+  const [archived, setArchived] = useState(character?.archived || false);
   const [baseAttrs, setBaseAttrs] = useState(() => {
     const base = character?.base_attributes || {};
     const result = {};
@@ -227,7 +237,7 @@ function CharacterForm({ campaignId, attrs, character, onClose, onSave }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const data = { name, type, description, portrait_url: portraitUrl, base_attributes: baseAttrs, max_attributes: maxAttrs, dm_notes: dmNotes };
+    const data = { name, type, description, portrait_url: portraitUrl, base_attributes: baseAttrs, max_attributes: maxAttrs, dm_notes: dmNotes, archived };
     if (character) {
       await api.updateCharacter(campaignId, character.id, data);
     } else {
@@ -309,6 +319,12 @@ function CharacterForm({ campaignId, attrs, character, onClose, onSave }) {
               <label>DM Notes</label>
               <textarea value={dmNotes} onChange={e => setDmNotes(e.target.value)} rows={3} placeholder="Private DM notes..." />
             </div>
+            {type === 'NPC' && (
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, marginTop: 8 }}>
+                <input type="checkbox" checked={archived} onChange={e => setArchived(e.target.checked)} />
+                Archived
+              </label>
+            )}
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>

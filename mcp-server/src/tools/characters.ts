@@ -99,6 +99,7 @@ export function registerCharacterTools(server: McpServer): void {
         type: z.enum(["PC", "NPC"]).optional().describe("Filter by character type"),
         search: z.string().optional().describe("Search by name"),
         include_spawned: z.boolean().optional().describe("Include encounter-spawned NPCs (hidden by default)"),
+        include_archived: z.boolean().optional().describe("Include archived NPCs (hidden by default)"),
       },
       annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
@@ -109,6 +110,7 @@ export function registerCharacterTools(server: McpServer): void {
         if (params.type) qp.set("type", params.type);
         if (params.search) qp.set("search", params.search);
         if (params.include_spawned) qp.set("include_spawned", "1");
+        if (params.include_archived) qp.set("include_archived", "1");
         const qs = qp.toString();
         const chars = await get<Character[]>(c(cId, `/characters${qs ? "?" + qs : ""}`));
         if (chars.length === 0) return { content: [{ type: "text", text: "No characters found." }] };
@@ -122,7 +124,8 @@ export function registerCharacterTools(server: McpServer): void {
                 .map(([k, v]) => `${k}: ${v}`)
                 .join(", ")
             : "";
-          lines.push(`- **${ch.name}** (${ch.type}, id: ${ch.id}) — ${attrs || ch.description || ""}`);
+          const archivedTag = (ch as any).archived ? " [archived]" : "";
+          lines.push(`- **${ch.name}**${archivedTag} (${ch.type}, id: ${ch.id}) — ${attrs || ch.description || ""}`);
         }
         return { content: [{ type: "text", text: lines.join("\n") }] };
       } catch (error) {

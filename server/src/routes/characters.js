@@ -16,13 +16,16 @@ function fireRules(campaignId, triggerType, triggerContext) {
 // GET all characters for a campaign
 router.get('/', (req, res) => {
   const { id } = req.params;
-  const { type, search, include_spawned } = req.query;
+  const { type, search, include_spawned, include_archived } = req.query;
 
   let query = 'SELECT * FROM characters WHERE campaign_id = ?';
   const params = [id];
 
   if (!include_spawned) {
     query += ' AND spawned_from_encounter_id IS NULL';
+  }
+  if (!include_archived) {
+    query += ' AND (archived = 0 OR archived IS NULL)';
   }
   if (type && (type === 'PC' || type === 'NPC')) {
     query += ' AND type = ?';
@@ -62,6 +65,7 @@ router.get('/', (req, res) => {
     ...c,
     base_attributes: JSON.parse(c.base_attributes),
     max_attributes: JSON.parse(c.max_attributes || '{}'),
+    archived: !!c.archived,
     applied_effects: effectsByChar[c.id] || [],
   })));
 });
@@ -71,7 +75,7 @@ router.get('/:charId', (req, res) => {
   const char = db.prepare('SELECT * FROM characters WHERE id = ? AND campaign_id = ?')
     .get(req.params.charId, req.params.id);
   if (!char) return res.status(404).json({ error: 'Character not found' });
-  res.json({ ...char, base_attributes: JSON.parse(char.base_attributes), max_attributes: JSON.parse(char.max_attributes || '{}') });
+  res.json({ ...char, base_attributes: JSON.parse(char.base_attributes), max_attributes: JSON.parse(char.max_attributes || '{}'), archived: !!char.archived });
 });
 
 // GET computed stats for a character
@@ -102,7 +106,7 @@ router.post('/', (req, res) => {
   );
 
   const char = db.prepare('SELECT * FROM characters WHERE id = ?').get(result.lastInsertRowid);
-  res.status(201).json({ ...char, base_attributes: JSON.parse(char.base_attributes), max_attributes: JSON.parse(char.max_attributes || '{}') });
+  res.status(201).json({ ...char, base_attributes: JSON.parse(char.base_attributes), max_attributes: JSON.parse(char.max_attributes || '{}'), archived: !!char.archived });
 });
 
 // PUT update character
@@ -111,7 +115,7 @@ router.put('/:charId', (req, res) => {
     .get(req.params.charId, req.params.id);
   if (!char) return res.status(404).json({ error: 'Character not found' });
 
-  const { name, type, description, portrait_url, base_attributes, max_attributes, dm_notes } = req.body;
+  const { name, type, description, portrait_url, base_attributes, max_attributes, dm_notes, archived } = req.body;
 
   db.prepare(`
     UPDATE characters SET
@@ -121,7 +125,8 @@ router.put('/:charId', (req, res) => {
       portrait_url = COALESCE(?, portrait_url),
       base_attributes = COALESCE(?, base_attributes),
       max_attributes = COALESCE(?, max_attributes),
-      dm_notes = COALESCE(?, dm_notes)
+      dm_notes = COALESCE(?, dm_notes),
+      archived = COALESCE(?, archived)
     WHERE id = ? AND campaign_id = ?
   `).run(
     name || null, type || null,
@@ -130,11 +135,12 @@ router.put('/:charId', (req, res) => {
     base_attributes ? JSON.stringify(base_attributes) : null,
     max_attributes ? JSON.stringify(max_attributes) : null,
     dm_notes !== undefined ? dm_notes : null,
+    archived !== undefined ? (archived ? 1 : 0) : null,
     req.params.charId, req.params.id,
   );
 
   const updated = db.prepare('SELECT * FROM characters WHERE id = ?').get(req.params.charId);
-  res.json({ ...updated, base_attributes: JSON.parse(updated.base_attributes), max_attributes: JSON.parse(updated.max_attributes || '{}') });
+  res.json({ ...updated, base_attributes: JSON.parse(updated.base_attributes), max_attributes: JSON.parse(updated.max_attributes || '{}'), archived: !!updated.archived });
 });
 
 // DELETE character

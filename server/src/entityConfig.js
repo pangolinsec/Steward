@@ -50,6 +50,7 @@ const ENTITY_CONFIG = {
       { name: 'max_attributes',  type: 'json', default: {} },
       { name: 'dm_notes',        type: 'text', default: '' },
       { name: 'spawned_from_encounter_id', type: 'integer', default: null },
+      { name: 'archived', type: 'bool_int', default: false },
     ],
     modifierColumns: [],
     idMapKey: 'charIdMap',

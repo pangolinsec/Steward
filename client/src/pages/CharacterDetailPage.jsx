@@ -98,10 +98,19 @@ export default function CharacterDetailPage({ campaignId, campaign }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <h2 style={{ fontSize: 22, fontWeight: 700 }}>{character.name}</h2>
               <span className={`tag ${character.type === 'PC' ? 'tag-buff' : ''}`}>{character.type}</span>
+              {character.archived && <span className="tag" style={{ fontSize: 10 }}>Archived</span>}
             </div>
             {character.description && <p style={{ marginTop: 6, color: 'var(--text-secondary)', fontSize: 13 }}>{character.description}</p>}
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
+            {character.type === 'NPC' && (
+              <button className="btn btn-ghost btn-sm" onClick={async () => {
+                await api.updateCharacter(campaignId, charId, { archived: !character.archived });
+                load();
+              }}>
+                {character.archived ? 'Unarchive' : 'Archive'}
+              </button>
+            )}
             <button className="btn btn-secondary btn-sm" onClick={() => setEditing(true)}>Edit</button>
             <button className="btn btn-danger btn-sm" onClick={handleDelete}>Delete</button>
           </div>
@@ -381,6 +390,7 @@ function EditCharacterModal({ campaignId, character, attrs, onClose, onSaved }) 
   const [description, setDescription] = useState(character.description || '');
   const [portraitUrl, setPortraitUrl] = useState(character.portrait_url || '');
   const [dmNotes, setDmNotes] = useState(character.dm_notes || '');
+  const [archived, setArchived] = useState(character.archived || false);
   const dmNotesRef = useRef(null);
   const [baseAttrs, setBaseAttrs] = useState(() => {
     const result = {};
@@ -396,7 +406,7 @@ function EditCharacterModal({ campaignId, character, attrs, onClose, onSaved }) 
   const handleSubmit = async (e) => {
     e.preventDefault();
     await api.updateCharacter(campaignId, character.id, {
-      name, type, description, portrait_url: portraitUrl, base_attributes: baseAttrs, max_attributes: maxAttrs, dm_notes: dmNotes,
+      name, type, description, portrait_url: portraitUrl, base_attributes: baseAttrs, max_attributes: maxAttrs, dm_notes: dmNotes, archived,
     });
     onSaved();
   };
@@ -471,6 +481,12 @@ function EditCharacterModal({ campaignId, character, attrs, onClose, onSaved }) 
               <textarea ref={dmNotesRef} value={dmNotes} onChange={e => setDmNotes(e.target.value)} rows={4} placeholder="Private notes, [[wikilinks]] supported..." />
               <WikilinkAutocomplete campaignId={campaignId} textareaRef={dmNotesRef} value={dmNotes} onChange={setDmNotes} />
             </div>
+            {type === 'NPC' && (
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, marginTop: 8 }}>
+                <input type="checkbox" checked={archived} onChange={e => setArchived(e.target.checked)} />
+                Archived
+              </label>
+            )}
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
