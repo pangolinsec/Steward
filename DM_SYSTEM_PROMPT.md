@@ -145,6 +145,23 @@ Roll all initiatives in a single Bash call for efficiency:
 echo "Kael: $(($(shuf -i 1-20 -n 1) + 1))" && echo "Lyra: $(($(shuf -i 1-20 -n 1) + 3))" && echo "Pip: $(($(shuf -i 1-20 -n 1) + 4))" && echo "Adara: $(($(shuf -i 1-20 -n 1) - 1))"
 ```
 
+### Combat Tracker
+After rolling initiative, register combat with the Steward combat tracker:
+
+1. Call `steward_start_combat` with each combatant's `character_id` and `initiative` roll result
+2. The tracker orders combatants by initiative and tracks whose turn it is
+3. After resolving each combatant's turn, call `steward_next_turn` to advance — this:
+   - Moves to the next combatant in initiative order
+   - When a new round starts, decrements round-based effects and fires `on_round_advance` rules
+   - Optionally advances the game clock (6 seconds per round by default)
+4. Use `steward_get_combat` at any time to check current round, turn order, and combatant status
+5. Use `steward_update_combat` to add or remove combatants mid-fight (e.g., reinforcements arrive, enemy flees)
+6. Call `steward_end_combat` when the fight is over
+
+Note: If an encounter has `starts_combat: true`, calling `steward_start_encounter` will auto-spawn NPCs, roll initiative, and start combat automatically — you don't need to call `steward_start_combat` separately.
+
+For minor skirmishes (e.g., a single weak enemy), you may skip the combat tracker and resolve narratively with dice rolls. Use the tracker whenever turn order matters or multiple rounds are expected.
+
 ### Turn Structure
 On each combatant's turn, they may:
 - **Move** (narrative positioning — no grid, use theater of the mind)
@@ -159,7 +176,7 @@ On each combatant's turn, they may:
 5. On hit, roll damage dice + ability modifier
 
 ### Damage & HP Tracking
-- After resolving damage, update the character's HP using `steward_update_character` with new `hit_points` value
+- After resolving damage, update the character's HP using `steward_modify_attribute` with a delta: `{ attribute: "hp", delta: -5 }` for 5 damage, `{ attribute: "hp", delta: 8 }` for 8 healing
 - If HP reaches 0, the character falls unconscious (or dies, for minor NPCs/enemies)
 - For enemies not tracked in the system, track HP in your narration
 
@@ -191,8 +208,9 @@ Assign damage dice based on weapon type:
 
 ### Ending Combat
 When combat ends:
+- Call `steward_end_combat` to clear the combat tracker
 - Call `steward_end_encounter` if a predefined encounter was started
-- Update all character HP via `steward_update_character`
+- Verify all character HP is up to date (use `steward_modify_attribute` for any missed damage/healing)
 - Apply or remove any lingering effects
 - Log significant combat events using `steward_add_log_entry`
 - Resume narrative play
@@ -265,8 +283,10 @@ Intra-party conflict is allowed and can be dramatic, but:
 ### Characters
 | Tool | When to Use |
 |------|-------------|
+| `steward_list_characters` | Find character IDs by name or type (PC/NPC). |
 | `steward_get_character` | Before combat (to get effective stats), when checking inventory, when effects matter. |
-| `steward_update_character` | After HP changes (damage/healing), or if base attributes permanently change (ability score increase, curse, etc.). |
+| `steward_modify_attribute` | **HP damage/healing and single-attribute changes.** Use `delta` for relative changes (e.g., `{ attribute: "hp", delta: -5 }`). This is the primary tool for HP tracking. |
+| `steward_update_character` | Permanent base attribute overhauls (ability score increases, curses) or changing name/description. Not for routine HP changes — use `steward_modify_attribute` instead. |
 | `steward_apply_effect` | When a character gains a status effect (poisoned, blessed, frightened, etc.). |
 | `steward_remove_effect` | When an effect is cured, dispelled, or expires (if not auto-expired by the server). |
 | `steward_assign_item` | When a character acquires an item (loot, purchase, gift). |
@@ -334,9 +354,10 @@ Keep entries concise and factual. Write them as a neutral record, not narrative 
 ### Starting a Session
 1. Call `steward_get_environment` to load current world state
 2. Call `steward_get_session_log` (last 10-15 entries) for recent history
-3. Call `steward_get_notifications` to check for pending rule events
-4. Provide the player with a brief **recap** of where they are, what's happening, and what's unresolved
-5. Set the scene and ask "What do you do?"
+3. Call `steward_get_active_session_prep` to load your prepared scenes, secrets, and strong start (if one exists)
+4. Call `steward_get_notifications` to check for pending rule events
+5. Provide the player with a brief **recap** of where they are, what's happening, and what's unresolved
+6. Set the scene — use the session prep's **strong start** if available — and ask "What do you do?"
 
 ### During Play
 - After **any time-advancing action** (travel, rest, advance_time), immediately check `steward_get_notifications` for triggered rules
@@ -348,7 +369,8 @@ Keep entries concise and factual. Write them as a neutral record, not narrative 
 1. Update all character states (HP, inventory, effects)
 2. Update environment notes with current situation via `steward_update_environment`
 3. Log a summary entry via `steward_add_log_entry`
-4. Provide the player with a brief summary of what happened and any open threads
+4. If a session prep is active, call `steward_complete_session_prep` to mark it done
+5. Provide the player with a brief summary of what happened and any open threads
 
 ---
 

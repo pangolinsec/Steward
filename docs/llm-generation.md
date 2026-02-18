@@ -105,7 +105,8 @@ Generate content that fits the setting. Invent creative names, descriptions, and
       "type": "PC | NPC",
       "description": "Character description",
       "portrait_url": "",
-      "base_attributes": { "strength": 14, "dexterity": 12 }
+      "base_attributes": { "strength": 14, "dexterity": 12, "hp": 45 },
+      "max_attributes": { "hp": 45 }
     }
   ],
   "locations": [
@@ -145,6 +146,7 @@ Generate content that fits the setting. Invent creative names, descriptions, and
         { "item_name": "Item Name", "quantity": 1, "drop_chance": 0.5 }
       ],
       "conditions": {
+        "location_ids": [],
         "edge_ids": [3],
         "time_of_day": ["Night", "Dusk"],
         "weather": [],
@@ -197,6 +199,7 @@ Generate content that fits the setting. Invent creative names, descriptions, and
     "current_year": 1,
     "weather": "Clear",
     "environment_notes": "",
+    "current_location_id": 1,
     "current_edge_id": null,
     "edge_progress": 0
   }
@@ -222,6 +225,7 @@ Generate content that fits the setting. Invent creative names, descriptions, and
 
 **Characters:**
 - Give each character attribute values between 3 and 20 for numeric attributes.
+- Use `max_attributes` for resource attributes that have a ceiling (typically just `hp`). `base_attributes.hp` is the current value; `max_attributes.hp` is the maximum. For freshly generated characters, set both to the same value.
 - Write 1-2 sentence descriptions that convey personality and role.
 - Tag attribute values must be from the defined options.
 
@@ -239,6 +243,7 @@ Generate content that fits the setting. Invent creative names, descriptions, and
 **Encounters:**
 - `loot_table` items reference item names that exist in the `items` array.
 - `drop_chance`: 0.0 to 1.0 (probability).
+- `conditions.location_ids`: 1-indexed positions in the `locations` array. Encounters with location_ids only trigger at those locations. Omit or use `[]` for no location restriction.
 - `conditions.edge_ids`: 1-indexed positions in the `edges` array. Encounters with edge_ids only trigger during travel along those paths. Omit or use `[]` for no path restriction.
 - `conditions.time_of_day` values must match labels in `time_of_day_thresholds`.
 - `conditions.weight`: relative probability (1.0 = normal, 2.0 = twice as likely).
@@ -292,7 +297,8 @@ Output a JSON object matching this schema:
       "type": "PC or NPC",
       "description": "1-2 sentence description with personality and role",
       "portrait_url": "",
-      "base_attributes": { "strength": 14, "dexterity": 12 }
+      "base_attributes": { "strength": 14, "dexterity": 12, "hp": 45 },
+      "max_attributes": { "hp": 45 }
     }
   ]
 }
@@ -415,6 +421,7 @@ Output a JSON object matching this schema:
         { "item_name": "Healing Potion", "quantity": 2, "drop_chance": 0.5 }
       ],
       "conditions": {
+        "location_ids": [],
         "edge_ids": [],
         "time_of_day": ["Night", "Dusk"],
         "weather": [],
@@ -430,6 +437,7 @@ Rules:
 - `notes` should be meaty — 3-5 sentences of tactical info, terrain description, and narrative hooks for the DM.
 - `environment_overrides`: optional changes applied when the encounter starts (e.g., `{"weather": "Fog"}`). Leave as `{}` for most encounters.
 - `loot_table`: items that can drop. `item_name` must match item names listed above. `drop_chance` is 0.0-1.0.
+- `conditions.location_ids`: location IDs this encounter is restricted to. Only triggers when the party is at one of these locations. Leave as `[]` for no location restriction. When importing alongside locations, use 1-indexed positions in the `locations` array.
 - `conditions.edge_ids`: path (edge) IDs this encounter is restricted to. Only triggers during travel along those paths. Leave as `[]` for no path restriction. When importing alongside locations/edges, use 1-indexed positions in the edges array.
 - `conditions.time_of_day`: when this encounter can randomly trigger. Use labels from the list above. Empty array `[]` means any time.
 - `conditions.weather`: which weather allows this encounter. Empty `[]` means any weather.
