@@ -92,11 +92,13 @@ router.post('/import', (req, res) => {
       const config = ENTITY_CONFIG[entityKey];
       const entities = data[config.exportKey] || [];
       idMaps[config.idMapKey] = {};
+      const insertionOrder = [];  // track DB IDs in array order for positional edge mapping
 
       for (const entity of entities) {
         const oldId = entity.id;
         const newId = insertEntity(db, newCampaignId, entityKey, entity);
         idMaps[config.idMapKey][oldId] = newId;
+        insertionOrder.push(newId);
       }
 
       // Import relations
@@ -136,7 +138,7 @@ router.post('/import', (req, res) => {
       }
       if (config.postProcess === 'remapLocationEdges') {
         const locationIdMap = idMaps.locationIdMap || {};
-        remapLocationEdges(db, newCampaignId, data.edges, locationIdMap);
+        remapLocationEdges(db, newCampaignId, data.edges, locationIdMap, insertionOrder);
       }
     }
 

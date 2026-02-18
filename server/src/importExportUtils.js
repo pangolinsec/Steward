@@ -122,13 +122,22 @@ function remapEncounterConditionLocations(db, campaignId, encounterId, condition
 
 // --- Location edge import ---
 
-function remapLocationEdges(db, campaignId, edges, locationIdMap) {
+function remapLocationEdges(db, campaignId, edges, locationIdMap, locationOrder) {
   // Insert edges with remapped from/to location IDs and campaign_id.
   // Called once for all edges (not per-location).
+  // locationOrder: optional array of new DB IDs in insertion order, used to
+  // resolve 1-indexed positional references from LLM-generated JSON.
   if (!edges || !Array.isArray(edges)) return;
+
+  // Build a positional (1-indexed) fallback map from the insertion order
+  const positionalMap = {};
+  if (Array.isArray(locationOrder)) {
+    locationOrder.forEach((dbId, idx) => { positionalMap[idx + 1] = dbId; });
+  }
+
   for (const edge of edges) {
-    const newFromId = locationIdMap[edge.from_location_id];
-    const newToId = locationIdMap[edge.to_location_id];
+    const newFromId = locationIdMap[edge.from_location_id] || positionalMap[edge.from_location_id];
+    const newToId = locationIdMap[edge.to_location_id] || positionalMap[edge.to_location_id];
     if (!newFromId || !newToId) continue;
     db.prepare(`
       INSERT INTO location_edges (campaign_id, from_location_id, to_location_id, label, description, travel_hours, bidirectional, encounter_modifier, properties, weather_override)
@@ -395,6 +404,7 @@ function executeMergeImport(db, campaignId, importData, decisions, entityTypes) 
     const entityDecisions = decisions[entityKey] || {};
     const bulkAction = entityDecisions._bulk || 'skip';
     idMaps[config.idMapKey] = {};
+    const insertionOrder = [];  // track DB IDs in array order for positional edge mapping
 
     const existingMap = findExistingByName(db, campaignId, entityKey);
 
@@ -413,14 +423,17 @@ function executeMergeImport(db, campaignId, importData, decisions, entityTypes) 
         // New entity — always import
         const newId = insertEntity(db, campaignId, entityKey, entity);
         idMaps[config.idMapKey][oldId] = newId;
+        insertionOrder.push(newId);
         stats.imported++;
       } else if (action === 'skip') {
         // Map old ID to existing ID so downstream relations still resolve
         idMaps[config.idMapKey][oldId] = existing.id;
+        insertionOrder.push(existing.id);
         stats.skipped++;
       } else if (action === 'overwrite') {
         updateEntity(db, entityKey, existing.id, entity);
         idMaps[config.idMapKey][oldId] = existing.id;
+        insertionOrder.push(existing.id);
         // If this entity has relations, delete old ones so they get re-imported
         for (const rel of config.relations) {
           deleteRelationsForEntity(db, rel, existing.id);
@@ -430,6 +443,7 @@ function executeMergeImport(db, campaignId, importData, decisions, entityTypes) 
         const dupData = { ...entity, [config.nameField]: name + ' (Imported)' };
         const newId = insertEntity(db, campaignId, entityKey, dupData);
         idMaps[config.idMapKey][oldId] = newId;
+        insertionOrder.push(newId);
         stats.duplicated++;
       }
     }
@@ -464,7 +478,7 @@ function executeMergeImport(db, campaignId, importData, decisions, entityTypes) 
     }
     if (config.postProcess === 'remapLocationEdges') {
       const locationIdMap = idMaps.locationIdMap || {};
-      remapLocationEdges(db, campaignId, data.edges, locationIdMap);
+      remapLocationEdges(db, campaignId, data.edges, locationIdMap, insertionOrder);
     }
   }
 
