@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import * as api from '../api';
 import ImportPreviewModal from '../components/ImportPreviewModal';
 import RuleTemplateBrowser from '../components/RuleTemplateBrowser';
-import { ConditionBuilder, ActionBuilder } from '../components/RuleBuilder';
+import { ConditionBuilder, ActionBuilder, stripIds } from '../components/RuleBuilder';
 import RuleTestPanel from '../components/RuleTestPanel';
 
 const TRIGGER_TYPES = [
@@ -15,6 +15,8 @@ const TRIGGER_TYPES = [
   { value: 'on_schedule', label: 'Scheduled' },
   { value: 'on_encounter', label: 'Encounter' },
 ];
+
+const NO_CONFIG_TRIGGERS = ['on_time_advance', 'on_rest', 'on_effect_change', 'on_item_change', 'on_location_change'];
 
 const ACTION_MODES = [
   { value: 'auto', label: 'Auto-apply' },
@@ -29,6 +31,30 @@ const TARGET_MODES = [
   { value: 'specific', label: 'Specific Characters' },
 ];
 
+function getMissingPrereqs(rule, entityLists) {
+  if (!entityLists) return [];
+  const warnings = [];
+  const conditions = rule.conditions;
+  const items = conditions?.all || conditions?.any || [];
+  for (const cond of items) {
+    if (['has_effect', 'lacks_effect'].includes(cond.type) && cond.effect_name && !entityLists.effects.includes(cond.effect_name)) {
+      warnings.push(`Effect "${cond.effect_name}" not found`);
+    }
+    if (['has_item', 'lacks_item', 'item_quantity_lte'].includes(cond.type) && cond.item_name && !entityLists.items.includes(cond.item_name)) {
+      warnings.push(`Item "${cond.item_name}" not found`);
+    }
+  }
+  for (const action of (rule.actions || [])) {
+    if (['apply_effect', 'remove_effect'].includes(action.type) && action.effect_name && !entityLists.effects.includes(action.effect_name)) {
+      warnings.push(`Effect "${action.effect_name}" not found`);
+    }
+    if (['consume_item', 'grant_item'].includes(action.type) && action.item_name && !entityLists.items.includes(action.item_name)) {
+      warnings.push(`Item "${action.item_name}" not found`);
+    }
+  }
+  return warnings;
+}
+
 export default function RulesPage({ campaignId, campaign }) {
   const [rules, setRules] = useState([]);
   const [search, setSearch] = useState('');
@@ -39,6 +65,7 @@ export default function RulesPage({ campaignId, campaign }) {
   const [showImport, setShowImport] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [testRule, setTestRule] = useState(null);
+  const [entityLists, setEntityLists] = useState(null);
 
   const load = async () => {
     if (!campaignId) return;
@@ -50,6 +77,23 @@ export default function RulesPage({ campaignId, campaign }) {
   };
 
   useEffect(() => { load(); }, [campaignId, search, filterTrigger]);
+
+  useEffect(() => {
+    if (!campaignId) return;
+    Promise.all([
+      api.getItems(campaignId),
+      api.getStatusEffects(campaignId),
+      api.getLocations(campaignId),
+      api.getCharacters(campaignId),
+    ]).then(([items, effects, locData, characters]) => {
+      setEntityLists({
+        items: items.map(i => i.name),
+        effects: effects.map(e => e.name),
+        locations: locData.locations || locData,
+        characters,
+      });
+    });
+  }, [campaignId]);
 
   const handleDelete = async (id, name) => {
     if (!confirm(`Delete rule "${name}"?`)) return;
@@ -110,71 +154,80 @@ export default function RulesPage({ campaignId, campaign }) {
         <div className="empty-state"><p>No rules defined yet. Create rules to automate game-world changes.</p></div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {rules.map(rule => (
-            <div key={rule.id} className="card" style={{ opacity: rule.enabled ? 1 : 0.5 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => setExpandedId(expandedId === rule.id ? null : rule.id)}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontWeight: 600, fontSize: 15 }}>{rule.name}</span>
-                    <span className="tag" style={{ fontSize: 10 }}>{triggerLabel(rule.trigger_type)}</span>
-                    <span className={`tag ${rule.action_mode === 'auto' ? 'tag-buff' : ''}`} style={{ fontSize: 10 }}>
-                      {rule.action_mode === 'auto' ? 'Auto' : 'Suggest'}
-                    </span>
+          {rules.map(rule => {
+            const warnings = getMissingPrereqs(rule, entityLists);
+            return (
+              <div key={rule.id} className="card" style={{ opacity: rule.enabled ? 1 : 0.5 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => setExpandedId(expandedId === rule.id ? null : rule.id)}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontWeight: 600, fontSize: 15 }}>{rule.name}</span>
+                      <span className="tag" style={{ fontSize: 10 }}>{triggerLabel(rule.trigger_type)}</span>
+                      <span className={`tag ${rule.action_mode === 'auto' ? 'tag-buff' : ''}`} style={{ fontSize: 10 }}>
+                        {rule.action_mode === 'auto' ? 'Auto' : 'Suggest'}
+                      </span>
+                      {warnings.length > 0 && (
+                        <span className="tag" style={{ background: 'var(--yellow)', color: '#000', fontSize: 10 }}
+                          title={warnings.join('\n')}>
+                          {warnings.length} warning{warnings.length > 1 ? 's' : ''}
+                        </span>
+                      )}
+                    </div>
+                    {rule.description && (
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>{rule.description}</div>
+                    )}
+                    <div className="inline-flex gap-sm mt-sm" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                      <span>Priority: {rule.priority}</span>
+                      <span>Target: {rule.target_mode}</span>
+                      {rule.tags.length > 0 && rule.tags.map(t => (
+                        <span key={t} className="tag" style={{ fontSize: 9, padding: '1px 5px' }}>{t}</span>
+                      ))}
+                    </div>
                   </div>
-                  {rule.description && (
-                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>{rule.description}</div>
-                  )}
-                  <div className="inline-flex gap-sm mt-sm" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                    <span>Priority: {rule.priority}</span>
-                    <span>Target: {rule.target_mode}</span>
-                    {rule.tags.length > 0 && rule.tags.map(t => (
-                      <span key={t} className="tag" style={{ fontSize: 9, padding: '1px 5px' }}>{t}</span>
-                    ))}
+                  <div className="inline-flex gap-sm">
+                    <button
+                      className={`btn btn-sm ${rule.enabled ? 'btn-secondary' : 'btn-primary'}`}
+                      onClick={() => handleToggle(rule.id)}
+                      style={{ minWidth: 60 }}
+                    >
+                      {rule.enabled ? 'Disable' : 'Enable'}
+                    </button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => setTestRule(rule)}>Test</button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => { setEditRule(rule); setShowForm(true); }}>Edit</button>
+                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(rule.id, rule.name)}>Delete</button>
                   </div>
                 </div>
-                <div className="inline-flex gap-sm">
-                  <button
-                    className={`btn btn-sm ${rule.enabled ? 'btn-secondary' : 'btn-primary'}`}
-                    onClick={() => handleToggle(rule.id)}
-                    style={{ minWidth: 60 }}
-                  >
-                    {rule.enabled ? 'Disable' : 'Enable'}
-                  </button>
-                  <button className="btn btn-ghost btn-sm" onClick={() => setTestRule(rule)}>Test</button>
-                  <button className="btn btn-ghost btn-sm" onClick={() => { setEditRule(rule); setShowForm(true); }}>Edit</button>
-                  <button className="btn btn-danger btn-sm" onClick={() => handleDelete(rule.id, rule.name)}>Delete</button>
-                </div>
+                {expandedId === rule.id && (
+                  <div style={{ marginTop: 12, padding: 12, background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', fontSize: 13 }}>
+                    <div style={{ marginBottom: 8 }}>
+                      <strong>Conditions:</strong> {summarizeConditions(rule.conditions)}
+                    </div>
+                    <div style={{ marginBottom: 8 }}>
+                      <strong>Actions:</strong> {summarizeActions(rule.actions)}
+                    </div>
+                    <div style={{ marginBottom: 8 }}>
+                      <strong>Trigger Config:</strong>
+                      <pre style={{ fontSize: 11, fontFamily: 'var(--font-mono)', marginTop: 4, whiteSpace: 'pre-wrap', color: 'var(--text-secondary)' }}>
+                        {JSON.stringify(rule.trigger_config, null, 2)}
+                      </pre>
+                    </div>
+                    <div style={{ marginBottom: 8 }}>
+                      <strong>Conditions (raw):</strong>
+                      <pre style={{ fontSize: 11, fontFamily: 'var(--font-mono)', marginTop: 4, whiteSpace: 'pre-wrap', color: 'var(--text-secondary)' }}>
+                        {JSON.stringify(rule.conditions, null, 2)}
+                      </pre>
+                    </div>
+                    <div>
+                      <strong>Actions (raw):</strong>
+                      <pre style={{ fontSize: 11, fontFamily: 'var(--font-mono)', marginTop: 4, whiteSpace: 'pre-wrap', color: 'var(--text-secondary)' }}>
+                        {JSON.stringify(rule.actions, null, 2)}
+                      </pre>
+                    </div>
+                  </div>
+                )}
               </div>
-              {expandedId === rule.id && (
-                <div style={{ marginTop: 12, padding: 12, background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', fontSize: 13 }}>
-                  <div style={{ marginBottom: 8 }}>
-                    <strong>Conditions:</strong> {summarizeConditions(rule.conditions)}
-                  </div>
-                  <div style={{ marginBottom: 8 }}>
-                    <strong>Actions:</strong> {summarizeActions(rule.actions)}
-                  </div>
-                  <div style={{ marginBottom: 8 }}>
-                    <strong>Trigger Config:</strong>
-                    <pre style={{ fontSize: 11, fontFamily: 'var(--font-mono)', marginTop: 4, whiteSpace: 'pre-wrap', color: 'var(--text-secondary)' }}>
-                      {JSON.stringify(rule.trigger_config, null, 2)}
-                    </pre>
-                  </div>
-                  <div style={{ marginBottom: 8 }}>
-                    <strong>Conditions (raw):</strong>
-                    <pre style={{ fontSize: 11, fontFamily: 'var(--font-mono)', marginTop: 4, whiteSpace: 'pre-wrap', color: 'var(--text-secondary)' }}>
-                      {JSON.stringify(rule.conditions, null, 2)}
-                    </pre>
-                  </div>
-                  <div>
-                    <strong>Actions (raw):</strong>
-                    <pre style={{ fontSize: 11, fontFamily: 'var(--font-mono)', marginTop: 4, whiteSpace: 'pre-wrap', color: 'var(--text-secondary)' }}>
-                      {JSON.stringify(rule.actions, null, 2)}
-                    </pre>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
       {showForm && (
@@ -182,6 +235,7 @@ export default function RulesPage({ campaignId, campaign }) {
           campaignId={campaignId}
           campaign={campaign}
           rule={editRule}
+          entityLists={entityLists}
           onClose={() => { setShowForm(false); setEditRule(null); }}
           onSave={() => { setShowForm(false); setEditRule(null); load(); }}
         />
@@ -214,7 +268,110 @@ export default function RulesPage({ campaignId, campaign }) {
   );
 }
 
-function RuleForm({ campaignId, campaign, rule, onClose, onSave }) {
+function TriggerConfigBuilder({ triggerType, value, onChange, campaign }) {
+  if (NO_CONFIG_TRIGGERS.includes(triggerType)) return null;
+
+  if (triggerType === 'on_threshold') {
+    const attrs = campaign?.attribute_definitions || [];
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div className="form-group" style={{ marginBottom: 0 }}>
+          <label>Attribute</label>
+          <select value={value?.attribute || ''} onChange={e => onChange({ ...value, attribute: e.target.value })}>
+            <option value="">Select attribute...</option>
+            {attrs.map(a => <option key={a.key} value={a.key}>{a.label}</option>)}
+          </select>
+        </div>
+        <div className="form-group" style={{ marginBottom: 0 }}>
+          <label>Threshold Value</label>
+          <input type="number" value={value?.threshold ?? ''} onChange={e => onChange({ ...value, threshold: Number(e.target.value) })} />
+        </div>
+        <div className="form-group" style={{ marginBottom: 0 }}>
+          <label>Direction</label>
+          <select value={value?.direction || 'either'} onChange={e => onChange({ ...value, direction: e.target.value })}>
+            <option value="falling">Falling</option>
+            <option value="rising">Rising</option>
+            <option value="either">Either</option>
+          </select>
+        </div>
+      </div>
+    );
+  }
+
+  if (triggerType === 'on_schedule') {
+    return (
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div className="form-group" style={{ marginBottom: 0, flex: 1, minWidth: 80 }}>
+          <label>Month</label>
+          <input type="number" min="1" value={value?.month ?? ''} onChange={e => onChange({ ...value, month: Number(e.target.value) })} />
+        </div>
+        <div className="form-group" style={{ marginBottom: 0, flex: 1, minWidth: 80 }}>
+          <label>Day</label>
+          <input type="number" min="1" value={value?.day ?? ''} onChange={e => onChange({ ...value, day: Number(e.target.value) })} />
+        </div>
+        <div className="form-group" style={{ marginBottom: 0, flex: 1, minWidth: 80 }}>
+          <label>Hour</label>
+          <input type="number" min="0" max="23" value={value?.hour ?? ''} onChange={e => onChange({ ...value, hour: Number(e.target.value) })} />
+        </div>
+        <div className="form-group" style={{ marginBottom: 0, flex: 1, minWidth: 80 }}>
+          <label>Minute</label>
+          <input type="number" min="0" max="59" value={value?.minute ?? ''} onChange={e => onChange({ ...value, minute: Number(e.target.value) })} />
+        </div>
+      </div>
+    );
+  }
+
+  if (triggerType === 'on_encounter') {
+    return (
+      <div className="form-group" style={{ marginBottom: 0 }}>
+        <label>Encounter Type (optional)</label>
+        <input type="text" value={value?.encounter_type || ''} onChange={e => onChange({ ...value, encounter_type: e.target.value })}
+          placeholder="Leave blank for any encounter" />
+      </div>
+    );
+  }
+
+  // Fallback: raw JSON for unknown trigger types
+  return (
+    <textarea
+      value={JSON.stringify(value || {}, null, 2)}
+      onChange={e => { try { onChange(JSON.parse(e.target.value)); } catch {} }}
+      rows={2}
+      style={{ fontFamily: 'var(--font-mono)', fontSize: 12, width: '100%' }}
+    />
+  );
+}
+
+function TargetConfigPicker({ value, onChange, characters }) {
+  const selectedIds = value?.character_ids || [];
+  const chars = characters || [];
+
+  const toggleChar = (id) => {
+    const newIds = selectedIds.includes(id)
+      ? selectedIds.filter(i => i !== id)
+      : [...selectedIds, id];
+    onChange({ character_ids: newIds });
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 150, overflowY: 'auto',
+      padding: 8, background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+      {chars.length === 0 ? (
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', padding: 4 }}>No characters in campaign</div>
+      ) : (
+        chars.map(c => (
+          <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: 'pointer', padding: '2px 0' }}>
+            <input type="checkbox" checked={selectedIds.includes(c.id)} onChange={() => toggleChar(c.id)} />
+            <span>{c.name}</span>
+            <span className="tag" style={{ fontSize: 9 }}>{c.type}</span>
+          </label>
+        ))
+      )}
+    </div>
+  );
+}
+
+function RuleForm({ campaignId, campaign, rule, entityLists, onClose, onSave }) {
   const [name, setName] = useState(rule?.name || '');
   const [description, setDescription] = useState(rule?.description || '');
   const [triggerType, setTriggerType] = useState(rule?.trigger_type || 'on_time_advance');
@@ -222,26 +379,30 @@ function RuleForm({ campaignId, campaign, rule, onClose, onSave }) {
   const [priority, setPriority] = useState(rule?.priority ?? 100);
   const [targetMode, setTargetMode] = useState(rule?.target_mode || 'environment');
   const [tagsStr, setTagsStr] = useState((rule?.tags || []).join(', '));
-  const [triggerConfigStr, setTriggerConfigStr] = useState(JSON.stringify(rule?.trigger_config || {}, null, 2));
-  const [targetConfigStr, setTargetConfigStr] = useState(JSON.stringify(rule?.target_config || {}, null, 2));
+  const [triggerConfig, setTriggerConfig] = useState(rule?.trigger_config || {});
+  const [showRawTrigger, setShowRawTrigger] = useState(false);
+  const [rawTriggerStr, setRawTriggerStr] = useState(JSON.stringify(rule?.trigger_config || {}, null, 2));
+  const [targetConfig, setTargetConfig] = useState(rule?.target_config || {});
   const [conditions, setConditions] = useState(rule?.conditions || { all: [] });
   const [actions, setActions] = useState(rule?.actions || []);
   const [useRawJson, setUseRawJson] = useState(false);
   const [rawConditions, setRawConditions] = useState(JSON.stringify(rule?.conditions || { all: [] }, null, 2));
   const [rawActions, setRawActions] = useState(JSON.stringify(rule?.actions || [], null, 2));
 
+  const characters = entityLists?.characters || [];
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    let trigger_config, target_config, finalConditions, finalActions;
+    let finalTriggerConfig, target_config, finalConditions, finalActions;
     try {
-      trigger_config = JSON.parse(triggerConfigStr);
-      target_config = JSON.parse(targetConfigStr);
+      finalTriggerConfig = showRawTrigger ? JSON.parse(rawTriggerStr) : triggerConfig;
+      target_config = targetConfig;
       if (useRawJson) {
         finalConditions = JSON.parse(rawConditions);
         finalActions = JSON.parse(rawActions);
       } else {
-        finalConditions = conditions;
-        finalActions = actions;
+        finalConditions = stripIds(conditions);
+        finalActions = stripIds(actions);
       }
     } catch {
       alert('Invalid JSON in one of the fields');
@@ -249,7 +410,7 @@ function RuleForm({ campaignId, campaign, rule, onClose, onSave }) {
     }
     const tags = tagsStr.split(',').map(s => s.trim()).filter(Boolean);
     const data = {
-      name, description, trigger_type: triggerType, trigger_config,
+      name, description, trigger_type: triggerType, trigger_config: finalTriggerConfig,
       conditions: finalConditions, actions: finalActions,
       action_mode: actionMode, priority, tags, target_mode: targetMode, target_config,
     };
@@ -270,11 +431,13 @@ function RuleForm({ campaignId, campaign, rule, onClose, onSave }) {
       } catch { /* keep current builder state */ }
     } else {
       // Switching from builder to raw — serialize
-      setRawConditions(JSON.stringify(conditions, null, 2));
-      setRawActions(JSON.stringify(actions, null, 2));
+      setRawConditions(JSON.stringify(stripIds(conditions), null, 2));
+      setRawActions(JSON.stringify(stripIds(actions), null, 2));
     }
     setUseRawJson(!useRawJson);
   };
+
+  const needsTriggerConfig = !NO_CONFIG_TRIGGERS.includes(triggerType);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -296,7 +459,7 @@ function RuleForm({ campaignId, campaign, rule, onClose, onSave }) {
             <div className="form-row">
               <div className="form-group">
                 <label>Trigger Type</label>
-                <select value={triggerType} onChange={e => setTriggerType(e.target.value)}>
+                <select value={triggerType} onChange={e => { setTriggerType(e.target.value); setTriggerConfig({}); }}>
                   {TRIGGER_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
               </div>
@@ -323,16 +486,36 @@ function RuleForm({ campaignId, campaign, rule, onClose, onSave }) {
               <label>Tags (comma-separated)</label>
               <input type="text" value={tagsStr} onChange={e => setTagsStr(e.target.value)} placeholder="survival, combat, ..." />
             </div>
-            <div className="form-group">
-              <label>Trigger Config (JSON)</label>
-              <textarea value={triggerConfigStr} onChange={e => setTriggerConfigStr(e.target.value)} rows={2}
-                style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }} />
-            </div>
+
+            {needsTriggerConfig && (
+              <div className="form-group">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <label style={{ marginBottom: 0 }}>Trigger Config</label>
+                  <button type="button" className="btn btn-ghost btn-sm" style={{ fontSize: 10 }}
+                    onClick={() => {
+                      if (showRawTrigger) {
+                        try { setTriggerConfig(JSON.parse(rawTriggerStr)); } catch {}
+                      } else {
+                        setRawTriggerStr(JSON.stringify(triggerConfig, null, 2));
+                      }
+                      setShowRawTrigger(!showRawTrigger);
+                    }}>
+                    {showRawTrigger ? 'Builder' : 'Raw JSON'}
+                  </button>
+                </div>
+                {showRawTrigger ? (
+                  <textarea value={rawTriggerStr} onChange={e => setRawTriggerStr(e.target.value)} rows={2}
+                    style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }} />
+                ) : (
+                  <TriggerConfigBuilder triggerType={triggerType} value={triggerConfig} onChange={setTriggerConfig} campaign={campaign} />
+                )}
+              </div>
+            )}
+
             {targetMode === 'specific' && (
               <div className="form-group">
-                <label>Target Config (JSON)</label>
-                <textarea value={targetConfigStr} onChange={e => setTargetConfigStr(e.target.value)} rows={2}
-                  style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }} />
+                <label>Target Characters</label>
+                <TargetConfigPicker value={targetConfig} onChange={setTargetConfig} characters={characters} />
               </div>
             )}
 
@@ -360,11 +543,11 @@ function RuleForm({ campaignId, campaign, rule, onClose, onSave }) {
               <>
                 <div className="form-group">
                   <label>Conditions</label>
-                  <ConditionBuilder value={conditions} onChange={setConditions} />
+                  <ConditionBuilder value={conditions} onChange={setConditions} entityLists={entityLists} campaign={campaign} />
                 </div>
                 <div className="form-group">
                   <label>Actions</label>
-                  <ActionBuilder value={actions} onChange={setActions} />
+                  <ActionBuilder value={actions} onChange={setActions} entityLists={entityLists} campaign={campaign} />
                 </div>
               </>
             )}

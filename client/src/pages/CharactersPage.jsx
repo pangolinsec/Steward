@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as api from '../api';
 import ImportPreviewModal from '../components/ImportPreviewModal';
+import RuleRefBadge from '../components/RuleRefBadge';
 
 export default function CharactersPage({ campaignId, campaign }) {
   const [characters, setCharacters] = useState([]);
@@ -71,7 +72,10 @@ export default function CharactersPage({ campaignId, campaign }) {
                   </div>
                 )}
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: 15 }}>{c.name}</div>
+                  <div style={{ fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center' }}>
+                    {c.name}
+                    <RuleRefBadge campaignId={campaignId} entityType="character" entityId={c.id} />
+                  </div>
                   <span className={`tag ${c.type === 'PC' ? 'tag-buff' : ''}`}>{c.type}</span>
                 </div>
               </div>

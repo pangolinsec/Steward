@@ -89,6 +89,13 @@ export const toggleRule = (cId, id) => request(`/campaigns/${cId}/rules/${id}/to
 export const getRuleTemplates = (cId) => request(`/campaigns/${cId}/rules/templates`);
 export const importRuleTemplate = (cId, templateName) => request(`/campaigns/${cId}/rules/templates/${templateName}`, { method: 'POST' });
 export const testRule = (cId, ruleId, characterId) => request(`/campaigns/${cId}/rules/${ruleId}/test`, { method: 'POST', body: JSON.stringify({ character_id: characterId || null }) });
+export const getRuleReferences = (cId, entityType, entityName, entityId) => {
+  const params = new URLSearchParams();
+  if (entityType) params.set('entity_type', entityType);
+  if (entityName) params.set('entity_name', entityName);
+  if (entityId) params.set('entity_id', entityId);
+  return request(`/campaigns/${cId}/rules/references?${params}`);
+};
 
 // Rest
 export const rest = (cId, restType) => request(`/campaigns/${cId}/rest`, { method: 'POST', body: JSON.stringify({ rest_type: restType }) });

@@ -14,6 +14,8 @@ import '@xyflow/react/dist/style.css';
 import * as api from '../api';
 import { dijkstra } from '../utils/pathfinding';
 import { useToast } from '../components/ToastContext';
+import PropertyEditor from '../components/PropertyEditor';
+import RuleRefBadge from '../components/RuleRefBadge';
 
 function LocationNode({ data, selected }) {
   const isParty = data.isPartyHere;
@@ -582,9 +584,7 @@ function LocationDetailPanel({ campaignId, location, locations, campaign, enviro
   const [parentId, setParentId] = useState(location.parent_id || '');
   const [encounterMod, setEncounterMod] = useState(location.encounter_modifier);
   const [weatherOverride, setWeatherOverride] = useState(location.weather_override);
-  const [propsStr, setPropsStr] = useState(
-    Object.entries(location.properties || {}).map(([k, v]) => `${k}: ${v}`).join('\n')
-  );
+  const [properties, setProperties] = useState(location.properties || {});
   const [saving, setSaving] = useState(false);
   const nameRef = useRef(null);
 
@@ -598,18 +598,20 @@ function LocationDetailPanel({ campaignId, location, locations, campaign, enviro
   const weatherOptions = campaign?.weather_options || [];
   const isPartyHere = environment?.current_location_id === location.id;
 
+  const registry = campaign?.property_key_registry || [];
+
   const handleSave = async () => {
     setSaving(true);
-    const properties = {};
-    propsStr.split('\n').forEach(line => {
-      const [k, ...rest] = line.split(':');
-      if (k?.trim() && rest.length) properties[k.trim()] = rest.join(':').trim();
-    });
+    // Filter out empty keys
+    const cleanProps = {};
+    for (const [k, v] of Object.entries(properties)) {
+      if (k.trim()) cleanProps[k.trim()] = v;
+    }
     await api.updateLocation(campaignId, location.id, {
       name, description, parent_id: parentId || null,
       encounter_modifier: encounterMod,
       weather_override: weatherOverride,
-      properties,
+      properties: cleanProps,
     });
     setSaving(false);
     onSave();
@@ -618,7 +620,10 @@ function LocationDetailPanel({ campaignId, location, locations, campaign, enviro
   return (
     <div style={{ padding: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <h3 style={{ fontSize: 15, fontWeight: 600 }}>Location</h3>
+        <h3 style={{ fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center' }}>
+          Location
+          <RuleRefBadge campaignId={campaignId} entityType="location" entityId={location.id} />
+        </h3>
         <button className="btn btn-ghost btn-sm" onClick={onClose}>&#x2715;</button>
       </div>
       <div className="form-group">
@@ -644,8 +649,8 @@ function LocationDetailPanel({ campaignId, location, locations, campaign, enviro
         <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>1.0 = normal, 2.0 = double chance</span>
       </div>
       <div className="form-group">
-        <label>Properties (one per line, key: value)</label>
-        <textarea value={propsStr} onChange={e => setPropsStr(e.target.value)} rows={2} placeholder="terrain: forest&#10;danger: high" />
+        <label>Properties</label>
+        <PropertyEditor properties={properties} onChange={setProperties} registry={registry} />
       </div>
 
       {/* Weather Override */}
@@ -709,27 +714,26 @@ function EdgeDetailPanel({ campaignId, edge, locations, campaign, onSave, onDele
   const [bidirectional, setBidirectional] = useState(!!edge.bidirectional);
   const [encounterMod, setEncounterMod] = useState(edge.encounter_modifier);
   const [weatherOverride, setWeatherOverride] = useState(edge.weather_override);
-  const [propsStr, setPropsStr] = useState(
-    Object.entries(edge.properties || {}).map(([k, v]) => `${k}: ${v}`).join('\n')
-  );
+  const [properties, setProperties] = useState(edge.properties || {});
   const [saving, setSaving] = useState(false);
 
   const weatherOptions = campaign?.weather_options || [];
   const fromLoc = locations.find(l => l.id === edge.from_location_id);
   const toLoc = locations.find(l => l.id === edge.to_location_id);
 
+  const registry = campaign?.property_key_registry || [];
+
   const handleSave = async () => {
     setSaving(true);
-    const properties = {};
-    propsStr.split('\n').forEach(line => {
-      const [k, ...rest] = line.split(':');
-      if (k?.trim() && rest.length) properties[k.trim()] = rest.join(':').trim();
-    });
+    const cleanProps = {};
+    for (const [k, v] of Object.entries(properties)) {
+      if (k.trim()) cleanProps[k.trim()] = v;
+    }
     await api.updateEdge(campaignId, edge.id, {
       label, description, travel_hours: travelHours,
       bidirectional, encounter_modifier: encounterMod,
       weather_override: weatherOverride,
-      properties,
+      properties: cleanProps,
     });
     setSaving(false);
     onSave();
@@ -768,8 +772,8 @@ function EdgeDetailPanel({ campaignId, edge, locations, campaign, onSave, onDele
         <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>1.0 = normal</span>
       </div>
       <div className="form-group">
-        <label>Properties (one per line, key: value)</label>
-        <textarea value={propsStr} onChange={e => setPropsStr(e.target.value)} rows={2} placeholder="terrain: mountain&#10;road_quality: poor" />
+        <label>Properties</label>
+        <PropertyEditor properties={properties} onChange={setProperties} registry={registry} />
       </div>
 
       {/* Weather Override */}

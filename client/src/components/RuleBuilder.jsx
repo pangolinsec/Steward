@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 
 const CONDITION_TYPES = [
   { value: 'attribute_gte', label: 'Attribute >=', fields: ['attribute', 'value'] },
@@ -36,28 +36,58 @@ const ACTION_TYPES = [
   { value: 'random_from_list', label: 'Random from List', fields: ['items', 'store_as'] },
 ];
 
-export function ConditionBuilder({ value, onChange }) {
+function ensureIds(items) {
+  return items.map(item => item._id ? item : { ...item, _id: crypto.randomUUID() });
+}
+
+export function stripIds(data) {
+  if (Array.isArray(data)) {
+    return data.map(item => {
+      const { _id, ...rest } = item;
+      return rest;
+    });
+  }
+  if (data && typeof data === 'object') {
+    const result = {};
+    for (const [key, val] of Object.entries(data)) {
+      if (key === '_id') continue;
+      if (Array.isArray(val)) result[key] = stripIds(val);
+      else result[key] = val;
+    }
+    return result;
+  }
+  return data;
+}
+
+export function ConditionBuilder({ value, onChange, entityLists, campaign }) {
   // value = { all: [...] } or { any: [...] }
   const operator = value?.any ? 'any' : 'all';
-  const conditions = value?.[operator] || [];
+  const conditions = ensureIds(value?.[operator] || []);
+  const containerRef = useRef(null);
 
   const setOperator = (op) => {
     onChange({ [op]: conditions });
   };
 
   const addCondition = () => {
-    onChange({ [operator]: [...conditions, { type: 'weather_is', value: '' }] });
+    const newConds = [...conditions, { _id: crypto.randomUUID(), type: 'weather_is', value: '' }];
+    onChange({ [operator]: newConds });
+    requestAnimationFrame(() => {
+      containerRef.current?.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
   };
 
   const updateCondition = (index, updated) => {
     const newConds = [...conditions];
-    newConds[index] = updated;
+    newConds[index] = { ...updated, _id: conditions[index]._id };
     onChange({ [operator]: newConds });
   };
 
   const removeCondition = (index) => {
     onChange({ [operator]: conditions.filter((_, i) => i !== index) });
   };
+
+  const registry = campaign?.property_key_registry || [];
 
   return (
     <div style={{ padding: 10, background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
@@ -77,17 +107,34 @@ export function ConditionBuilder({ value, onChange }) {
           No conditions (rule always passes)
         </div>
       )}
-      {conditions.map((cond, i) => (
-        <ConditionRow key={i} condition={cond}
-          onChange={updated => updateCondition(i, updated)}
-          onRemove={() => removeCondition(i)} />
-      ))}
+      <div ref={containerRef}>
+        {conditions.map((cond, i) => (
+          <ConditionRow key={cond._id} condition={cond}
+            onChange={updated => updateCondition(i, updated)}
+            onRemove={() => removeCondition(i)}
+            entityLists={entityLists}
+            registry={registry} />
+        ))}
+      </div>
     </div>
   );
 }
 
-function ConditionRow({ condition, onChange, onRemove }) {
+function ConditionRow({ condition, onChange, onRemove, entityLists, registry }) {
   const typeDef = CONDITION_TYPES.find(t => t.value === condition.type);
+
+  const getWarning = (field) => {
+    if (!entityLists) return null;
+    const val = condition[field];
+    if (!val) return null;
+    if (field === 'effect_name' && !entityLists.effects.includes(val)) {
+      return 'This effect does not exist in the campaign';
+    }
+    if (field === 'item_name' && !entityLists.items.includes(val)) {
+      return 'This item does not exist in the campaign';
+    }
+    return null;
+  };
 
   return (
     <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 6, padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
@@ -95,35 +142,67 @@ function ConditionRow({ condition, onChange, onRemove }) {
         style={{ width: 140, fontSize: 11, padding: '4px 28px 4px 6px' }}>
         {CONDITION_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
       </select>
-      <div style={{ display: 'flex', gap: 4, flex: 1, flexWrap: 'wrap' }}>
-        {(typeDef?.fields || []).map(field => (
-          <input key={field} type={['value', 'probability', 'hours', 'from_hour', 'to_hour', 'location_id', 'delta'].includes(field) ? 'number' : 'text'}
-            value={field === 'values' ? (condition[field] || []).join(', ') : (condition[field] ?? '')}
-            onChange={e => {
-              const val = field === 'values' ? e.target.value.split(',').map(s => s.trim()) :
-                e.target.type === 'number' ? Number(e.target.value) : e.target.value;
-              onChange({ ...condition, [field]: val });
-            }}
-            placeholder={field}
-            style={{ flex: 1, minWidth: 60, fontSize: 11, padding: '4px 6px' }}
-            step={field === 'probability' ? '0.1' : undefined} />
-        ))}
+      <div style={{ display: 'flex', gap: 4, flex: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+        {(typeDef?.fields || []).map(field => {
+          const warning = getWarning(field);
+          const isPropertyField = field === 'property' && condition.type === 'location_property';
+          return (
+            <span key={field} style={{ display: 'inline-flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 60 }}>
+              {isPropertyField ? (
+                <>
+                  <input
+                    type="text"
+                    list="property-keys-list"
+                    value={condition[field] ?? ''}
+                    onChange={e => onChange({ ...condition, [field]: e.target.value })}
+                    placeholder={field}
+                    style={{ flex: 1, minWidth: 60, fontSize: 11, padding: '4px 6px' }}
+                  />
+                  <datalist id="property-keys-list">
+                    {registry.map(k => <option key={k} value={k} />)}
+                  </datalist>
+                </>
+              ) : (
+                <input
+                  type={['value', 'probability', 'hours', 'from_hour', 'to_hour', 'location_id', 'delta'].includes(field) ? 'number' : 'text'}
+                  value={field === 'values' ? (condition[field] || []).join(', ') : (condition[field] ?? '')}
+                  onChange={e => {
+                    const val = field === 'values' ? e.target.value.split(',').map(s => s.trim()) :
+                      e.target.type === 'number' ? Number(e.target.value) : e.target.value;
+                    onChange({ ...condition, [field]: val });
+                  }}
+                  placeholder={field}
+                  style={{ flex: 1, minWidth: 60, fontSize: 11, padding: '4px 6px' }}
+                  step={field === 'probability' ? '0.1' : undefined}
+                />
+              )}
+              {warning && (
+                <span style={{ color: 'var(--yellow)', fontSize: 13, cursor: 'help', flexShrink: 0 }} title={warning}>&#x26A0;</span>
+              )}
+            </span>
+          );
+        })}
       </div>
       <button className="btn btn-danger btn-sm" style={{ padding: '2px 6px', fontSize: 10 }} onClick={onRemove}>&#x2715;</button>
     </div>
   );
 }
 
-export function ActionBuilder({ value, onChange }) {
-  const actions = value || [];
+export function ActionBuilder({ value, onChange, entityLists, campaign }) {
+  const actions = ensureIds(value || []);
+  const containerRef = useRef(null);
 
   const addAction = () => {
-    onChange([...actions, { type: 'notify', message: '' }]);
+    const newActions = [...actions, { _id: crypto.randomUUID(), type: 'notify', message: '' }];
+    onChange(newActions);
+    requestAnimationFrame(() => {
+      containerRef.current?.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
   };
 
   const updateAction = (index, updated) => {
     const newActions = [...actions];
-    newActions[index] = updated;
+    newActions[index] = { ...updated, _id: actions[index]._id };
     onChange(newActions);
   };
 
@@ -151,18 +230,38 @@ export function ActionBuilder({ value, onChange }) {
       {actions.length === 0 && (
         <div style={{ fontSize: 12, color: 'var(--text-muted)', padding: 8 }}>No actions</div>
       )}
-      {actions.map((action, i) => (
-        <ActionRow key={i} action={action} index={i} total={actions.length}
-          onChange={updated => updateAction(i, updated)}
-          onRemove={() => removeAction(i)}
-          onMove={dir => moveAction(i, dir)} />
-      ))}
+      <div ref={containerRef}>
+        {actions.map((action, i) => (
+          <ActionRow key={action._id} action={action} index={i} total={actions.length}
+            onChange={updated => updateAction(i, updated)}
+            onRemove={() => removeAction(i)}
+            onMove={dir => moveAction(i, dir)}
+            entityLists={entityLists}
+            campaign={campaign} />
+        ))}
+      </div>
     </div>
   );
 }
 
-function ActionRow({ action, index, total, onChange, onRemove, onMove }) {
+function ActionRow({ action, index, total, onChange, onRemove, onMove, entityLists, campaign }) {
   const typeDef = ACTION_TYPES.find(t => t.value === action.type);
+
+  const getWarning = (field) => {
+    if (!entityLists) return null;
+    const val = action[field];
+    if (!val) return null;
+    if (field === 'effect_name' && !entityLists.effects.includes(val)) {
+      return 'This effect does not exist in the campaign';
+    }
+    if (field === 'item_name' && !entityLists.items.includes(val)) {
+      return 'This item does not exist in the campaign';
+    }
+    if (field === 'weather' && campaign?.weather_options && !campaign.weather_options.includes(val)) {
+      return 'This weather type does not exist in the campaign';
+    }
+    return null;
+  };
 
   return (
     <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 6, padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
@@ -176,18 +275,27 @@ function ActionRow({ action, index, total, onChange, onRemove, onMove }) {
         style={{ width: 130, fontSize: 11, padding: '4px 28px 4px 6px' }}>
         {ACTION_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
       </select>
-      <div style={{ display: 'flex', gap: 4, flex: 1, flexWrap: 'wrap' }}>
-        {(typeDef?.fields || []).filter(f => f !== 'items').map(field => (
-          <input key={field}
-            type={['delta', 'quantity', 'hours', 'minutes'].includes(field) ? 'number' : 'text'}
-            value={action[field] ?? ''}
-            onChange={e => {
-              const val = e.target.type === 'number' ? Number(e.target.value) : e.target.value;
-              onChange({ ...action, [field]: val });
-            }}
-            placeholder={field}
-            style={{ flex: 1, minWidth: 60, fontSize: 11, padding: '4px 6px' }} />
-        ))}
+      <div style={{ display: 'flex', gap: 4, flex: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+        {(typeDef?.fields || []).filter(f => f !== 'items').map(field => {
+          const warning = getWarning(field);
+          return (
+            <span key={field} style={{ display: 'inline-flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 60 }}>
+              <input
+                type={['delta', 'quantity', 'hours', 'minutes'].includes(field) ? 'number' : 'text'}
+                value={action[field] ?? ''}
+                onChange={e => {
+                  const val = e.target.type === 'number' ? Number(e.target.value) : e.target.value;
+                  onChange({ ...action, [field]: val });
+                }}
+                placeholder={field}
+                style={{ flex: 1, minWidth: 60, fontSize: 11, padding: '4px 6px' }}
+              />
+              {warning && (
+                <span style={{ color: 'var(--yellow)', fontSize: 13, cursor: 'help', flexShrink: 0 }} title={warning}>&#x26A0;</span>
+              )}
+            </span>
+          );
+        })}
       </div>
       <button className="btn btn-danger btn-sm" style={{ padding: '2px 6px', fontSize: 10 }} onClick={onRemove}>&#x2715;</button>
     </div>

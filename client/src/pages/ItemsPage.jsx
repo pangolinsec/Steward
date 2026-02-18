@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import * as api from '../api';
 import { ModifierSummary } from '../components/ModifierDisplay';
 import ImportPreviewModal from '../components/ImportPreviewModal';
+import RuleRefBadge from '../components/RuleRefBadge';
 
 export default function ItemsPage({ campaignId, campaign }) {
   const [items, setItems] = useState([]);
@@ -77,7 +78,10 @@ export default function ItemsPage({ campaignId, campaign }) {
             {items.map(i => (
               <tr key={i.id}>
                 <td>
-                  <div style={{ fontWeight: 500 }}>{i.name}</div>
+                  <div style={{ fontWeight: 500, display: 'flex', alignItems: 'center' }}>
+                    {i.name}
+                    <RuleRefBadge campaignId={campaignId} entityType="item" entityName={i.name} />
+                  </div>
                   {i.description && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{i.description}</div>}
                 </td>
                 <td><span className="tag">{i.item_type}</span></td>

@@ -21,7 +21,11 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
   const [encounterSettings, setEncounterSettings] = useState({ enabled: false, base_rate: 0.1, min_interval_hours: 1 });
 
   // Rules engine settings
-  const [rulesSettings, setRulesSettings] = useState({ engine_enabled: true, cascade_depth_limit: 3 });
+  const [rulesSettings, setRulesSettings] = useState({ engine_enabled: false, cascade_depth_limit: 3 });
+
+  // Property key registry
+  const [propertyKeyRegistry, setPropertyKeyRegistry] = useState([]);
+  const [newPropKey, setNewPropKey] = useState('');
 
   useEffect(() => {
     if (!campaignId || !campaign) return;
@@ -33,6 +37,7 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
     setTransitionTable(campaign.weather_transition_table || null);
     setEncounterSettings(campaign.encounter_settings || { enabled: false, base_rate: 0.1, min_interval_hours: 1 });
     setRulesSettings(campaign.rules_settings || { engine_enabled: true, cascade_depth_limit: 3 });
+    setPropertyKeyRegistry(campaign.property_key_registry || []);
     api.getEnvironment(campaignId).then(setEnv).catch(() => {});
   }, [campaignId, campaign]);
 
@@ -48,6 +53,7 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
         weather_transition_table: transitionTable,
         encounter_settings: encounterSettings,
         rules_settings: rulesSettings,
+        property_key_registry: propertyKeyRegistry,
       });
       onUpdate();
     } finally {
@@ -343,6 +349,45 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
               </span>
             </div>
           )}
+        </div>
+
+        {/* Property Key Registry */}
+        <div className="card">
+          <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 12 }}>Property Key Registry</h3>
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
+            Define property keys used on locations and edges. These populate dropdowns in the map editor and validate rules that use location_property conditions.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {propertyKeyRegistry.map((key, i) => (
+              <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <input type="text" value={key} onChange={e => {
+                  const updated = [...propertyKeyRegistry];
+                  updated[i] = e.target.value;
+                  setPropertyKeyRegistry(updated);
+                }} style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: 12 }} />
+                <button className="btn btn-danger btn-sm" onClick={() =>
+                  setPropertyKeyRegistry(propertyKeyRegistry.filter((_, idx) => idx !== i))
+                }>&#x2715;</button>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <input type="text" placeholder="New property key" value={newPropKey}
+              onChange={e => setNewPropKey(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && newPropKey.trim()) {
+                  setPropertyKeyRegistry([...propertyKeyRegistry, newPropKey.trim()]);
+                  setNewPropKey('');
+                }
+              }}
+              style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: 12 }} />
+            <button className="btn btn-secondary btn-sm" onClick={() => {
+              if (newPropKey.trim()) {
+                setPropertyKeyRegistry([...propertyKeyRegistry, newPropKey.trim()]);
+                setNewPropKey('');
+              }
+            }}>Add</button>
+          </div>
         </div>
 
         {/* Calendar Config */}

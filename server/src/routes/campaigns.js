@@ -13,6 +13,7 @@ function parseCampaign(c) {
     weather_volatility: c.weather_volatility ?? db.CAMPAIGN_DEFAULTS.weather_volatility,
     weather_transition_table: c.weather_transition_table ? JSON.parse(c.weather_transition_table) : null,
     rules_settings: c.rules_settings ? JSON.parse(c.rules_settings) : { cascade_depth_limit: 3, engine_enabled: true },
+    property_key_registry: c.property_key_registry ? JSON.parse(c.property_key_registry) : [],
   };
 }
 
@@ -59,7 +60,7 @@ router.put('/:id', (req, res) => {
   if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
 
   const { name, attribute_definitions, time_of_day_thresholds, calendar_config, weather_options,
-    encounter_settings, weather_volatility, weather_transition_table, rules_settings } = req.body;
+    encounter_settings, weather_volatility, weather_transition_table, rules_settings, property_key_registry } = req.body;
 
   db.prepare(`
     UPDATE campaigns SET
@@ -71,7 +72,8 @@ router.put('/:id', (req, res) => {
       encounter_settings = COALESCE(?, encounter_settings),
       weather_volatility = COALESCE(?, weather_volatility),
       weather_transition_table = ?,
-      rules_settings = COALESCE(?, rules_settings)
+      rules_settings = COALESCE(?, rules_settings),
+      property_key_registry = COALESCE(?, property_key_registry)
     WHERE id = ?
   `).run(
     name || null,
@@ -83,6 +85,7 @@ router.put('/:id', (req, res) => {
     weather_volatility !== undefined ? weather_volatility : null,
     weather_transition_table !== undefined ? (weather_transition_table ? JSON.stringify(weather_transition_table) : null) : campaign.weather_transition_table,
     rules_settings ? JSON.stringify(rules_settings) : null,
+    property_key_registry ? JSON.stringify(property_key_registry) : null,
     req.params.id,
   );
 

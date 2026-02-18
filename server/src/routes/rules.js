@@ -16,6 +16,71 @@ function parseRule(rule) {
   };
 }
 
+// GET rule references for entities
+router.get('/references', (req, res) => {
+  const { entity_type, entity_name, entity_id } = req.query;
+  const rules = db.prepare('SELECT * FROM rule_definitions WHERE campaign_id = ? AND enabled = 1')
+    .all(req.params.id);
+
+  const matches = [];
+  for (const rule of rules) {
+    const conditions = JSON.parse(rule.conditions || '{"all":[]}');
+    const actions = JSON.parse(rule.actions || '[]');
+    const targetConfig = JSON.parse(rule.target_config || '{}');
+
+    const refs = scanForReferences(conditions, actions, targetConfig, entity_type, entity_name, entity_id);
+    if (refs.length > 0) {
+      matches.push({ rule_id: rule.id, rule_name: rule.name, references: refs });
+    }
+  }
+  res.json(matches);
+});
+
+function scanForReferences(conditions, actions, targetConfig, entityType, entityName, entityId) {
+  const refs = [];
+  const condItems = conditions?.all || conditions?.any || [];
+
+  for (const cond of condItems) {
+    if (entityType === 'effect' || !entityType) {
+      if (['has_effect', 'lacks_effect'].includes(cond.type) && cond.effect_name === entityName) {
+        refs.push({ location: 'condition', detail: `${cond.type}: ${cond.effect_name}` });
+      }
+    }
+    if (entityType === 'item' || !entityType) {
+      if (['has_item', 'lacks_item', 'item_quantity_lte'].includes(cond.type) && cond.item_name === entityName) {
+        refs.push({ location: 'condition', detail: `${cond.type}: ${cond.item_name}` });
+      }
+    }
+    if (entityType === 'location' || !entityType) {
+      if (cond.type === 'location_is' && entityId && cond.location_id == entityId) {
+        refs.push({ location: 'condition', detail: `location_is: #${entityId}` });
+      }
+    }
+  }
+
+  for (const action of actions) {
+    if (entityType === 'effect' || !entityType) {
+      if (['apply_effect', 'remove_effect'].includes(action.type) && action.effect_name === entityName) {
+        refs.push({ location: 'action', detail: `${action.type}: ${action.effect_name}` });
+      }
+    }
+    if (entityType === 'item' || !entityType) {
+      if (['consume_item', 'grant_item'].includes(action.type) && action.item_name === entityName) {
+        refs.push({ location: 'action', detail: `${action.type}: ${action.item_name}` });
+      }
+    }
+  }
+
+  if ((entityType === 'character' || !entityType) && entityId) {
+    const charIds = targetConfig?.character_ids || [];
+    if (charIds.includes(Number(entityId))) {
+      refs.push({ location: 'target', detail: `specific target` });
+    }
+  }
+
+  return refs;
+}
+
 // GET templates
 router.get('/templates', (req, res) => {
   const templates = Object.entries(RULE_TEMPLATES).map(([key, template]) => ({

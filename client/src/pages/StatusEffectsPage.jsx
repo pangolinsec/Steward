@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import * as api from '../api';
 import { ModifierSummary } from '../components/ModifierDisplay';
 import ImportPreviewModal from '../components/ImportPreviewModal';
+import RuleRefBadge from '../components/RuleRefBadge';
 
 export default function StatusEffectsPage({ campaignId, campaign }) {
   const [effects, setEffects] = useState([]);
@@ -67,7 +68,10 @@ export default function StatusEffectsPage({ campaignId, campaign }) {
             {effects.map(e => (
               <tr key={e.id}>
                 <td>
-                  <div style={{ fontWeight: 500 }}>{e.name}</div>
+                  <div style={{ fontWeight: 500, display: 'flex', alignItems: 'center' }}>
+                    {e.name}
+                    <RuleRefBadge campaignId={campaignId} entityType="effect" entityName={e.name} />
+                  </div>
                   {e.description && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{e.description}</div>}
                 </td>
                 <td>
