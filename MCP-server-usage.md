@@ -101,7 +101,7 @@ If you don't know your campaign ID, you can omit `ALMANAC_CAMPAIGN_ID` and ask t
 
 ## Toolbox: dynamic tool loading
 
-The server has 73 tools total, but to keep context overhead low, only **38 tools** are visible by default — the session play tools plus two meta-tools. The remaining tools are organized into loadable **toolsets** that the AI agent can open on demand:
+The server has 74 tools total, but to keep context overhead low, only **39 tools** are visible by default — the session play tools plus two meta-tools. The remaining tools are organized into loadable **toolsets** that the AI agent can open on demand:
 
 | Toolset | Tools | Contents |
 |---|---|---|
@@ -118,9 +118,9 @@ The two meta-tools that manage this:
 
 When the agent needs to create a location or edit a rule, it calls `almanac_open_toolbox` first, does the work, then optionally calls `almanac_close_toolbox` to clean up. MCP clients are notified of tool list changes automatically via `notifications/tools/list_changed`.
 
-## Available tools (73 total)
+## Available tools (74 total)
 
-### Always available: Session Play (38 tools)
+### Always available: Session Play (39 tools)
 
 These tools are always visible — they power a live game session plus toolbox management.
 
@@ -147,12 +147,13 @@ These tools are always visible — they power a live game session plus toolbox m
 | Tool | Description |
 |---|---|
 | `almanac_list_characters` | List all characters, filterable by type (PC/NPC), search, `include_spawned` for encounter-spawned NPCs, and `include_archived` for archived NPCs |
-| `almanac_get_character` | Full character sheet: base/effective attributes, applied effects, inventory |
+| `almanac_get_character` | Full character sheet: base/max/effective attributes, applied effects, inventory |
 | `almanac_apply_effect` | Apply a status effect to a character |
 | `almanac_remove_effect` | Remove an applied effect |
 | `almanac_assign_item` | Give an item to a character |
 | `almanac_update_item_quantity` | Change how many of an item a character holds |
 | `almanac_remove_item` | Remove an item from inventory |
+| `almanac_modify_attribute` | Change a single base or max attribute by delta or absolute value (e.g. HP damage/healing) |
 
 #### Encounters
 
@@ -278,6 +279,8 @@ Once configured, you can interact with your campaign naturally through the AI as
 > "The party travels along the Thornwood Trail"
 > "Apply the Poisoned effect to Thorin"
 > "Give Elara 3 healing potions"
+> "Thorin takes 5 damage"
+> "Heal Elara for 8 HP"
 > "Start the Goblin Ambush encounter"
 > "Take a long rest"
 
