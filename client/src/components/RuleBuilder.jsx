@@ -87,7 +87,7 @@ export function ConditionBuilder({ value, onChange, entityLists, campaign }) {
     onChange({ [operator]: conditions.filter((_, i) => i !== index) });
   };
 
-  const registry = campaign?.property_key_registry || [];
+  const registry = (campaign?.property_key_registry || []).map(r => typeof r === 'string' ? r : r.key);
 
   return (
     <div style={{ padding: 10, background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>

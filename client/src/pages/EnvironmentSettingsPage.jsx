@@ -23,9 +23,14 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
   // Rules engine settings
   const [rulesSettings, setRulesSettings] = useState({ engine_enabled: false, cascade_depth_limit: 3 });
 
-  // Property key registry
+  // Property key registry — normalized to {key, values}[] format
   const [propertyKeyRegistry, setPropertyKeyRegistry] = useState([]);
   const [newPropKey, setNewPropKey] = useState('');
+
+  // Normalize old string[] format to {key, values}[]
+  const normalizedRegistry = (propertyKeyRegistry || []).map(entry =>
+    typeof entry === 'string' ? { key: entry, values: [] } : entry
+  );
 
   useEffect(() => {
     if (!campaignId || !campaign) return;
@@ -355,20 +360,20 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
         <div className="card">
           <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 12 }}>Property Key Registry</h3>
           <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
-            Define property keys used on locations and edges. These populate dropdowns in the map editor and validate rules that use location_property conditions.
+            Define property keys and their allowed values for locations and edges. These populate dropdowns in the map editor and validate rules that use location_property conditions.
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {propertyKeyRegistry.map((key, i) => (
-              <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <input type="text" value={key} onChange={e => {
-                  const updated = [...propertyKeyRegistry];
-                  updated[i] = e.target.value;
-                  setPropertyKeyRegistry(updated);
-                }} style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: 12 }} />
-                <button className="btn btn-danger btn-sm" onClick={() =>
-                  setPropertyKeyRegistry(propertyKeyRegistry.filter((_, idx) => idx !== i))
-                }>&#x2715;</button>
-              </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {normalizedRegistry.map((entry, i) => (
+              <PropertyKeyEntry
+                key={i}
+                entry={entry}
+                onChange={updated => {
+                  const next = [...normalizedRegistry];
+                  next[i] = updated;
+                  setPropertyKeyRegistry(next);
+                }}
+                onRemove={() => setPropertyKeyRegistry(normalizedRegistry.filter((_, idx) => idx !== i))}
+              />
             ))}
           </div>
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
@@ -376,17 +381,17 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
               onChange={e => setNewPropKey(e.target.value)}
               onKeyDown={e => {
                 if (e.key === 'Enter' && newPropKey.trim()) {
-                  setPropertyKeyRegistry([...propertyKeyRegistry, newPropKey.trim()]);
+                  setPropertyKeyRegistry([...normalizedRegistry, { key: newPropKey.trim(), values: [] }]);
                   setNewPropKey('');
                 }
               }}
               style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: 12 }} />
             <button className="btn btn-secondary btn-sm" onClick={() => {
               if (newPropKey.trim()) {
-                setPropertyKeyRegistry([...propertyKeyRegistry, newPropKey.trim()]);
+                setPropertyKeyRegistry([...normalizedRegistry, { key: newPropKey.trim(), values: [] }]);
                 setNewPropKey('');
               }
-            }}>Add</button>
+            }}>Add Key</button>
           </div>
         </div>
 
@@ -424,6 +429,63 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
           }}>+ Add Month</button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function PropertyKeyEntry({ entry, onChange, onRemove }) {
+  const [newValue, setNewValue] = useState('');
+  const [expanded, setExpanded] = useState(false);
+
+  const addValue = () => {
+    if (!newValue.trim()) return;
+    if (entry.values.includes(newValue.trim())) return;
+    onChange({ ...entry, values: [...entry.values, newValue.trim()] });
+    setNewValue('');
+  };
+
+  const removeValue = (val) => {
+    onChange({ ...entry, values: entry.values.filter(v => v !== val) });
+  };
+
+  return (
+    <div style={{ background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', padding: 8 }}>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm"
+          style={{ padding: '0 4px', fontSize: 10, lineHeight: 1 }}
+          onClick={() => setExpanded(!expanded)}
+        >{expanded ? '\u25BC' : '\u25B6'}</button>
+        <input type="text" value={entry.key} onChange={e => onChange({ ...entry, key: e.target.value })}
+          style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: 12 }} />
+        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+          {entry.values.length} value{entry.values.length !== 1 ? 's' : ''}
+        </span>
+        <button className="btn btn-danger btn-sm" onClick={onRemove}>&#x2715;</button>
+      </div>
+      {expanded && (
+        <div style={{ marginTop: 8, paddingLeft: 24 }}>
+          {entry.values.length > 0 && (
+            <div className="inline-flex gap-sm flex-wrap" style={{ marginBottom: 8 }}>
+              {entry.values.map(v => (
+                <span key={v} className="tag" style={{ gap: 6 }}>
+                  {v}
+                  <button style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 0, fontSize: 11 }}
+                    onClick={() => removeValue(v)}>&#x2715;</button>
+                </span>
+              ))}
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: 6 }}>
+            <input type="text" placeholder="New value" value={newValue}
+              onChange={e => setNewValue(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') addValue(); }}
+              style={{ flex: 1, fontSize: 12 }} />
+            <button className="btn btn-secondary btn-sm" onClick={addValue}>Add</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

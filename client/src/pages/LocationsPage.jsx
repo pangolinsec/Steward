@@ -14,7 +14,7 @@ import '@xyflow/react/dist/style.css';
 import * as api from '../api';
 import { dijkstra } from '../utils/pathfinding';
 import { useToast } from '../components/ToastContext';
-import PropertyEditor from '../components/PropertyEditor';
+import PropertyEditor, { getNewRegistryEntries, mergeRegistryEntries } from '../components/PropertyEditor';
 import RuleRefBadge from '../components/RuleRefBadge';
 
 function LocationNode({ data, selected }) {
@@ -428,6 +428,7 @@ export default function LocationsPage({ campaignId, campaign, environment, onUpd
               onDelete={() => handleDeleteLocation(selected.id)}
               onSetParty={() => handleSetPartyPosition(selected.id)}
               onClose={() => setSelected(null)}
+              onUpdate={onUpdate}
             />
           ) : (
             <EdgeDetailPanel
@@ -439,6 +440,7 @@ export default function LocationsPage({ campaignId, campaign, environment, onUpd
               onSave={() => { load(); }}
               onDelete={() => handleDeleteEdge(selected.id)}
               onClose={() => setSelected(null)}
+              onUpdate={onUpdate}
             />
           )}
         </div>
@@ -450,6 +452,9 @@ export default function LocationsPage({ campaignId, campaign, environment, onUpd
             <p style={{ fontSize: 13, marginBottom: 8 }}>Double-click the canvas to create a location.</p>
             <p style={{ fontSize: 13 }}>Drag between nodes to create paths.</p>
             <p style={{ fontSize: 13 }}>Click a node or edge to edit.</p>
+            <p style={{ fontSize: 12, marginTop: 16, color: 'var(--text-muted)', fontStyle: 'italic' }}>
+              You can create keys and values for properties in the <a href="/environment" style={{ color: 'var(--accent)' }}>Settings</a> page.
+            </p>
             {environment?.current_location_id && (
               <p style={{ fontSize: 13, marginTop: 12, color: 'var(--accent)' }}>Ctrl+click nodes or edges to plan a travel route.</p>
             )}
@@ -578,7 +583,7 @@ function EncounterTriggerModal({ event, onStart, onDismiss }) {
   );
 }
 
-function LocationDetailPanel({ campaignId, location, locations, campaign, environment, onSave, onDelete, onSetParty, onClose, autoFocus }) {
+function LocationDetailPanel({ campaignId, location, locations, campaign, environment, onSave, onDelete, onSetParty, onClose, autoFocus, onUpdate }) {
   const [name, setName] = useState(location.name);
   const [description, setDescription] = useState(location.description || '');
   const [parentId, setParentId] = useState(location.parent_id || '');
@@ -613,6 +618,13 @@ function LocationDetailPanel({ campaignId, location, locations, campaign, enviro
       weather_override: weatherOverride,
       properties: cleanProps,
     });
+    // Auto-register new keys/values to campaign registry
+    const newEntries = getNewRegistryEntries(cleanProps, registry);
+    if (newEntries.length > 0) {
+      const merged = mergeRegistryEntries(registry, newEntries);
+      await api.updateCampaign(campaignId, { property_key_registry: merged });
+      if (onUpdate) onUpdate();
+    }
     setSaving(false);
     onSave();
   };
@@ -707,7 +719,7 @@ function LocationDetailPanel({ campaignId, location, locations, campaign, enviro
   );
 }
 
-function EdgeDetailPanel({ campaignId, edge, locations, campaign, onSave, onDelete, onClose }) {
+function EdgeDetailPanel({ campaignId, edge, locations, campaign, onSave, onDelete, onClose, onUpdate }) {
   const [label, setLabel] = useState(edge.label || '');
   const [description, setDescription] = useState(edge.description || '');
   const [travelHours, setTravelHours] = useState(edge.travel_hours);
@@ -735,6 +747,13 @@ function EdgeDetailPanel({ campaignId, edge, locations, campaign, onSave, onDele
       weather_override: weatherOverride,
       properties: cleanProps,
     });
+    // Auto-register new keys/values to campaign registry
+    const newEntries = getNewRegistryEntries(cleanProps, registry);
+    if (newEntries.length > 0) {
+      const merged = mergeRegistryEntries(registry, newEntries);
+      await api.updateCampaign(campaignId, { property_key_registry: merged });
+      if (onUpdate) onUpdate();
+    }
     setSaving(false);
     onSave();
   };
