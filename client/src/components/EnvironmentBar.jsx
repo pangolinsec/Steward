@@ -125,7 +125,8 @@ export default function EnvironmentBar({ environment, campaignId, onUpdate, camp
         )}
         {environment.combat_state?.active && (
           <div className="env-bar-item">
-            <span className="tag" style={{ background: 'var(--red-dim)', color: 'var(--red)', borderColor: '#991b1b', fontWeight: 600 }}>
+            <span className="tag" style={{ background: 'var(--red-dim)', color: 'var(--red)', borderColor: '#991b1b', fontWeight: 600, cursor: 'pointer' }}
+              onClick={() => navigate('/characters')}>
               COMBAT Round {environment.combat_state.round}
             </span>
           </div>
