@@ -134,7 +134,23 @@ router.post('/:encId/start', (req, res) => {
     phase: 'start', encounter_id: enc.id, encounter_name: enc.name,
   });
 
-  res.json({ success: true, encounter_name: enc.name, events: rulesResult.events });
+  // Enrich with NPC character data for combat bridge
+  const npcs = JSON.parse(enc.npcs);
+  const characters = npcs.map(npc => {
+    const char = db.prepare('SELECT id, name, type FROM characters WHERE id = ? AND campaign_id = ?')
+      .get(npc.character_id, req.params.id);
+    return char ? { ...char, role: npc.role } : null;
+  }).filter(Boolean);
+
+  const encounter = {
+    ...enc,
+    npcs: JSON.parse(enc.npcs),
+    environment_overrides: JSON.parse(enc.environment_overrides),
+    loot_table: JSON.parse(enc.loot_table),
+    conditions: JSON.parse(enc.conditions || '{}'),
+  };
+
+  res.json({ success: true, encounter_name: enc.name, encounter, characters, events: rulesResult.events });
 });
 
 // POST end encounter

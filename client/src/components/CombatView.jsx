@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import * as api from '../api';
 
-export function CombatSetupModal({ campaignId, characters, onStart, onClose }) {
+export function CombatSetupModal({ campaignId, characters, onStart, onClose, preselectedCharacterIds, encounterName }) {
   const [selected, setSelected] = useState(() => {
     const map = {};
-    characters.forEach(c => { map[c.id] = c.type === 'PC'; });
+    characters.forEach(c => {
+      map[c.id] = preselectedCharacterIds ? preselectedCharacterIds.includes(c.id) : c.type === 'PC';
+    });
     return map;
   });
   const [initiatives, setInitiatives] = useState(() => {
@@ -43,7 +45,7 @@ export function CombatSetupModal({ campaignId, characters, onStart, onClose }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" style={{ maxWidth: 520 }} onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <h3>Start Combat</h3>
+          <h3>{encounterName ? `Start Combat: ${encounterName}` : 'Start Combat'}</h3>
           <button className="btn btn-ghost btn-sm" onClick={onClose}>&#x2715;</button>
         </div>
         <div className="modal-body">
@@ -94,8 +96,10 @@ export function CombatSetupModal({ campaignId, characters, onStart, onClose }) {
 export function CombatTracker({ campaignId, campaign, combatState, onUpdate, onEnd }) {
   const [loading, setLoading] = useState(false);
   const [effectPickerFor, setEffectPickerFor] = useState(null);
-  const [editingAttr, setEditingAttr] = useState(null);
-  const [editAttrValue, setEditAttrValue] = useState('');
+  const [deltaAttr, setDeltaAttr] = useState(null);
+  const [deltaValue, setDeltaValue] = useState('');
+  const [flashCells, setFlashCells] = useState({});
+  const [expandedNotes, setExpandedNotes] = useState({});
 
   const attrs = campaign?.attribute_definitions?.filter(a => a.type !== 'tag') || [];
   const currentCombatant = combatState.combatants[combatState.turn_index];
@@ -106,15 +110,6 @@ export function CombatTracker({ campaignId, campaign, combatState, onUpdate, onE
       await api.nextTurn(campaignId);
       onUpdate();
     } finally { setLoading(false); }
-  };
-
-  const handlePrevTurn = async () => {
-    // Client-side only: adjust turn_index backwards
-    const newIndex = combatState.turn_index > 0 ? combatState.turn_index - 1 : combatState.combatants.length - 1;
-    const newCombatants = combatState.combatants.map(c => ({ character_id: c.character_id, initiative: c.initiative }));
-    await api.updateCombat(campaignId, { combatants: newCombatants });
-    // We can't easily go back a turn with server state, so just reload
-    onUpdate();
   };
 
   const handleEnd = async () => {
@@ -134,13 +129,37 @@ export function CombatTracker({ campaignId, campaign, combatState, onUpdate, onE
     onUpdate();
   };
 
-  const handleAttrSave = async (charId) => {
-    if (!editingAttr) return;
+  const handleDeltaApply = async () => {
+    if (!deltaAttr || !deltaValue.trim()) return;
+    const { charId, attrKey, currentBase } = deltaAttr;
     const char = combatState.combatants.find(c => c.character_id === charId);
     if (!char) return;
-    const newAttrs = { ...char.base_attributes, [editingAttr.key]: Number(editAttrValue) };
+    const input = deltaValue.trim();
+    let newBase;
+    let delta;
+    if (input.startsWith('+') || input.startsWith('-')) {
+      delta = Number(input);
+      newBase = currentBase + delta;
+    } else {
+      newBase = Number(input);
+      delta = newBase - currentBase;
+    }
+    if (isNaN(newBase)) return;
+    const newAttrs = { ...char.base_attributes, [attrKey]: newBase };
     await api.updateCharacter(campaignId, charId, { base_attributes: newAttrs });
-    setEditingAttr(null);
+    const flashKey = `${charId}-${attrKey}`;
+    setFlashCells(prev => ({ ...prev, [flashKey]: delta < 0 ? 'damage' : 'heal' }));
+    setTimeout(() => setFlashCells(prev => { const n = { ...prev }; delete n[flashKey]; return n; }), 600);
+    const effectiveOld = char.effective_attributes?.[attrKey] ?? currentBase;
+    const effectiveNew = effectiveOld + delta;
+    try {
+      await api.addLogEntry(campaignId, {
+        entry_type: 'combat',
+        message: `${char.name}: ${attrKey} ${effectiveOld} \u2192 ${effectiveNew} (${delta >= 0 ? '+' : ''}${delta})`,
+      });
+    } catch {}
+    setDeltaAttr(null);
+    setDeltaValue('');
     onUpdate();
   };
 
@@ -174,7 +193,15 @@ export function CombatTracker({ campaignId, campaign, combatState, onUpdate, onE
                   </div>
                 )}
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, fontSize: 14 }}>{c.name}</div>
+                  <div style={{ fontWeight: 600, fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {c.name}
+                    {c.dm_notes && (
+                      <button className="combatant-notes-btn" title="DM Notes"
+                        onClick={() => setExpandedNotes(prev => ({ ...prev, [c.character_id]: !prev[c.character_id] }))}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                      </button>
+                    )}
+                  </div>
                   <div className="inline-flex gap-sm">
                     <span className="combatant-initiative">{c.initiative}</span>
                     <span className={`tag ${c.type === 'PC' ? 'tag-buff' : ''}`} style={{ fontSize: 9 }}>{c.type}</span>
@@ -182,32 +209,58 @@ export function CombatTracker({ campaignId, campaign, combatState, onUpdate, onE
                 </div>
               </div>
 
-              {/* Attributes */}
+              {/* DM Notes (expandable) */}
+              {expandedNotes[c.character_id] && c.dm_notes && (
+                <div className="combatant-notes-content">{c.dm_notes}</div>
+              )}
+
+              {/* Attributes with delta popover */}
               <div className="combatant-attrs">
                 {attrs.slice(0, 6).map(a => {
                   const val = c.effective_attributes?.[a.key];
                   const base = c.base_attributes?.[a.key];
-                  const isEditing = editingAttr?.charId === c.character_id && editingAttr?.key === a.key;
+                  const flashKey = `${c.character_id}-${a.key}`;
+                  const flashType = flashCells[flashKey];
+                  const isEditingThis = deltaAttr?.charId === c.character_id && deltaAttr?.attrKey === a.key;
                   return (
-                    <div key={a.key} className="combatant-attr" onClick={() => {
-                      if (!isEditing) {
-                        setEditingAttr({ charId: c.character_id, key: a.key });
-                        setEditAttrValue(String(base ?? 0));
-                      }
-                    }}>
+                    <div key={a.key} className={`combatant-attr${flashType ? ` attr-flash-${flashType}` : ''}`}
+                      style={{ position: 'relative' }}
+                      onClick={() => {
+                        if (!isEditingThis) {
+                          setDeltaAttr({ charId: c.character_id, attrKey: a.key, currentBase: base ?? 0 });
+                          setDeltaValue('');
+                        }
+                      }}>
                       <span className="combatant-attr-label">{a.label.substring(0, 3).toUpperCase()}</span>
-                      {isEditing ? (
-                        <input
-                          type="number"
-                          value={editAttrValue}
-                          onChange={e => setEditAttrValue(e.target.value)}
-                          onBlur={() => handleAttrSave(c.character_id)}
-                          onKeyDown={e => { if (e.key === 'Enter') handleAttrSave(c.character_id); if (e.key === 'Escape') setEditingAttr(null); }}
-                          autoFocus
-                          style={{ width: 50, textAlign: 'center', padding: '2px 4px', fontSize: 13 }}
-                        />
-                      ) : (
-                        <span className="combatant-attr-value">{val ?? '—'}</span>
+                      <span className="combatant-attr-value">{val ?? '\u2014'}</span>
+                      {isEditingThis && (
+                        <div className="delta-popover" onClick={e => e.stopPropagation()}>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>
+                            {a.label}: <strong>{val ?? 0}</strong> (base {base ?? 0})
+                          </div>
+                          <input
+                            className="delta-input"
+                            type="text"
+                            value={deltaValue}
+                            onChange={e => setDeltaValue(e.target.value)}
+                            placeholder="-5 or +3 or 15"
+                            autoFocus
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') handleDeltaApply();
+                              if (e.key === 'Escape') { setDeltaAttr(null); setDeltaValue(''); }
+                            }}
+                          />
+                          <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
+                            <button className="btn btn-sm delta-btn-damage" onClick={() => {
+                              const v = Math.abs(Number(deltaValue) || 0);
+                              if (v) { setDeltaValue(`-${v}`); setTimeout(handleDeltaApply, 0); }
+                            }}>Damage</button>
+                            <button className="btn btn-sm delta-btn-heal" onClick={() => {
+                              const v = Math.abs(Number(deltaValue) || 0);
+                              if (v) { setDeltaValue(`+${v}`); setTimeout(handleDeltaApply, 0); }
+                            }}>Heal</button>
+                          </div>
+                        </div>
                       )}
                     </div>
                   );

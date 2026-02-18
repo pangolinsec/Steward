@@ -13,6 +13,8 @@ import LocationsPage from './pages/LocationsPage';
 import EnvironmentSettingsPage from './pages/EnvironmentSettingsPage';
 import SessionLogPage from './pages/SessionLogPage';
 import JournalPage from './pages/JournalPage';
+import RandomTablesPage from './pages/RandomTablesPage';
+import DashboardPage from './pages/DashboardPage';
 import DiceRoller from './components/DiceRoller';
 
 export default function App() {
@@ -57,7 +59,7 @@ export default function App() {
   const switchCampaign = (id) => {
     setActiveCampaignId(id);
     setShowCampaignModal(false);
-    navigate('/characters');
+    navigate('/dashboard');
   };
 
   const refreshEnvironment = () => loadEnvironment();
@@ -92,6 +94,10 @@ export default function App() {
             </div>
           </div>
           <nav className="sidebar-nav">
+            <NavLink to="/dashboard">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+              Dashboard
+            </NavLink>
             <NavLink to="/characters">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               Characters
@@ -107,6 +113,10 @@ export default function App() {
             <NavLink to="/encounters">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
               Encounters
+            </NavLink>
+            <NavLink to="/random-tables">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="3"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>
+              Random Tables
             </NavLink>
             <NavLink to="/rules">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
@@ -134,12 +144,14 @@ export default function App() {
         <div className="main-content">
           {environment && <EnvironmentBar environment={environment} campaignId={activeCampaignId} onUpdate={refreshEnvironment} campaign={activeCampaign} />}
           <Routes>
-            <Route path="/" element={<Navigate to="/characters" replace />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<DashboardPage campaignId={activeCampaignId} campaign={activeCampaign} />} />
             <Route path="/characters" element={<CharactersPage campaignId={activeCampaignId} campaign={activeCampaign} />} />
             <Route path="/characters/:charId" element={<CharacterDetailPage campaignId={activeCampaignId} campaign={activeCampaign} />} />
             <Route path="/status-effects" element={<StatusEffectsPage campaignId={activeCampaignId} campaign={activeCampaign} />} />
             <Route path="/items" element={<ItemsPage campaignId={activeCampaignId} campaign={activeCampaign} />} />
             <Route path="/encounters" element={<EncountersPage campaignId={activeCampaignId} campaign={activeCampaign} />} />
+            <Route path="/random-tables" element={<RandomTablesPage campaignId={activeCampaignId} />} />
             <Route path="/rules" element={<RulesPage campaignId={activeCampaignId} campaign={activeCampaign} />} />
             <Route path="/locations" element={<LocationsPage campaignId={activeCampaignId} campaign={activeCampaign} environment={environment} onUpdate={() => { refreshEnvironment(); }} />} />
             <Route path="/journal" element={<JournalPage campaignId={activeCampaignId} />} />

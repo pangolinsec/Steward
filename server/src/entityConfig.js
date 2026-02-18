@@ -47,6 +47,7 @@ const ENTITY_CONFIG = {
       { name: 'description',     type: 'text', default: '' },
       { name: 'portrait_url',    type: 'text', default: '' },
       { name: 'base_attributes', type: 'json', default: {} },
+      { name: 'dm_notes',        type: 'text', default: '' },
     ],
     modifierColumns: [],
     idMapKey: 'charIdMap',
@@ -131,6 +132,22 @@ const ENTITY_CONFIG = {
     idMapKey: 'journalIdMap',
     relations: [],
   },
+  random_tables: {
+    table: 'random_tables',
+    exportKey: 'random_tables',
+    displayName: 'Random Tables',
+    nameField: 'name',
+    columns: [
+      { name: 'name',        type: 'text', default: '' },
+      { name: 'description', type: 'text', default: '' },
+      { name: 'table_type',  type: 'text', default: 'weighted' },
+      { name: 'entries',     type: 'json', default: [] },
+      { name: 'created_at',  type: 'text', default: null },
+    ],
+    modifierColumns: [],
+    idMapKey: 'randomTableIdMap',
+    relations: [],
+  },
   rules: {
     table: 'rule_definitions',
     exportKey: 'rules',
@@ -160,6 +177,6 @@ const ENTITY_CONFIG = {
 // locations before encounters (encounter conditions reference location IDs),
 // encounters last (needs charIdMap for NPC remapping).
 // rules last — they're standalone, no cross-references.
-const IMPORT_ORDER = ['status_effects', 'items', 'characters', 'locations', 'encounters', 'rules', 'journal_notes'];
+const IMPORT_ORDER = ['status_effects', 'items', 'characters', 'locations', 'encounters', 'rules', 'random_tables', 'journal_notes'];
 
 module.exports = { ENTITY_CONFIG, IMPORT_ORDER };

@@ -22,6 +22,7 @@ const notificationsRouter = require('./routes/notifications');
 const restRouter = require('./routes/rest');
 const journalRouter = require('./routes/journal');
 const combatRouter = require('./routes/combat');
+const randomTablesRouter = require('./routes/randomTables');
 const exportImportRouter = require('./routes/exportImport');
 
 app.use('/api/campaigns', campaignsRouter);
@@ -37,6 +38,7 @@ app.use('/api/campaigns/:id/notifications', notificationsRouter);
 app.use('/api/campaigns/:id/rest', restRouter);
 app.use('/api/campaigns/:id/journal', journalRouter);
 app.use('/api/campaigns/:id/combat', combatRouter);
+app.use('/api/campaigns/:id/random-tables', randomTablesRouter);
 app.use('/api/campaigns/:id', exportImportRouter);
 
 // Serve static frontend in production

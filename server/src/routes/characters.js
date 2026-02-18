@@ -59,16 +59,17 @@ router.get('/:charId/computed', (req, res) => {
 
 // POST create character
 router.post('/', (req, res) => {
-  const { name, type, description, portrait_url, base_attributes } = req.body;
+  const { name, type, description, portrait_url, base_attributes, dm_notes } = req.body;
   if (!name || !type) return res.status(400).json({ error: 'Name and type are required' });
 
   const result = db.prepare(`
-    INSERT INTO characters (campaign_id, name, type, description, portrait_url, base_attributes)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO characters (campaign_id, name, type, description, portrait_url, base_attributes, dm_notes)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `).run(
     req.params.id, name, type,
     description || '', portrait_url || '',
     JSON.stringify(base_attributes || {}),
+    dm_notes || '',
   );
 
   const char = db.prepare('SELECT * FROM characters WHERE id = ?').get(result.lastInsertRowid);
@@ -81,7 +82,7 @@ router.put('/:charId', (req, res) => {
     .get(req.params.charId, req.params.id);
   if (!char) return res.status(404).json({ error: 'Character not found' });
 
-  const { name, type, description, portrait_url, base_attributes } = req.body;
+  const { name, type, description, portrait_url, base_attributes, dm_notes } = req.body;
 
   db.prepare(`
     UPDATE characters SET
@@ -89,13 +90,15 @@ router.put('/:charId', (req, res) => {
       type = COALESCE(?, type),
       description = COALESCE(?, description),
       portrait_url = COALESCE(?, portrait_url),
-      base_attributes = COALESCE(?, base_attributes)
+      base_attributes = COALESCE(?, base_attributes),
+      dm_notes = COALESCE(?, dm_notes)
     WHERE id = ? AND campaign_id = ?
   `).run(
     name || null, type || null,
     description !== undefined ? description : null,
     portrait_url !== undefined ? portrait_url : null,
     base_attributes ? JSON.stringify(base_attributes) : null,
+    dm_notes !== undefined ? dm_notes : null,
     req.params.charId, req.params.id,
   );
 

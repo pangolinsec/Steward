@@ -2,6 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import * as api from '../api';
 import { ModifierSummary, formatModifier } from '../components/ModifierDisplay';
+import { renderMarkdown } from '../utils/markdown';
+import { resolveWikilink } from '../utils/wikilinkNavigate';
+import WikilinkAutocomplete from '../components/WikilinkAutocomplete';
 
 export default function CharacterDetailPage({ campaignId, campaign }) {
   const { charId } = useParams();
@@ -10,6 +13,7 @@ export default function CharacterDetailPage({ campaignId, campaign }) {
   const [showEffectPicker, setShowEffectPicker] = useState(false);
   const [showItemPicker, setShowItemPicker] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [dmNotesOpen, setDmNotesOpen] = useState(true);
 
   const load = useCallback(async () => {
     if (!campaignId || !charId) return;
@@ -23,6 +27,15 @@ export default function CharacterDetailPage({ campaignId, campaign }) {
 
   const { character, base, effects_breakdown, items_breakdown, effective } = data;
   const attrs = campaign?.attribute_definitions || [];
+
+  const handleWikilinkClick = async (e) => {
+    const link = e.target.closest('.wikilink');
+    if (!link) return;
+    e.preventDefault();
+    const name = decodeURIComponent(link.getAttribute('data-wikilink'));
+    const path = await resolveWikilink(campaignId, name);
+    if (path) navigate(path);
+  };
 
   const handleRemoveEffect = async (effectId) => {
     await api.removeEffect(campaignId, charId, effectId);
@@ -94,6 +107,24 @@ export default function CharacterDetailPage({ campaignId, campaign }) {
           </div>
         </div>
       </div>
+
+      {/* DM Notes */}
+      {(character.dm_notes || dmNotesOpen) && (
+        <div className="card dm-notes-card" style={{ marginBottom: 16 }}>
+          <div className="dm-notes-toggle" onClick={() => setDmNotesOpen(!dmNotesOpen)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
+            <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-secondary)' }}>DM Notes</h3>
+            <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{dmNotesOpen ? '\u25BC' : '\u25B6'}</span>
+          </div>
+          {dmNotesOpen && character.dm_notes && (
+            <div className="markdown-content" style={{ marginTop: 8, fontSize: 13 }}
+              onClick={handleWikilinkClick}
+              dangerouslySetInnerHTML={{ __html: renderMarkdown(character.dm_notes) }} />
+          )}
+          {dmNotesOpen && !character.dm_notes && (
+            <p style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 8 }}>No DM notes. Click Edit to add private notes.</p>
+          )}
+        </div>
+      )}
 
       {/* Attributes Table */}
       <div className="card" style={{ marginBottom: 16 }}>
@@ -347,6 +378,7 @@ function EditCharacterModal({ campaignId, character, attrs, onClose, onSaved }) 
   const [type, setType] = useState(character.type);
   const [description, setDescription] = useState(character.description || '');
   const [portraitUrl, setPortraitUrl] = useState(character.portrait_url || '');
+  const [dmNotes, setDmNotes] = useState(character.dm_notes || '');
   const [baseAttrs, setBaseAttrs] = useState(() => {
     const result = {};
     attrs.forEach(a => { result[a.key] = base[a.key] ?? (a.type === 'tag' ? '' : 10); });
@@ -356,7 +388,7 @@ function EditCharacterModal({ campaignId, character, attrs, onClose, onSaved }) 
   const handleSubmit = async (e) => {
     e.preventDefault();
     await api.updateCharacter(campaignId, character.id, {
-      name, type, description, portrait_url: portraitUrl, base_attributes: baseAttrs,
+      name, type, description, portrait_url: portraitUrl, base_attributes: baseAttrs, dm_notes: dmNotes,
     });
     onSaved();
   };
@@ -416,6 +448,10 @@ function EditCharacterModal({ campaignId, character, attrs, onClose, onSaved }) 
                 ))}
               </div>
             )}
+            <div className="form-group" style={{ marginTop: 12 }}>
+              <label>DM Notes</label>
+              <WikilinkAutocomplete campaignId={campaignId} value={dmNotes} onChange={setDmNotes} rows={4} placeholder="Private notes, [[wikilinks]] supported..." />
+            </div>
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>

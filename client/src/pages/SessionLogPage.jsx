@@ -49,15 +49,19 @@ export default function SessionLogPage({ campaignId }) {
     URL.revokeObjectURL(url);
   };
 
-  const entryTypes = ['general', 'manual', 'effect_applied', 'effect_removed', 'item_assigned', 'item_removed', 'time_advance', 'environment', 'weather_change', 'encounter_roll', 'travel', 'dice_roll'];
+  const entryTypes = ['general', 'manual', 'effect_applied', 'effect_removed', 'item_assigned', 'item_removed', 'time_advance', 'environment', 'weather_change', 'encounter_roll', 'encounter_start', 'encounter_end', 'travel', 'dice_roll', 'combat', 'table_roll'];
 
   const typeColors = {
     weather_change: 'var(--accent)',
     encounter_roll: 'var(--yellow)',
+    encounter_start: 'var(--yellow)',
+    encounter_end: 'var(--yellow)',
     travel: 'var(--green)',
     dice_roll: 'var(--text-muted)',
     time_advance: 'var(--text-secondary)',
     environment: 'var(--text-secondary)',
+    combat: 'var(--red)',
+    table_roll: 'var(--accent)',
   };
 
   return (

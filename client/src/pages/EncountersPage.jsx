@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import * as api from '../api';
 import ImportPreviewModal from '../components/ImportPreviewModal';
 
@@ -9,6 +10,8 @@ export default function EncountersPage({ campaignId, campaign }) {
   const [editEnc, setEditEnc] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
   const [showImport, setShowImport] = useState(false);
+  const [combatPrompt, setCombatPrompt] = useState(null);
+  const navigate = useNavigate();
 
   const load = async () => {
     if (!campaignId) return;
@@ -31,7 +34,18 @@ export default function EncountersPage({ campaignId, campaign }) {
     if (Object.keys(patch).length > 0) {
       await api.updateEnvironment(campaignId, patch);
     }
-    alert(`Encounter "${enc.name}" started. Environment overrides applied.`);
+    try {
+      const result = await api.startEncounter(campaignId, enc.id);
+      if (result.characters && result.characters.length > 0) {
+        setCombatPrompt({ encounterName: enc.name, npcIds: result.characters.map(c => c.id) });
+      }
+    } catch { /* fallback — just log */ }
+  };
+
+  const handleStartCombatFromEncounter = () => {
+    if (!combatPrompt) return;
+    navigate('/characters', { state: { startCombat: true, encounterNpcs: combatPrompt.npcIds, encounterName: combatPrompt.encounterName } });
+    setCombatPrompt(null);
   };
 
   const handleExport = async () => {
@@ -134,6 +148,26 @@ export default function EncountersPage({ campaignId, campaign }) {
           initialEntityTypes={['encounters']}
           lockEntityTypes={true}
         />
+      )}
+      {combatPrompt && (
+        <div className="modal-overlay" onClick={() => setCombatPrompt(null)}>
+          <div className="modal" style={{ maxWidth: 400 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Start Combat?</h3>
+              <button className="btn btn-ghost btn-sm" onClick={() => setCombatPrompt(null)}>&#x2715;</button>
+            </div>
+            <div className="modal-body">
+              <p style={{ fontSize: 13 }}>
+                Encounter "<strong>{combatPrompt.encounterName}</strong>" has {combatPrompt.npcIds.length} NPC(s).
+                Start combat with these NPCs pre-selected?
+              </p>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setCombatPrompt(null)}>Log Only</button>
+              <button className="btn btn-primary" onClick={handleStartCombatFromEncounter}>Start Combat</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

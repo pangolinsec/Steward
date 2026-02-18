@@ -129,6 +129,18 @@ export const endCombat = (cId) => request(`/campaigns/${cId}/combat/end`, { meth
 export const nextTurn = (cId) => request(`/campaigns/${cId}/combat/next-turn`, { method: 'POST' });
 export const updateCombat = (cId, data) => request(`/campaigns/${cId}/combat`, { method: 'PATCH', body: JSON.stringify(data) });
 
+// Random Tables
+export const getRandomTables = (cId, params = '') => request(`/campaigns/${cId}/random-tables${params ? '?' + params : ''}`);
+export const getRandomTable = (cId, tableId) => request(`/campaigns/${cId}/random-tables/${tableId}`);
+export const createRandomTable = (cId, data) => request(`/campaigns/${cId}/random-tables`, { method: 'POST', body: JSON.stringify(data) });
+export const updateRandomTable = (cId, tableId, data) => request(`/campaigns/${cId}/random-tables/${tableId}`, { method: 'PUT', body: JSON.stringify(data) });
+export const deleteRandomTable = (cId, tableId) => request(`/campaigns/${cId}/random-tables/${tableId}`, { method: 'DELETE' });
+export const rollRandomTable = (cId, tableId) => request(`/campaigns/${cId}/random-tables/${tableId}/roll`, { method: 'POST' });
+
+// Encounters (start/end)
+export const startEncounter = (cId, encId) => request(`/campaigns/${cId}/encounters/${encId}/start`, { method: 'POST' });
+export const endEncounter = (cId, encId) => request(`/campaigns/${cId}/encounters/${encId}/end`, { method: 'POST' });
+
 // Export / Import
 export const exportCampaign = (cId) => request(`/campaigns/${cId}/export`);
 export const importCampaign = (cId, data) => request(`/campaigns/${cId}/import`, { method: 'POST', body: JSON.stringify(data) });

@@ -230,6 +230,17 @@ function initialize() {
     CREATE INDEX IF NOT EXISTS idx_rule_action_log_batch ON rule_action_log(batch_id);
     CREATE INDEX IF NOT EXISTS idx_notifications_campaign ON notifications(campaign_id);
 
+    CREATE TABLE IF NOT EXISTS random_tables (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+      name TEXT NOT NULL DEFAULT '',
+      description TEXT DEFAULT '',
+      table_type TEXT DEFAULT 'weighted',
+      entries TEXT DEFAULT '[]',
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_random_tables_campaign ON random_tables(campaign_id);
+
     CREATE TABLE IF NOT EXISTS journal_notes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
@@ -264,6 +275,7 @@ const migrations = [
   `ALTER TABLE campaigns ADD COLUMN custom_tag_presets TEXT DEFAULT '[]'`,
   `ALTER TABLE campaigns ADD COLUMN dice_settings TEXT DEFAULT '{"log_rolls":false}'`,
   `ALTER TABLE environment_state ADD COLUMN combat_state TEXT DEFAULT NULL`,
+  `ALTER TABLE characters ADD COLUMN dm_notes TEXT DEFAULT ''`,
 ];
 
 for (const sql of migrations) {

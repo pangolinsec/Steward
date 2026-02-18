@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import * as api from '../api';
 import ImportPreviewModal from '../components/ImportPreviewModal';
 import RuleRefBadge from '../components/RuleRefBadge';
@@ -14,7 +14,9 @@ export default function CharactersPage({ campaignId, campaign }) {
   const [showImport, setShowImport] = useState(false);
   const [combatState, setCombatState] = useState(null);
   const [showCombatSetup, setShowCombatSetup] = useState(false);
+  const [encounterCombat, setEncounterCombat] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const loadCombat = async () => {
     if (!campaignId) return;
@@ -34,6 +36,19 @@ export default function CharactersPage({ campaignId, campaign }) {
   };
 
   useEffect(() => { load(); loadCombat(); }, [campaignId, typeFilter, search]);
+
+  // Encounter→Combat bridge: auto-open combat setup from navigation state
+  useEffect(() => {
+    if (location.state?.startCombat) {
+      setEncounterCombat({
+        npcIds: location.state.encounterNpcs || [],
+        name: location.state.encounterName || '',
+      });
+      setShowCombatSetup(true);
+      // Clear the location state so it doesn't re-trigger
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state]);
 
   const attrs = campaign?.attribute_definitions || [];
 
@@ -142,8 +157,10 @@ export default function CharactersPage({ campaignId, campaign }) {
         <CombatSetupModal
           campaignId={campaignId}
           characters={characters}
-          onStart={(state) => { setCombatState(state); setShowCombatSetup(false); }}
-          onClose={() => setShowCombatSetup(false)}
+          preselectedCharacterIds={encounterCombat?.npcIds}
+          encounterName={encounterCombat?.name}
+          onStart={(state) => { setCombatState(state); setShowCombatSetup(false); setEncounterCombat(null); }}
+          onClose={() => { setShowCombatSetup(false); setEncounterCombat(null); }}
         />
       )}
     </div>
@@ -155,6 +172,7 @@ function CharacterForm({ campaignId, attrs, character, onClose, onSave }) {
   const [type, setType] = useState(character?.type || 'PC');
   const [description, setDescription] = useState(character?.description || '');
   const [portraitUrl, setPortraitUrl] = useState(character?.portrait_url || '');
+  const [dmNotes, setDmNotes] = useState(character?.dm_notes || '');
   const [baseAttrs, setBaseAttrs] = useState(() => {
     const base = character?.base_attributes || {};
     const result = {};
@@ -164,7 +182,7 @@ function CharacterForm({ campaignId, attrs, character, onClose, onSave }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const data = { name, type, description, portrait_url: portraitUrl, base_attributes: baseAttrs };
+    const data = { name, type, description, portrait_url: portraitUrl, base_attributes: baseAttrs, dm_notes: dmNotes };
     if (character) {
       await api.updateCharacter(campaignId, character.id, data);
     } else {
@@ -232,6 +250,10 @@ function CharacterForm({ campaignId, attrs, character, onClose, onSave }) {
                 ))}
               </div>
             )}
+            <div className="form-group" style={{ marginTop: 12 }}>
+              <label>DM Notes</label>
+              <textarea value={dmNotes} onChange={e => setDmNotes(e.target.value)} rows={3} placeholder="Private DM notes..." />
+            </div>
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>

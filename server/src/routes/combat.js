@@ -14,6 +14,7 @@ function enrichCombatState(state, campaignId) {
       name: char.name || 'Unknown',
       type: char.type || 'NPC',
       portrait_url: char.portrait_url || '',
+      dm_notes: char.dm_notes || '',
       base_attributes: stats?.base || {},
       effective_attributes: stats?.effective || {},
       applied_effects: stats?.effects_breakdown || [],

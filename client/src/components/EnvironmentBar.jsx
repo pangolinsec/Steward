@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import * as api from '../api';
 import { useToast } from './ToastContext';
 import NotificationDrawer from './NotificationDrawer';
 
 export default function EnvironmentBar({ environment, campaignId, onUpdate, campaign }) {
+  const navigate = useNavigate();
   const [showAdvance, setShowAdvance] = useState(false);
   const [advHours, setAdvHours] = useState(0);
   const [advMinutes, setAdvMinutes] = useState(0);
@@ -54,7 +56,7 @@ export default function EnvironmentBar({ environment, campaignId, onUpdate, camp
     setAdvMinutes(0);
   };
 
-  const handleStartEncounter = async (enc) => {
+  const handleStartEncounter = async (enc, startCombat = false) => {
     const overrides = enc.environment_overrides || {};
     const patch = {};
     if (overrides.weather) patch.weather = overrides.weather;
@@ -64,6 +66,10 @@ export default function EnvironmentBar({ environment, campaignId, onUpdate, camp
     addToast(`Encounter "${enc.name}" started!`, 'warning');
     setEncounterEvent(null);
     onUpdate();
+    if (startCombat && enc.npcs?.length > 0) {
+      const npcIds = enc.npcs.map(n => n.character_id);
+      navigate('/characters', { state: { startCombat: true, encounterNpcs: npcIds, encounterName: enc.name } });
+    }
   };
 
   const weatherIcons = {
@@ -151,6 +157,7 @@ export default function EnvironmentBar({ environment, campaignId, onUpdate, camp
         <EncounterTriggerModal
           event={encounterEvent}
           onStart={() => handleStartEncounter(encounterEvent.encounter)}
+          onStartCombat={() => handleStartEncounter(encounterEvent.encounter, true)}
           onDismiss={() => { setEncounterEvent(null); addToast('Encounter dismissed', 'info'); }}
         />
       )}
@@ -166,7 +173,7 @@ export default function EnvironmentBar({ environment, campaignId, onUpdate, camp
   );
 }
 
-function EncounterTriggerModal({ event, onStart, onDismiss }) {
+function EncounterTriggerModal({ event, onStart, onStartCombat, onDismiss }) {
   const enc = event.encounter;
   return (
     <div className="modal-overlay" onClick={onDismiss}>
@@ -209,6 +216,9 @@ function EncounterTriggerModal({ event, onStart, onDismiss }) {
         <div className="modal-footer">
           <button className="btn btn-secondary" onClick={onDismiss}>Dismiss</button>
           <button className="btn btn-primary" onClick={onStart}>Start Encounter</button>
+          {enc.npcs?.length > 0 && (
+            <button className="btn btn-danger" onClick={onStartCombat}>Start Combat</button>
+          )}
         </div>
       </div>
     </div>

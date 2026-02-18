@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as api from '../api';
 
 const DICE = [
@@ -16,6 +16,14 @@ export default function DiceRoller({ campaignId, campaign }) {
   const [quantities, setQuantities] = useState({});
   const [result, setResult] = useState(null);
   const [history, setHistory] = useState([]);
+  const [tables, setTables] = useState([]);
+  const [tableResults, setTableResults] = useState({});
+
+  useEffect(() => {
+    if (expanded && campaignId) {
+      api.getRandomTables(campaignId).then(setTables).catch(() => {});
+    }
+  }, [expanded, campaignId]);
 
   const getQty = (sides) => quantities[sides] || 0;
 
@@ -99,6 +107,22 @@ export default function DiceRoller({ campaignId, campaign }) {
                 <div key={i} className="dice-history-item">
                   <span>{h.rolls.map(r => `${r.values.length}${r.label}`).join('+')}</span>
                   <span style={{ fontWeight: 600 }}>{h.total}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {tables.length > 0 && (
+            <div style={{ borderTop: '1px solid var(--border)', marginTop: 8, paddingTop: 8 }}>
+              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>Tables</div>
+              {tables.map(t => (
+                <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '3px 0', fontSize: 11 }}>
+                  <span style={{ color: 'var(--text-secondary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</span>
+                  {tableResults[t.id] && <span style={{ color: 'var(--accent)', fontSize: 10, marginRight: 4, maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tableResults[t.id]}</span>}
+                  <button className="btn btn-ghost btn-sm" style={{ fontSize: 9, padding: '1px 6px' }}
+                    onClick={async () => {
+                      const res = await api.rollRandomTable(campaignId, t.id);
+                      setTableResults(prev => ({ ...prev, [t.id]: res.result }));
+                    }}>Roll</button>
                 </div>
               ))}
             </div>
