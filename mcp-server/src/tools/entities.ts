@@ -28,6 +28,7 @@ interface Encounter {
   description: string;
   notes: string;
   conditions: Record<string, unknown>;
+  starts_combat: boolean;
 }
 
 export function registerEntityTools(server: McpServer): void {
@@ -137,7 +138,8 @@ export function registerEntityTools(server: McpServer): void {
           if (Array.isArray(co?.time_of_day) && co.time_of_day.length > 0) conds.push((co.time_of_day as string[]).join("/"));
           if (Array.isArray(co?.weather) && co.weather.length > 0) conds.push((co.weather as string[]).join("/"));
           const condStr = conds.length > 0 ? ` | conditions: ${conds.join(", ")}` : "";
-          lines.push(`- **${enc.name}** (id: ${enc.id})${condStr}`);
+          const combatTag = enc.starts_combat ? " [auto-combat]" : "";
+          lines.push(`- **${enc.name}** (id: ${enc.id})${combatTag}${condStr}`);
           if (enc.description) lines.push(`  ${enc.description}`);
         }
         return { content: [{ type: "text", text: lines.join("\n") }] };

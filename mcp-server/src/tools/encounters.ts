@@ -8,16 +8,21 @@ interface Encounter {
   name: string;
   description: string;
   notes: string;
-  npcs: { character_id: number; role: string }[];
+  npcs: { character_id?: number; name?: string; role: string; count?: number }[];
   environment_overrides: Record<string, unknown>;
   loot_table: { item_name: string; quantity: number; drop_chance: number }[];
   conditions: Record<string, unknown>;
+  starts_combat: boolean;
 }
 
 interface EncounterResult {
   success: boolean;
   encounter_name: string;
   events: { type: string; message?: string; rule_name?: string }[];
+  combat_started?: boolean;
+  combat_state?: Record<string, unknown>;
+  combat_ended?: boolean;
+  npcs_cleaned?: number;
 }
 
 export function registerEncounterTools(server: McpServer): void {
@@ -38,6 +43,16 @@ export function registerEncounterTools(server: McpServer): void {
         const cId = campaignId(params.campaign_id);
         const result = await post<EncounterResult>(c(cId, `/encounters/${params.encounter_id}/start`));
         const lines = [`**Encounter started:** ${result.encounter_name}`];
+        if (result.combat_started) {
+          lines.push("**Combat auto-started** (Round 1)");
+          const cs = result.combat_state as Record<string, unknown> | undefined;
+          if (cs?.combatants && Array.isArray(cs.combatants)) {
+            lines.push(`Combatants (${cs.combatants.length}):`);
+            for (const c of cs.combatants as { name: string; type: string; initiative: number }[]) {
+              lines.push(`- ${c.name} (${c.type}) — initiative ${c.initiative}`);
+            }
+          }
+        }
         if (result.events?.length > 0) {
           for (const e of result.events) {
             lines.push(`- ${e.message || e.type}`);
@@ -66,6 +81,8 @@ export function registerEncounterTools(server: McpServer): void {
         const cId = campaignId(params.campaign_id);
         const result = await post<EncounterResult>(c(cId, `/encounters/${params.encounter_id}/end`));
         const lines = [`**Encounter ended:** ${result.encounter_name}`];
+        if (result.combat_ended) lines.push("Combat ended.");
+        if (result.npcs_cleaned && result.npcs_cleaned > 0) lines.push(`${result.npcs_cleaned} spawned NPC(s) cleaned up.`);
         if (result.events?.length > 0) {
           for (const e of result.events) {
             lines.push(`- ${e.message || e.type}`);
@@ -92,7 +109,12 @@ export function registerEncounterTools(server: McpServer): void {
         description: z.string().optional().describe("Encounter description (shown to players)"),
         notes: z.string().optional().describe("DM notes (private)"),
         npcs: z
-          .array(z.object({ character_id: z.number().int(), role: z.string() }))
+          .array(z.object({
+            character_id: z.number().int().optional().describe("Existing character ID (use this OR name)"),
+            name: z.string().optional().describe("Ad-hoc NPC name (use this OR character_id)"),
+            role: z.string(),
+            count: z.number().int().min(1).optional().describe("Number of this NPC to spawn (default: 1)"),
+          }))
           .optional()
           .describe("NPCs in the encounter with roles"),
         environment_overrides: z.record(z.unknown()).optional().describe("Environment overrides when encounter is active"),
@@ -110,6 +132,7 @@ export function registerEncounterTools(server: McpServer): void {
           })
           .optional()
           .describe("Trigger conditions (empty = can trigger anywhere)"),
+        starts_combat: z.boolean().optional().describe("Auto-start combat when this encounter triggers (default: false)"),
       },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
@@ -124,6 +147,7 @@ export function registerEncounterTools(server: McpServer): void {
           environment_overrides: params.environment_overrides ?? {},
           loot_table: params.loot_table ?? [],
           conditions: params.conditions ?? {},
+          starts_combat: params.starts_combat ?? false,
         });
         return { content: [{ type: "text", text: `Encounter **${result.name}** created (id: ${result.id})` }] };
       } catch (error) {
@@ -143,7 +167,12 @@ export function registerEncounterTools(server: McpServer): void {
         name: z.string().optional().describe("Encounter name"),
         description: z.string().optional().describe("Encounter description"),
         notes: z.string().optional().describe("DM notes"),
-        npcs: z.array(z.object({ character_id: z.number().int(), role: z.string() })).optional().describe("NPCs (replaces all)"),
+        npcs: z.array(z.object({
+          character_id: z.number().int().optional().describe("Existing character ID (use this OR name)"),
+          name: z.string().optional().describe("Ad-hoc NPC name (use this OR character_id)"),
+          role: z.string(),
+          count: z.number().int().min(1).optional().describe("Number of this NPC to spawn (default: 1)"),
+        })).optional().describe("NPCs (replaces all)"),
         environment_overrides: z.record(z.unknown()).optional().describe("Environment overrides (replaces all)"),
         loot_table: z.array(z.object({ item_name: z.string(), quantity: z.number(), drop_chance: z.number() })).optional().describe("Loot table (replaces all)"),
         conditions: z
@@ -156,6 +185,7 @@ export function registerEncounterTools(server: McpServer): void {
           })
           .optional()
           .describe("Trigger conditions (replaces all)"),
+        starts_combat: z.boolean().optional().describe("Auto-start combat when this encounter triggers"),
       },
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
     },

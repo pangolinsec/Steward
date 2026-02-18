@@ -98,6 +98,7 @@ export function registerCharacterTools(server: McpServer): void {
         campaign_id: z.number().int().optional().describe("Campaign ID"),
         type: z.enum(["PC", "NPC"]).optional().describe("Filter by character type"),
         search: z.string().optional().describe("Search by name"),
+        include_spawned: z.boolean().optional().describe("Include encounter-spawned NPCs (hidden by default)"),
       },
       annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
@@ -107,6 +108,7 @@ export function registerCharacterTools(server: McpServer): void {
         const qp = new URLSearchParams();
         if (params.type) qp.set("type", params.type);
         if (params.search) qp.set("search", params.search);
+        if (params.include_spawned) qp.set("include_spawned", "1");
         const qs = qp.toString();
         const chars = await get<Character[]>(c(cId, `/characters${qs ? "?" + qs : ""}`));
         if (chars.length === 0) return { content: [{ type: "text", text: "No characters found." }] };
