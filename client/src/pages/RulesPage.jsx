@@ -146,11 +146,120 @@ function relativeTime(dateStr) {
   return `${diffDays}d ago`;
 }
 
+function flattenConditions(node) {
+  if (!node) return [];
+  if (node.all) return node.all.flatMap(flattenConditions);
+  if (node.any) return node.any.flatMap(flattenConditions);
+  if (node.not) return flattenConditions(node.not);
+  return [node];
+}
+
+function extractRuleReferenceText(rule) {
+  const parts = [];
+  for (const cond of flattenConditions(rule.conditions)) {
+    if (cond.effect_name) parts.push(cond.effect_name);
+    if (cond.item_name) parts.push(cond.item_name);
+    if (cond.attribute) parts.push(cond.attribute);
+    if (cond.trait) parts.push(cond.trait);
+    if (cond.value != null) parts.push(String(cond.value));
+    if (cond.values) parts.push(...cond.values.map(String));
+    if (cond.location_id != null) parts.push(String(cond.location_id));
+    if (cond.property) parts.push(cond.property);
+  }
+  for (const action of (rule.actions || [])) {
+    if (action.effect_name) parts.push(action.effect_name);
+    if (action.item_name) parts.push(action.item_name);
+    if (action.weather) parts.push(action.weather);
+    if (action.attribute) parts.push(action.attribute);
+    if (action.message) parts.push(action.message);
+    if (action.note) parts.push(action.note);
+  }
+  return parts.join(' ').toLowerCase();
+}
+
+function conditionParts(cond) {
+  switch (cond.type) {
+    case 'attribute_gte': return { label: `${cond.attribute} >=`, detail: String(cond.value) };
+    case 'attribute_lte': return { label: `${cond.attribute} <=`, detail: String(cond.value) };
+    case 'attribute_eq': return { label: `${cond.attribute} ==`, detail: String(cond.value) };
+    case 'has_effect': return { label: 'Has Effect', detail: cond.effect_name };
+    case 'lacks_effect': return { label: 'Lacks Effect', detail: cond.effect_name };
+    case 'has_item': return { label: 'Has Item', detail: cond.item_name };
+    case 'lacks_item': return { label: 'Lacks Item', detail: cond.item_name };
+    case 'item_quantity_lte': return { label: `${cond.item_name} qty <=`, detail: String(cond.value) };
+    case 'character_type': return { label: 'Character', detail: cond.value };
+    case 'weather_is': return { label: 'Weather', detail: cond.value };
+    case 'weather_in': return { label: 'Weather In', detail: (cond.values || []).join(', ') };
+    case 'time_of_day_is': return { label: 'Time of Day', detail: cond.value };
+    case 'time_between': return { label: 'Time Between', detail: `${cond.from_hour}:00–${cond.to_hour}:00` };
+    case 'location_is': return { label: 'At Location', detail: `#${cond.location_id}` };
+    case 'location_property': return { label: `Location ${cond.property}`, detail: String(cond.value) };
+    case 'random_chance': return { label: 'Chance', detail: `${Math.round((cond.probability || 0) * 100)}%` };
+    case 'hours_since_last_rest': return { label: 'Hours Since Rest', detail: `${cond.operator || '??'} ${cond.hours}` };
+    case 'season_is': return { label: 'Season', detail: cond.value };
+    case 'trait_equals': return { label: cond.trait, detail: `"${cond.value}"` };
+    case 'trait_in': return { label: cond.trait, detail: `[${(cond.values || []).join(', ')}]` };
+    default: return { label: cond.type, detail: '' };
+  }
+}
+
+function actionParts(action) {
+  switch (action.type) {
+    case 'apply_effect': return { label: 'Apply Effect', detail: action.effect_name };
+    case 'remove_effect': return { label: 'Remove Effect', detail: action.effect_name };
+    case 'modify_attribute': return { label: 'Modify', detail: `${action.attribute} by ${action.delta > 0 ? '+' : ''}${action.delta}` };
+    case 'consume_item': return { label: 'Consume', detail: `${action.quantity || 1}× ${action.item_name}` };
+    case 'grant_item': return { label: 'Grant', detail: `${action.quantity || 1}× ${action.item_name}` };
+    case 'set_weather': return { label: 'Set Weather', detail: action.weather };
+    case 'set_environment_note': return { label: 'Set Note', detail: action.note };
+    case 'advance_time': return { label: 'Advance Time', detail: `${action.hours || 0}h ${action.minutes || 0}m` };
+    case 'notify': return { label: 'Notify', detail: `(${action.severity || 'info'}): ${action.message}` };
+    case 'log': return { label: 'Log', detail: action.message };
+    case 'roll_dice': return { label: 'Roll Dice', detail: `${action.formula} → ${action.store_as}` };
+    case 'random_from_list': return { label: 'Random List', detail: `→ ${action.store_as}` };
+    default: return { label: action.type, detail: '' };
+  }
+}
+
+function renderConditionTree(node, depth = 0) {
+  if (!node) return null;
+  if (node.all || node.any) {
+    const op = node.all ? 'ALL' : 'ANY';
+    const children = node.all || node.any;
+    return (
+      <div style={depth > 0 ? { borderLeft: '2px solid var(--border)', paddingLeft: 10, marginLeft: 4, marginTop: 4 } : {}}>
+        <span className="tag" style={{ fontSize: 9 }}>{op}</span>
+        {children.map((child, i) => (
+          <div key={i}>{renderConditionTree(child, depth + 1)}</div>
+        ))}
+      </div>
+    );
+  }
+  if (node.not) {
+    return (
+      <div style={{ borderLeft: '2px solid var(--border)', paddingLeft: 10, marginLeft: 4, marginTop: 4 }}>
+        <span className="tag" style={{ fontSize: 9 }}>NOT</span>
+        {renderConditionTree(node.not, depth + 1)}
+      </div>
+    );
+  }
+  const { label, detail } = conditionParts(node);
+  return (
+    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 2, marginTop: 2 }}>
+      <span className="tag" style={{ fontSize: 9 }}>{label}</span> {detail}
+    </div>
+  );
+}
+
 export default function RulesPage({ campaignId, campaign }) {
   const [rules, setRules] = useState([]);
   const [search, setSearch] = useState('');
   const [filterTrigger, setFilterTrigger] = useState('');
   const [filterEnabled, setFilterEnabled] = useState('');
+  const [filterMode, setFilterMode] = useState('');
+  const [filterTarget, setFilterTarget] = useState('');
+  const [filterTags, setFilterTags] = useState([]);
+  const [filterRef, setFilterRef] = useState('');
   const [sortBy, setSortBy] = useState('priority');
   const [showForm, setShowForm] = useState(false);
   const [editRule, setEditRule] = useState(null);
@@ -159,6 +268,7 @@ export default function RulesPage({ campaignId, campaign }) {
   const [showTemplates, setShowTemplates] = useState(false);
   const [testRule, setTestRule] = useState(null);
   const [entityLists, setEntityLists] = useState(null);
+  const [overflowMenuId, setOverflowMenuId] = useState(null);
 
   const load = async () => {
     if (!campaignId) return;
@@ -188,8 +298,37 @@ export default function RulesPage({ campaignId, campaign }) {
     });
   }, [campaignId]);
 
+  useEffect(() => {
+    if (overflowMenuId === null) return;
+    const handler = (e) => {
+      if (!e.target.closest('[data-overflow-menu]')) {
+        setOverflowMenuId(null);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [overflowMenuId]);
+
+  const allTags = [...new Set(rules.flatMap(r => r.tags || []))].sort();
+
+  const activeFilterCount = [
+    filterMode, filterTarget, filterEnabled, filterRef
+  ].filter(Boolean).length + (filterTags.length > 0 ? 1 : 0);
+
+  const clearAllFilters = () => {
+    setFilterEnabled('');
+    setFilterMode('');
+    setFilterTarget('');
+    setFilterTags([]);
+    setFilterRef('');
+  };
+
   const displayRules = rules
     .filter(r => filterEnabled === '' ? true : filterEnabled === 'enabled' ? r.enabled : !r.enabled)
+    .filter(r => !filterMode || r.action_mode === filterMode)
+    .filter(r => !filterTarget || r.target_mode === filterTarget)
+    .filter(r => filterTags.length === 0 || filterTags.some(t => (r.tags || []).includes(t)))
+    .filter(r => !filterRef || extractRuleReferenceText(r).includes(filterRef.toLowerCase()))
     .sort((a, b) => {
       switch (sortBy) {
         case 'name': return a.name.localeCompare(b.name);
@@ -257,11 +396,19 @@ export default function RulesPage({ campaignId, campaign }) {
           <button className="btn btn-primary" onClick={() => { setEditRule(null); setShowForm(true); }}>+ New Rule</button>
         </div>
       </div>
-      <div className="search-bar">
-        <input type="text" placeholder="Search rules..." value={search} onChange={e => setSearch(e.target.value)} />
-        <select value={filterTrigger} onChange={e => setFilterTrigger(e.target.value)} style={{ width: 180 }}>
+      <div className="search-bar" style={{ flexWrap: 'wrap' }}>
+        <input type="text" placeholder="Search rules..." value={search} onChange={e => setSearch(e.target.value)} style={{ flex: 1, minWidth: 140 }} />
+        <select value={filterTrigger} onChange={e => setFilterTrigger(e.target.value)} style={{ width: 160 }}>
           <option value="">All triggers</option>
           {TRIGGER_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+        </select>
+        <select value={filterMode} onChange={e => setFilterMode(e.target.value)} style={{ width: 120 }}>
+          <option value="">All modes</option>
+          {ACTION_MODES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+        </select>
+        <select value={filterTarget} onChange={e => setFilterTarget(e.target.value)} style={{ width: 140 }}>
+          <option value="">All targets</option>
+          {TARGET_MODES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
         </select>
         <select value={filterEnabled} onChange={e => setFilterEnabled(e.target.value)} style={{ width: 130 }}>
           <option value="">All rules</option>
@@ -275,14 +422,46 @@ export default function RulesPage({ campaignId, campaign }) {
           <option value="newest">Sort: Newest</option>
         </select>
       </div>
+      {(allTags.length > 0 || activeFilterCount > 0) && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 6, marginBottom: 12 }}>
+          <input
+            type="text"
+            placeholder="Search references (effects, items, attributes...)"
+            value={filterRef}
+            onChange={e => setFilterRef(e.target.value)}
+            style={{ width: 260, fontSize: 12, padding: '3px 8px' }}
+          />
+          {allTags.length > 0 && (
+            <>
+              <span style={{ width: 1, height: 16, background: 'var(--border)', flexShrink: 0 }} />
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', flexShrink: 0 }}>Tags:</span>
+              {allTags.map(tag => (
+                <span
+                  key={tag}
+                  className={`tag ${filterTags.includes(tag) ? 'tag-buff' : ''}`}
+                  style={{ cursor: 'pointer', fontSize: 11 }}
+                  onClick={() => setFilterTags(prev =>
+                    prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+                  )}
+                >{tag}</span>
+              ))}
+            </>
+          )}
+          {activeFilterCount > 0 && (
+            <button className="btn btn-ghost btn-sm" onClick={clearAllFilters}>
+              Clear filters ({activeFilterCount})
+            </button>
+          )}
+        </div>
+      )}
       {displayRules.length === 0 ? (
-        <div className="empty-state"><p>{rules.length === 0 ? 'No rules defined yet. Create rules to automate game-world changes.' : 'No rules match the current filters.'}</p></div>
+        <div className="empty-state"><p>{rules.length === 0 ? 'No rules defined yet. Create rules to automate game-world changes.' : `No rules match the current filters.${activeFilterCount > 0 ? ' Try clearing some filters.' : ''}`}</p></div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {displayRules.map(rule => {
             const warnings = getMissingPrereqs(rule, entityLists);
             return (
-              <div key={rule.id} className="card" style={{ opacity: rule.enabled ? 1 : 0.5 }}>
+              <div key={rule.id} className="card" style={{ opacity: rule.enabled ? 1 : 0.5, borderLeft: rule.action_mode === 'auto' ? '3px solid var(--green)' : '3px solid transparent' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => setExpandedId(expandedId === rule.id ? null : rule.id)}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -302,29 +481,56 @@ export default function RulesPage({ campaignId, campaign }) {
                     {rule.description && (
                       <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>{rule.description}</div>
                     )}
-                    <div className="inline-flex gap-sm mt-sm" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                    <div className="inline-flex gap-sm mt-sm" style={{ fontSize: 11, color: 'var(--text-muted)', width: '100%' }}>
                       <span>Priority: {rule.priority}</span>
                       <span>Target: {rule.target_mode}</span>
-                      {rule.last_triggered_at && (
-                        <span title={rule.last_triggered_at}>Fired: {relativeTime(rule.last_triggered_at)}</span>
-                      )}
                       {rule.tags.length > 0 && rule.tags.map(t => (
                         <span key={t} className="tag" style={{ fontSize: 9, padding: '1px 5px' }}>{t}</span>
                       ))}
+                      {rule.last_triggered_at && (() => {
+                        const firedDate = new Date(rule.last_triggered_at.endsWith('Z') ? rule.last_triggered_at : rule.last_triggered_at + 'Z');
+                        const isRecent = (Date.now() - firedDate.getTime()) < 60 * 60 * 1000;
+                        return (
+                          <span title={rule.last_triggered_at} style={{ marginLeft: 'auto', color: isRecent ? 'var(--accent)' : 'var(--text-muted)' }}>
+                            Fired: {relativeTime(rule.last_triggered_at)}
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
                   <div className="inline-flex gap-sm">
-                    <button
-                      className={`btn btn-sm ${rule.enabled ? 'btn-secondary' : 'btn-primary'}`}
-                      onClick={() => handleToggle(rule.id)}
-                      style={{ minWidth: 60 }}
-                    >
-                      {rule.enabled ? 'Disable' : 'Enable'}
-                    </button>
-                    <button className="btn btn-ghost btn-sm" onClick={() => setTestRule(rule)}>Test</button>
-                    <button className="btn btn-ghost btn-sm" onClick={() => handleDuplicate(rule)}>Duplicate</button>
                     <button className="btn btn-ghost btn-sm" onClick={() => { setEditRule(rule); setShowForm(true); }}>Edit</button>
-                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(rule.id, rule.name)}>Delete</button>
+                    <div style={{ position: 'relative' }} data-overflow-menu>
+                      <button className="btn btn-ghost btn-sm" style={{ fontSize: 16, lineHeight: 1, padding: '2px 6px' }}
+                        onClick={(e) => { e.stopPropagation(); setOverflowMenuId(overflowMenuId === rule.id ? null : rule.id); }}>
+                        &#x22EF;
+                      </button>
+                      {overflowMenuId === rule.id && (
+                        <div style={{
+                          position: 'absolute', top: '100%', right: 0, zIndex: 10,
+                          background: 'var(--bg-card)', border: '1px solid var(--border)',
+                          borderRadius: 'var(--radius-sm)', boxShadow: 'var(--shadow)',
+                          minWidth: 140, padding: '4px 0'
+                        }} onClick={(e) => e.stopPropagation()}>
+                          <button className="btn btn-ghost btn-sm" style={{ width: '100%', textAlign: 'left', borderRadius: 0, padding: '6px 12px', justifyContent: 'flex-start' }}
+                            onClick={() => { handleToggle(rule.id); setOverflowMenuId(null); }}>
+                            {rule.enabled ? 'Disable' : 'Enable'}
+                          </button>
+                          <button className="btn btn-ghost btn-sm" style={{ width: '100%', textAlign: 'left', borderRadius: 0, padding: '6px 12px', justifyContent: 'flex-start' }}
+                            onClick={() => { setTestRule(rule); setOverflowMenuId(null); }}>
+                            Test
+                          </button>
+                          <button className="btn btn-ghost btn-sm" style={{ width: '100%', textAlign: 'left', borderRadius: 0, padding: '6px 12px', justifyContent: 'flex-start' }}
+                            onClick={() => { handleDuplicate(rule); setOverflowMenuId(null); }}>
+                            Duplicate
+                          </button>
+                          <button className="btn btn-ghost btn-sm" style={{ width: '100%', textAlign: 'left', borderRadius: 0, padding: '6px 12px', justifyContent: 'flex-start', borderTop: '1px solid var(--border)', color: 'var(--red)' }}
+                            onClick={() => { handleDelete(rule.id, rule.name); setOverflowMenuId(null); }}>
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
                 {expandedId === rule.id && (
@@ -342,21 +548,9 @@ export default function RulesPage({ campaignId, campaign }) {
                       <strong>Conditions:</strong>
                       {(() => {
                         const tree = rule.conditions || {};
-                        const items = tree.all || tree.any || [];
-                        if (items.length === 0) return <span style={{ color: 'var(--text-muted)', marginLeft: 4 }}>None (always passes)</span>;
-                        const op = tree.all ? 'ALL' : 'ANY';
-                        return (
-                          <>
-                            <span style={{ color: 'var(--text-muted)', marginLeft: 4, fontSize: 11 }}>({op} must match)</span>
-                            <ul style={{ margin: '4px 0 0 16px', padding: 0, listStyle: 'disc' }}>
-                              {items.map((c, i) => (
-                                <li key={i} style={{ color: 'var(--text-secondary)', fontSize: 12, marginBottom: 2 }}>
-                                  {summarizeConditionReadable(c)}
-                                </li>
-                              ))}
-                            </ul>
-                          </>
-                        );
+                        const hasContent = tree.all || tree.any || tree.not || tree.type;
+                        if (!hasContent) return <span style={{ color: 'var(--text-muted)', marginLeft: 4 }}>None (always passes)</span>;
+                        return <div style={{ marginTop: 4 }}>{renderConditionTree(tree)}</div>;
                       })()}
                     </div>
                     <div>
@@ -364,13 +558,16 @@ export default function RulesPage({ campaignId, campaign }) {
                       {(!rule.actions || rule.actions.length === 0) ? (
                         <span style={{ color: 'var(--text-muted)', marginLeft: 4 }}>None</span>
                       ) : (
-                        <ol style={{ margin: '4px 0 0 16px', padding: 0 }}>
-                          {rule.actions.map((a, i) => (
-                            <li key={i} style={{ color: 'var(--text-secondary)', fontSize: 12, marginBottom: 2 }}>
-                              {summarizeActionReadable(a)}
-                            </li>
-                          ))}
-                        </ol>
+                        <div style={{ marginTop: 4 }}>
+                          {rule.actions.map((a, i) => {
+                            const { label, detail } = actionParts(a);
+                            return (
+                              <div key={i} style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 2 }}>
+                                <span className="tag" style={{ fontSize: 9 }}>{label}</span> {detail}
+                              </div>
+                            );
+                          })}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -631,7 +828,7 @@ function RuleForm({ campaignId, campaign, rule, entityLists, onClose, onSave, on
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" style={{ maxWidth: 700 }} onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <h3>{rule ? 'Edit Rule' : 'New Rule'}</h3>
+          <h3>{rule ? <>Edit Rule <span style={{ fontWeight: 400 }}>&mdash; {rule.name}</span></> : 'New Rule'}</h3>
           <button className="btn btn-ghost btn-sm" onClick={onClose}>&#x2715;</button>
         </div>
         <form onSubmit={handleSubmit}>
