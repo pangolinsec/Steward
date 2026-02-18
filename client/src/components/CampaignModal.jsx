@@ -9,7 +9,17 @@ export default function CampaignModal({ campaigns, activeCampaignId, onClose, on
     if (!newName.trim()) return;
     setCreating(true);
     try {
-      const campaign = await api.createCampaign({ name: newName.trim() });
+      const campaign = await api.createCampaign({
+        name: newName.trim(),
+        attribute_definitions: [
+          { key: 'strength', label: 'Strength' },
+          { key: 'dexterity', label: 'Dexterity' },
+          { key: 'constitution', label: 'Constitution' },
+          { key: 'intelligence', label: 'Intelligence' },
+          { key: 'wisdom', label: 'Wisdom' },
+          { key: 'charisma', label: 'Charisma' },
+        ],
+      });
       setNewName('');
       await onRefresh();
       onSelect(campaign.id);

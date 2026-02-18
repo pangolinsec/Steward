@@ -142,18 +142,24 @@ function CharacterForm({ campaignId, attrs, character, onClose, onSave }) {
               <input type="text" value={portraitUrl} onChange={e => setPortraitUrl(e.target.value)} placeholder="https://..." />
             </div>
             <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 8, display: 'block' }}>Base Attributes</label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
-              {attrs.map(a => (
-                <div key={a.key} className="form-group" style={{ marginBottom: 0 }}>
-                  <label>{a.label}</label>
-                  <input
-                    type="number"
-                    value={baseAttrs[a.key] ?? 10}
-                    onChange={e => setBaseAttrs({ ...baseAttrs, [a.key]: Number(e.target.value) })}
-                  />
-                </div>
-              ))}
-            </div>
+            {attrs.length === 0 ? (
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', padding: '8px 0' }}>
+                No attributes defined for this campaign. <a href="/environment">Go to Settings</a> to add attribute definitions.
+              </p>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
+                {attrs.map(a => (
+                  <div key={a.key} className="form-group" style={{ marginBottom: 0 }}>
+                    <label>{a.label}</label>
+                    <input
+                      type="number"
+                      value={baseAttrs[a.key] ?? 10}
+                      onChange={e => setBaseAttrs({ ...baseAttrs, [a.key]: Number(e.target.value) })}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
