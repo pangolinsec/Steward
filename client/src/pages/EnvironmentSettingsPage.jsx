@@ -138,29 +138,62 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
     onUpdate();
   };
 
+  const DEFAULT_ADJACENCY = {
+    'Clear':      ['Overcast', 'Windy'],
+    'Overcast':   ['Clear', 'Rain', 'Fog', 'Windy', 'Snow'],
+    'Rain':       ['Overcast', 'Heavy Rain', 'Fog'],
+    'Heavy Rain': ['Rain', 'Storm'],
+    'Storm':      ['Heavy Rain', 'Hail', 'Windy'],
+    'Windy':      ['Clear', 'Overcast', 'Storm'],
+    'Fog':        ['Overcast', 'Rain'],
+    'Snow':       ['Overcast', 'Hail'],
+    'Hail':       ['Storm', 'Snow'],
+  };
+
   const generateDefaultTable = () => {
     const table = {};
-    const opts = weatherOptions;
-    for (const from of opts) {
+    for (const from of weatherOptions) {
       const row = {};
+      const neighbors = DEFAULT_ADJACENCY[from];
+      const selfWeight = 4;
       let total = 0;
-      const fromLower = from.toLowerCase();
-      for (const to of opts) {
-        const toLower = to.toLowerCase();
-        let weight;
-        if (from === to) weight = 5;
-        else if ((fromLower.includes('rain') && toLower.includes('rain')) ||
-                 (fromLower.includes('storm') && toLower.includes('rain')) ||
-                 (fromLower.includes('rain') && toLower.includes('storm'))) weight = 2;
-        else if (fromLower === 'clear' && toLower === 'overcast') weight = 2;
-        else if (fromLower === 'overcast' && (toLower === 'clear' || toLower === 'rain')) weight = 2;
-        else weight = 0.5;
-        row[to] = weight;
-        total += weight;
+      for (const to of weatherOptions) {
+        if (from === to) {
+          row[to] = selfWeight;
+        } else if (neighbors && neighbors.includes(to)) {
+          row[to] = 1;
+        } else if (!neighbors) {
+          row[to] = 0.3;
+        } else {
+          row[to] = 0;
+        }
+        total += row[to];
       }
-      for (const to of opts) row[to] = Math.round((row[to] / total) * 1000) / 1000;
+      for (const to of weatherOptions) {
+        row[to] = total > 0 ? Math.round((row[to] / total) * 1000) / 1000 : 0;
+      }
       table[from] = row;
     }
+    setTransitionTable(table);
+  };
+
+  const toggleAdjacency = (from, to) => {
+    const table = { ...(transitionTable || {}) };
+    // Initialize row if missing
+    if (!table[from]) {
+      const row = {};
+      for (const w of weatherOptions) row[w] = from === w ? 4 : 0;
+      table[from] = row;
+    }
+    const row = { ...table[from] };
+    // Toggle: if >0 set to 0, if 0 set to 1 (raw weight)
+    row[to] = row[to] > 0 ? 0 : 1;
+    // Re-normalize
+    const total = weatherOptions.reduce((s, w) => s + (row[w] || 0), 0);
+    if (total > 0) {
+      for (const w of weatherOptions) row[w] = Math.round(((row[w] || 0) / total) * 1000) / 1000;
+    }
+    table[from] = row;
     setTransitionTable(table);
   };
 
@@ -374,17 +407,61 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
               <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Volatile</span>
             </div>
           </div>
-          <button className="btn btn-ghost btn-sm" style={{ marginBottom: 8 }}
-            onClick={() => setShowAdvancedWeather(!showAdvancedWeather)}>
-            {showAdvancedWeather ? 'Hide' : 'Show'} Advanced Transition Table
-          </button>
-          {showAdvancedWeather && (
-            <div style={{ marginTop: 8 }}>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                <button className="btn btn-secondary btn-sm" onClick={generateDefaultTable}>Auto-generate</button>
-                <button className="btn btn-ghost btn-sm" onClick={() => setTransitionTable(null)}>Clear (use default)</button>
-              </div>
-              {transitionTable ? (
+
+          {/* Adjacency Editor */}
+          <div style={{ marginTop: 8 }}>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 10, alignItems: 'center' }}>
+              <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)', margin: 0 }}>Weather Adjacency</label>
+              <button className="btn btn-secondary btn-sm" onClick={generateDefaultTable}>Auto-generate</button>
+              <button className="btn btn-ghost btn-sm" onClick={() => setTransitionTable(null)}>Clear (use default)</button>
+            </div>
+            {transitionTable ? (
+              <>
+                <p style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>
+                  Toggle which weather types can transition to each other. Non-adjacent transitions are blocked.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
+                  {weatherOptions.map(from => {
+                    const row = transitionTable[from] || {};
+                    return (
+                      <div key={from} style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 12, fontWeight: 500, minWidth: 90, color: 'var(--text-primary)' }}>{from}</span>
+                        {weatherOptions.filter(w => w !== from).map(to => {
+                          const isOn = (row[to] || 0) > 0;
+                          return (
+                            <button key={to} className="btn btn-sm"
+                              style={{
+                                fontSize: 11, padding: '2px 8px',
+                                background: isOn ? 'var(--accent)' : 'var(--bg-input)',
+                                color: isOn ? '#fff' : 'var(--text-muted)',
+                                border: `1px solid ${isOn ? 'var(--accent)' : 'var(--border)'}`,
+                              }}
+                              onClick={() => toggleAdjacency(from, to)}
+                            >
+                              {to}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
+                Using auto-generated defaults. Click "Auto-generate" to customize.
+              </p>
+            )}
+          </div>
+
+          {/* Raw probability table */}
+          {transitionTable && (
+            <>
+              <button className="btn btn-ghost btn-sm" style={{ marginBottom: 8 }}
+                onClick={() => setShowAdvancedWeather(!showAdvancedWeather)}>
+                {showAdvancedWeather ? 'Hide' : 'Show'} Probability Table
+              </button>
+              {showAdvancedWeather && (
                 <div style={{ overflowX: 'auto' }}>
                   <table className="data-table" style={{ fontSize: 11 }}>
                     <thead>
@@ -424,15 +501,11 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
                     </tbody>
                   </table>
                   <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
-                    Each row should sum to 1.00
+                    Each row should sum to 1.00. Editing values here will not auto-normalize.
                   </p>
                 </div>
-              ) : (
-                <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  Using auto-generated defaults. Click "Auto-generate" to customize.
-                </p>
               )}
-            </div>
+            </>
           )}
         </div>
 

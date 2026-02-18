@@ -28,40 +28,44 @@ function resolveMonthName(calendarConfig, monthNum) {
   return calendarConfig.months[monthNum - 1]?.name || `Month ${monthNum}`;
 }
 
+const DEFAULT_ADJACENCY = {
+  'Clear':      ['Overcast', 'Windy'],
+  'Overcast':   ['Clear', 'Rain', 'Fog', 'Windy', 'Snow'],
+  'Rain':       ['Overcast', 'Heavy Rain', 'Fog'],
+  'Heavy Rain': ['Rain', 'Storm'],
+  'Storm':      ['Heavy Rain', 'Hail', 'Windy'],
+  'Windy':      ['Clear', 'Overcast', 'Storm'],
+  'Fog':        ['Overcast', 'Rain'],
+  'Snow':       ['Overcast', 'Hail'],
+  'Hail':       ['Storm', 'Snow'],
+};
+
 function generateDefaultTransitionTable(weatherOptions) {
   const table = {};
-  const n = weatherOptions.length;
-  if (n === 0) return table;
+  if (weatherOptions.length === 0) return table;
 
   for (const from of weatherOptions) {
     const row = {};
-    const fromLower = from.toLowerCase();
+    const neighbors = DEFAULT_ADJACENCY[from];
+    const selfWeight = 4;
     let total = 0;
 
     for (const to of weatherOptions) {
-      const toLower = to.toLowerCase();
-      let weight;
       if (from === to) {
-        weight = 5;
-      } else if (
-        (fromLower.includes('rain') && toLower.includes('rain')) ||
-        (fromLower.includes('storm') && toLower.includes('rain')) ||
-        (fromLower.includes('rain') && toLower.includes('storm'))
-      ) {
-        weight = 2;
-      } else if (fromLower === 'clear' && toLower === 'overcast') {
-        weight = 2;
-      } else if (fromLower === 'overcast' && (toLower === 'clear' || toLower === 'rain')) {
-        weight = 2;
+        row[to] = selfWeight;
+      } else if (neighbors && neighbors.includes(to)) {
+        row[to] = 1;
+      } else if (!neighbors) {
+        // Unknown weather type: connect to everything with low weight
+        row[to] = 0.3;
       } else {
-        weight = 0.5;
+        row[to] = 0;
       }
-      row[to] = weight;
-      total += weight;
+      total += row[to];
     }
 
     for (const to of weatherOptions) {
-      row[to] = Math.round((row[to] / total) * 1000) / 1000;
+      row[to] = total > 0 ? Math.round((row[to] / total) * 1000) / 1000 : 0;
     }
     table[from] = row;
   }
@@ -384,4 +388,4 @@ function advanceTime(campaignId, { hours = 0, minutes = 0 }) {
   };
 }
 
-module.exports = { advanceTime, getCampaignConfig, resolveTimeOfDay, resolveMonthName, generateDefaultTransitionTable };
+module.exports = { advanceTime, getCampaignConfig, resolveTimeOfDay, resolveMonthName, generateDefaultTransitionTable, DEFAULT_ADJACENCY };
