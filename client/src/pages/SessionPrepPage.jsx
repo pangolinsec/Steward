@@ -536,6 +536,14 @@ export default function SessionPrepPage({ campaignId }) {
                 />
               </div>
             </div>
+
+            {/* Attribution */}
+            <div style={{ marginTop: 32, paddingTop: 16, borderTop: '1px solid var(--border)', fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+              This section is intended to allow DMs to follow Mike Shea's <em>Lazy DM</em> principles, and hopefully be even lazier.
+              See <a href="https://slyflourish.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-muted)', textDecoration: 'underline' }}>slyflourish.com</a> for
+              more and better tips. This page was specifically inspired
+              by <a href="https://slyflourish.com/eight_steps_2023.html" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-muted)', textDecoration: 'underline' }}>The Eight Steps of Session Prep</a>.
+            </div>
           </div>
         ) : (
           <div className="empty-state" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
