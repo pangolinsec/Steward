@@ -421,6 +421,17 @@ router.patch('/:ruleId/toggle', (req, res) => {
   res.json(parseRule(updated));
 });
 
+// POST run a rule manually
+router.post('/:ruleId/run', (req, res) => {
+  const rule = db.prepare('SELECT * FROM rule_definitions WHERE id = ? AND campaign_id = ?')
+    .get(req.params.ruleId, req.params.id);
+  if (!rule) return res.status(404).json({ error: 'Rule not found' });
+
+  const { runSingleRule } = require('../rulesEngine/engine');
+  const result = runSingleRule(Number(req.params.id), Number(req.params.ruleId));
+  res.json(result);
+});
+
 // POST test a rule
 router.post('/:ruleId/test', (req, res) => {
   const rule = db.prepare('SELECT * FROM rule_definitions WHERE id = ? AND campaign_id = ?')

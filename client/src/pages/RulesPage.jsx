@@ -4,6 +4,7 @@ import ImportPreviewModal from '../components/ImportPreviewModal';
 import RuleTemplateBrowser from '../components/RuleTemplateBrowser';
 import { ConditionBuilder, ActionBuilder, stripIds } from '../components/RuleBuilder';
 import RuleTestPanel from '../components/RuleTestPanel';
+import { useToast } from '../components/ToastContext';
 
 const TRIGGER_TYPES = [
   { value: 'on_time_advance', label: 'Time Advance' },
@@ -269,6 +270,7 @@ export default function RulesPage({ campaignId, campaign }) {
   const [testRule, setTestRule] = useState(null);
   const [entityLists, setEntityLists] = useState(null);
   const [overflowMenuId, setOverflowMenuId] = useState(null);
+  const { addToast } = useToast();
 
   const load = async () => {
     if (!campaignId) return;
@@ -353,6 +355,21 @@ export default function RulesPage({ campaignId, campaign }) {
     const { id, created_at, updated_at, ...data } = rule;
     await api.createRule(campaignId, { ...data, name: `${data.name} (copy)` });
     load();
+  };
+
+  const handleRun = async (rule) => {
+    try {
+      const result = await api.runRule(campaignId, rule.id);
+      if (result.fired) {
+        const applied = result.results.filter(r => r.status === 'applied');
+        addToast(`Rule "${rule.name}" applied to ${applied.length} target${applied.length !== 1 ? 's' : ''}`, 'success');
+      } else {
+        addToast(`Rule "${rule.name}": conditions not met for any target`, 'info');
+      }
+      load();
+    } catch (err) {
+      addToast(`Failed to run rule: ${err.message}`, 'error');
+    }
   };
 
   const triggerLabel = (type) => TRIGGER_TYPES.find(t => t.value === type)?.label || type;
@@ -519,6 +536,10 @@ export default function RulesPage({ campaignId, campaign }) {
                           <button className="btn btn-ghost btn-sm" style={{ width: '100%', textAlign: 'left', borderRadius: 0, padding: '6px 12px', justifyContent: 'flex-start' }}
                             onClick={() => { setTestRule(rule); setOverflowMenuId(null); }}>
                             Test
+                          </button>
+                          <button className="btn btn-ghost btn-sm" style={{ width: '100%', textAlign: 'left', borderRadius: 0, padding: '6px 12px', justifyContent: 'flex-start' }}
+                            onClick={() => { handleRun(rule); setOverflowMenuId(null); }}>
+                            Run
                           </button>
                           <button className="btn btn-ghost btn-sm" style={{ width: '100%', textAlign: 'left', borderRadius: 0, padding: '6px 12px', justifyContent: 'flex-start' }}
                             onClick={() => { handleDuplicate(rule); setOverflowMenuId(null); }}>

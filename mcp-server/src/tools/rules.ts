@@ -319,6 +319,48 @@ export function registerRuleTools(server: McpServer): void {
   );
 
   server.registerTool(
+    "steward_run_rule",
+    {
+      title: "Run Rule",
+      description:
+        "Manually run a rule against the current game state, bypassing trigger requirements and the enabled flag. Evaluates conditions and executes actions directly. Use this when you want to force-fire a rule without waiting for its trigger.",
+      inputSchema: {
+        campaign_id: z.number().int().optional().describe("Campaign ID"),
+        rule_id: z.number().int().describe("Rule ID to run"),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+    },
+    async (params) => {
+      try {
+        const cId = campaignId(params.campaign_id);
+        const result = await post<{ fired: boolean; results: { target: string; target_id: number | null; status: string; reason?: string; actions?: { success: boolean; description: string }[] }[] }>(
+          c(cId, `/rules/${params.rule_id}/run`),
+          {},
+        );
+
+        const lines: string[] = [];
+        lines.push(`## Run Rule Result\n`);
+        lines.push(`**Fired:** ${result.fired ? "Yes" : "No"}\n`);
+
+        for (const r of result.results) {
+          if (r.status === "applied") {
+            lines.push(`- **${r.target}**: Applied`);
+            for (const a of r.actions ?? []) {
+              lines.push(`  - ${a.success ? "OK" : "FAIL"}: ${a.description}`);
+            }
+          } else {
+            lines.push(`- **${r.target}**: Skipped — ${r.reason}`);
+          }
+        }
+
+        return { content: [{ type: "text", text: lines.join("\n") }] };
+      } catch (error) {
+        return { content: [{ type: "text", text: handleError(error) }], isError: true };
+      }
+    },
+  );
+
+  server.registerTool(
     "steward_get_rule_references",
     {
       title: "Find Rule References",

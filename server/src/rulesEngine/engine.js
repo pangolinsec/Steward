@@ -328,4 +328,98 @@ function isInTimeWindow(schedTime, oldTime, newTime) {
   return schedVal > oldVal && schedVal <= newVal;
 }
 
-module.exports = { evaluateRules, checkThresholds, getRulesSettings };
+/**
+ * Manually run a single rule against the current game state.
+ * Bypasses trigger matching, enabled flag, and action_mode — always executes directly.
+ */
+function runSingleRule(campaignId, ruleId) {
+  const rawRule = db.prepare('SELECT * FROM rule_definitions WHERE id = ? AND campaign_id = ?')
+    .get(ruleId, campaignId);
+  if (!rawRule) return { fired: false, error: 'Rule not found', results: [] };
+
+  const rule = {
+    ...rawRule,
+    trigger_config: JSON.parse(rawRule.trigger_config || '{}'),
+    conditions: JSON.parse(rawRule.conditions || '{"all":[]}'),
+    actions: JSON.parse(rawRule.actions || '[]'),
+    tags: JSON.parse(rawRule.tags || '[]'),
+    target_config: JSON.parse(rawRule.target_config || '{}'),
+  };
+
+  const targets = resolveTargets(rule, campaignId);
+  const batchId = crypto.randomUUID();
+  const results = [];
+  let anyFired = false;
+
+  for (const target of targets) {
+    const context = buildContext(campaignId, {}, target);
+    const evalResult = evaluateConditionTree(rule.conditions, context);
+
+    if (!evalResult.pass) {
+      results.push({
+        target: target?.name || 'environment',
+        target_id: target?.id || null,
+        status: 'skipped',
+        reason: 'Conditions not met',
+        details: evalResult.details,
+      });
+      continue;
+    }
+
+    // Execute actions directly (always auto mode)
+    const actionResults = [];
+    for (let i = 0; i < rule.actions.length; i++) {
+      const action = rule.actions[i];
+      const result = executeAction(action, context);
+      actionResults.push(result);
+
+      if (result.success) {
+        db.prepare(`
+          INSERT INTO rule_action_log (campaign_id, rule_id, rule_name, batch_id, action_index,
+            action_type, action_params, target_character_id, target_character_name, undo_data)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          campaignId, rule.id, rule.name, batchId, i,
+          action.type, JSON.stringify(action),
+          target?.id || null, target?.name || '',
+          JSON.stringify(result.undoData),
+        );
+      }
+    }
+
+    // Create auto-applied notification
+    const successActions = actionResults.filter(r => r.success);
+    if (successActions.length > 0) {
+      const autoNotif = {
+        campaign_id: campaignId,
+        batch_id: batchId,
+        rule_id: rule.id,
+        rule_name: rule.name,
+        notification_type: 'auto_applied',
+        message: `Rule "${rule.name}" manually run: ${successActions.map(r => r.description).join('; ')}`,
+        severity: 'info',
+        target_character_id: target?.id || null,
+        target_character_name: target?.name || '',
+        actions_data: JSON.stringify(rule.actions),
+      };
+      saveNotification(autoNotif);
+    }
+
+    anyFired = true;
+    results.push({
+      target: target?.name || 'environment',
+      target_id: target?.id || null,
+      status: 'applied',
+      actions: actionResults.map(r => ({ success: r.success, description: r.description })),
+    });
+  }
+
+  // Update last_triggered_at
+  if (anyFired) {
+    db.prepare("UPDATE rule_definitions SET last_triggered_at = datetime('now') WHERE id = ?").run(rule.id);
+  }
+
+  return { fired: anyFired, results };
+}
+
+module.exports = { evaluateRules, checkThresholds, getRulesSettings, runSingleRule };
