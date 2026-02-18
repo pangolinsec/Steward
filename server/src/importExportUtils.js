@@ -166,6 +166,128 @@ function validateModifierAttributes(entityKey, entities, attrKeys) {
   return warnings;
 }
 
+// --- Prerequisite scanning ---
+
+function extractAllConditions(node) {
+  if (!node) return [];
+  if (node.all) return node.all.flatMap(extractAllConditions);
+  if (node.any) return node.any.flatMap(extractAllConditions);
+  if (node.not) return extractAllConditions(node.not);
+  return [node];
+}
+
+function getExistingNames(db, campaignId, entityKey) {
+  const config = ENTITY_CONFIG[entityKey];
+  const rows = db.prepare(`SELECT ${config.nameField} FROM ${config.table} WHERE campaign_id = ?`).all(campaignId);
+  return rows.map(r => r[config.nameField]);
+}
+
+function getExistingIds(db, campaignId, entityKey) {
+  const config = ENTITY_CONFIG[entityKey];
+  const rows = db.prepare(`SELECT id FROM ${config.table} WHERE campaign_id = ?`).all(campaignId);
+  return rows.map(r => r.id);
+}
+
+function getAttributeKeys(db, campaignId) {
+  const row = db.prepare('SELECT attribute_definitions FROM campaigns WHERE id = ?').get(campaignId);
+  if (!row || !row.attribute_definitions) return [];
+  try { return JSON.parse(row.attribute_definitions).map(a => a.key); }
+  catch { return []; }
+}
+
+function getWeatherOptions(db, campaignId) {
+  const row = db.prepare('SELECT weather_options FROM campaigns WHERE id = ?').get(campaignId);
+  if (!row || !row.weather_options) return [];
+  try { return JSON.parse(row.weather_options); }
+  catch { return []; }
+}
+
+function scanPrerequisites(db, campaignId, importData, entityTypes) {
+  const data = normalizeImportData(importData, entityTypes);
+
+  // Build "available" sets: what exists in campaign + what's being imported
+  const availableEffects = new Set([
+    ...getExistingNames(db, campaignId, 'status_effects'),
+    ...(data.status_effects || []).map(e => e.name),
+  ]);
+  const availableItems = new Set([
+    ...getExistingNames(db, campaignId, 'items'),
+    ...(data.items || []).map(e => e.name),
+  ]);
+  const availableAttributes = new Set(getAttributeKeys(db, campaignId));
+  const availableWeather = new Set(getWeatherOptions(db, campaignId));
+  const availableLocationIds = new Set([
+    ...getExistingIds(db, campaignId, 'locations'),
+    ...(data.locations || []).map(e => e.id),
+  ]);
+  const availableCharacterIds = new Set([
+    ...getExistingIds(db, campaignId, 'characters'),
+    ...(data.characters || []).map(e => e.id),
+  ]);
+
+  const issues = [];
+
+  // Scan rules
+  for (const rule of (data.rules || [])) {
+    const conditions = extractAllConditions(
+      typeof rule.conditions === 'string' ? JSON.parse(rule.conditions) : rule.conditions
+    );
+    const actions = typeof rule.actions === 'string' ? JSON.parse(rule.actions) : (rule.actions || []);
+    const targetConfig = typeof rule.target_config === 'string' ? JSON.parse(rule.target_config) : (rule.target_config || {});
+
+    for (const c of conditions) {
+      if (['has_effect', 'lacks_effect'].includes(c.type) && c.effect_name && !availableEffects.has(c.effect_name))
+        issues.push({ entity: rule.name, entityType: 'rules', refType: 'effect', refName: c.effect_name });
+      if (['has_item', 'lacks_item', 'item_quantity_lte'].includes(c.type) && c.item_name && !availableItems.has(c.item_name))
+        issues.push({ entity: rule.name, entityType: 'rules', refType: 'item', refName: c.item_name });
+      if (['attribute_gte', 'attribute_lte', 'attribute_eq'].includes(c.type) && c.attribute && !availableAttributes.has(c.attribute))
+        issues.push({ entity: rule.name, entityType: 'rules', refType: 'attribute', refName: c.attribute });
+      if (c.type === 'weather_is' && c.value && !availableWeather.has(c.value))
+        issues.push({ entity: rule.name, entityType: 'rules', refType: 'weather', refName: c.value });
+      if (c.type === 'weather_in' && Array.isArray(c.values))
+        for (const v of c.values) if (!availableWeather.has(v))
+          issues.push({ entity: rule.name, entityType: 'rules', refType: 'weather', refName: v });
+      if (c.type === 'location_is' && c.location_id && !availableLocationIds.has(c.location_id))
+        issues.push({ entity: rule.name, entityType: 'rules', refType: 'location', refName: `#${c.location_id}` });
+    }
+
+    for (const a of actions) {
+      if (['apply_effect', 'remove_effect'].includes(a.type) && a.effect_name && !availableEffects.has(a.effect_name))
+        issues.push({ entity: rule.name, entityType: 'rules', refType: 'effect', refName: a.effect_name });
+      if (['consume_item', 'grant_item'].includes(a.type) && a.item_name && !availableItems.has(a.item_name))
+        issues.push({ entity: rule.name, entityType: 'rules', refType: 'item', refName: a.item_name });
+      if (a.type === 'modify_attribute' && a.attribute && !availableAttributes.has(a.attribute))
+        issues.push({ entity: rule.name, entityType: 'rules', refType: 'attribute', refName: a.attribute });
+      if (a.type === 'set_weather' && a.weather && !availableWeather.has(a.weather))
+        issues.push({ entity: rule.name, entityType: 'rules', refType: 'weather', refName: a.weather });
+    }
+
+    if (Array.isArray(targetConfig.character_ids)) {
+      for (const cid of targetConfig.character_ids)
+        if (!availableCharacterIds.has(cid))
+          issues.push({ entity: rule.name, entityType: 'rules', refType: 'character', refName: `#${cid}` });
+    }
+  }
+
+  // Scan encounters
+  for (const enc of (data.encounters || [])) {
+    const npcs = typeof enc.npcs === 'string' ? JSON.parse(enc.npcs) : (enc.npcs || []);
+    const loot = typeof enc.loot_table === 'string' ? JSON.parse(enc.loot_table) : (enc.loot_table || []);
+    const envOverrides = typeof enc.environment_overrides === 'string' ? JSON.parse(enc.environment_overrides) : (enc.environment_overrides || {});
+
+    for (const npc of npcs)
+      if (npc.character_id && !availableCharacterIds.has(npc.character_id))
+        issues.push({ entity: enc.name, entityType: 'encounters', refType: 'character', refName: `#${npc.character_id}` });
+    for (const item of loot)
+      if (item.item_name && !availableItems.has(item.item_name))
+        issues.push({ entity: enc.name, entityType: 'encounters', refType: 'item', refName: item.item_name });
+    if (envOverrides.weather && !availableWeather.has(envOverrides.weather))
+      issues.push({ entity: enc.name, entityType: 'encounters', refType: 'weather', refName: envOverrides.weather });
+  }
+
+  return issues;
+}
+
 // --- Preview ---
 
 function normalizeImportData(importData, entityTypes) {
@@ -248,7 +370,8 @@ function buildImportPreview(db, campaignId, importData, entityTypes) {
     warnings.push(...modWarnings);
   }
 
-  return { preview, warnings };
+  const prerequisites = scanPrerequisites(db, campaignId, importData, entityTypes);
+  return { preview, warnings, prerequisites };
 }
 
 // --- Merge import engine ---
@@ -363,4 +486,6 @@ module.exports = {
   buildImportPreview,
   executeMergeImport,
   normalizeImportData,
+  extractAllConditions,
+  scanPrerequisites,
 };

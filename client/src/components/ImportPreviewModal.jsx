@@ -18,6 +18,7 @@ export default function ImportPreviewModal({ campaignId, onClose, onComplete, in
   const [fileName, setFileName] = useState('');
   const [preview, setPreview] = useState(null);
   const [warnings, setWarnings] = useState([]);
+  const [prerequisites, setPrerequisites] = useState([]);
   const [decisions, setDecisions] = useState({});
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -54,6 +55,7 @@ export default function ImportPreviewModal({ campaignId, onClose, onComplete, in
       const res = await api.previewImport(campaignId, fileData, selectedTypes);
       setPreview(res.preview);
       setWarnings(res.warnings || []);
+      setPrerequisites(res.prerequisites || []);
       // Initialize decisions with bulk defaults
       const initDecisions = {};
       for (const key of selectedTypes) {
@@ -144,6 +146,7 @@ export default function ImportPreviewModal({ campaignId, onClose, onComplete, in
             <ResolveStep
               preview={preview}
               warnings={warnings}
+              prerequisites={prerequisites}
               decisions={decisions}
               selectedTypes={selectedTypes}
               loading={loading}
@@ -217,15 +220,46 @@ function SelectStep({ fileData, fileName, fileRef, selectedTypes, lockEntityType
   );
 }
 
-function ResolveStep({ preview, warnings, decisions, selectedTypes, loading, onBulkAction, onEntityAction, onImport, onBack }) {
+function ResolveStep({ preview, warnings, prerequisites, decisions, selectedTypes, loading, onBulkAction, onEntityAction, onImport, onBack }) {
   const [expanded, setExpanded] = useState(() => {
     // Auto-expand first section with conflicts
     const first = selectedTypes.find(k => preview[k]?.conflicts?.length > 0);
     return first || selectedTypes[0];
   });
 
+  // Group prerequisites by refType+refName
+  const prereqGroups = React.useMemo(() => {
+    if (!prerequisites || prerequisites.length === 0) return [];
+    const grouped = {};
+    for (const issue of prerequisites) {
+      const key = `${issue.refType}:${issue.refName}`;
+      if (!grouped[key]) grouped[key] = { refType: issue.refType, refName: issue.refName, entities: [] };
+      if (!grouped[key].entities.includes(issue.entity)) grouped[key].entities.push(issue.entity);
+    }
+    return Object.values(grouped);
+  }, [prerequisites]);
+
   return (
     <>
+      {prereqGroups.length > 0 && (
+        <div className="import-warning-box" style={{ marginBottom: 12 }}>
+          <div className="import-warning-title">
+            Missing Prerequisites ({prereqGroups.length})
+          </div>
+          <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '4px 0 8px' }}>
+            These imported entities reference things that don't exist in your campaign.
+            Rules using missing references may not work until you create them.
+          </p>
+          <ul className="import-warning-list">
+            {prereqGroups.map((group, i) => (
+              <li key={i}>
+                {group.refType} <strong>"{group.refName}"</strong> — referenced by: {group.entities.join(', ')}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {selectedTypes.map(entityKey => {
         const section = preview[entityKey];
         if (!section) return null;
