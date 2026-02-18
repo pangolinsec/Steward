@@ -33,7 +33,7 @@ The **Characters** page shows all characters in a card grid. Each card displays:
 - Description preview
 - First four attribute values
 
-**Filter** by type (All / PC / NPC) using the dropdown. **Search** by name using the search box.
+**Filter** by type (All / PC / NPC) using the dropdown. **Search** by name using the search box. **Show Archived** reveals archived NPCs (hidden by default), which appear dimmed with an "Archived" tag.
 
 ### Creating a Character
 
@@ -62,6 +62,8 @@ Tag attributes display below the numeric table as label/value pairs.
 **Applied Effects** — all status effects currently active on the character. Each entry shows the effect name, modifier summary, tags, and remaining duration. Click the remove button to strip an effect. Click **Add Effect** to open a searchable picker of all effect definitions.
 
 **Inventory** — all items the character carries. Shows item name, type, modifiers, and quantity. For stackable items, use the +/- buttons to adjust quantity. Click **Add Item** to open the item picker.
+
+**Archiving NPCs** — click **Archive** on an NPC's detail page (or check the Archived box in the edit modal) to hide it from the main character list. Archived NPCs remain available in encounter NPC pickers. Use **Unarchive** to restore visibility.
 
 ### Computed Stats
 

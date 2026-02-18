@@ -146,7 +146,7 @@ These tools are always visible — they power a live game session plus toolbox m
 
 | Tool | Description |
 |---|---|
-| `almanac_list_characters` | List all characters, filterable by type (PC/NPC), search, and `include_spawned` for encounter-spawned NPCs |
+| `almanac_list_characters` | List all characters, filterable by type (PC/NPC), search, `include_spawned` for encounter-spawned NPCs, and `include_archived` for archived NPCs |
 | `almanac_get_character` | Full character sheet: base/effective attributes, applied effects, inventory |
 | `almanac_apply_effect` | Apply a status effect to a character |
 | `almanac_remove_effect` | Remove an applied effect |

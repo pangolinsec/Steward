@@ -240,7 +240,7 @@ All endpoints are prefixed with `/api`. Campaign-scoped endpoints use `/api/camp
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/campaigns/:id/characters` | List characters (query: `type`, `search`, `include_spawned`) |
+| GET | `/api/campaigns/:id/characters` | List characters (query: `type`, `search`, `include_spawned`, `include_archived`) |
 | GET | `/api/campaigns/:id/characters/:charId` | Get character |
 | GET | `/api/campaigns/:id/characters/:charId/computed` | Get computed stats with modifier breakdown |
 | POST | `/api/campaigns/:id/characters` | Create character (`name`, `type` required) |
