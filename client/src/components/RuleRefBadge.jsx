@@ -18,8 +18,8 @@ export default function RuleRefBadge({ campaignId, entityType, entityName, entit
       {showPopover && (
         <div className="rule-ref-popover" onClick={e => e.stopPropagation()}>
           {refs.map(r => (
-            <div key={r.rule_id} style={{ marginBottom: 4 }}>
-              <strong>{r.rule_name}</strong>: {r.references.map(ref => ref.detail).join(', ')}
+            <div key={r.rule_id} style={{ marginBottom: 4, opacity: r.enabled === false ? 0.5 : 1 }}>
+              <strong>{r.rule_name}</strong>{r.enabled === false && <span style={{ fontSize: 10, color: 'var(--text-muted)', marginLeft: 4 }}>(disabled)</span>}: {r.references.map(ref => ref.detail).join(', ')}
             </div>
           ))}
         </div>

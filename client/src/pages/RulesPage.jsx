@@ -75,6 +75,8 @@ function summarizeConditionReadable(cond) {
     case 'random_chance': return `${Math.round((cond.probability || 0) * 100)}% chance`;
     case 'hours_since_last_rest': return `Hours since rest ${cond.operator || '??'} ${cond.hours}`;
     case 'season_is': return `Season is ${cond.value}`;
+    case 'trait_equals': return `${cond.trait} is "${cond.value}"`;
+    case 'trait_in': return `${cond.trait} in [${(cond.values || []).join(', ')}]`;
     default: return cond.type;
   }
 }

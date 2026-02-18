@@ -19,6 +19,8 @@ const CONDITION_TYPES = [
   { value: 'random_chance', label: 'Random Chance', fields: ['probability'] },
   { value: 'hours_since_last_rest', label: 'Hours Since Rest', fields: ['operator', 'hours'] },
   { value: 'season_is', label: 'Season Is', fields: ['value'] },
+  { value: 'trait_equals', label: 'Trait Equals', fields: ['trait', 'value'] },
+  { value: 'trait_in', label: 'Trait In', fields: ['trait', 'values'] },
 ];
 
 const ACTION_TYPES = [
@@ -299,6 +301,48 @@ function ConditionRow({ condition, onChange, onRemove, entityLists, campaign }) 
           options={attrOptions}
           allowCustom
           placeholder="attribute"
+        />
+      );
+    }
+    // trait field for trait_equals / trait_in
+    else if (field === 'trait') {
+      const tagAttrs = (campaign?.attribute_definitions || [])
+        .filter(a => a.type === 'tag')
+        .map(a => ({ value: a.key, label: a.label }));
+      fieldElement = (
+        <FieldSelect
+          value={condition[field]}
+          onChange={v => onChange({ ...condition, [field]: v })}
+          options={tagAttrs}
+          allowCustom
+          placeholder="trait"
+        />
+      );
+    }
+    // trait_equals value — populate from trait's options
+    else if (field === 'value' && condType === 'trait_equals') {
+      const traitDef = (campaign?.attribute_definitions || []).find(a => a.key === condition.trait);
+      const opts = traitDef?.options || [];
+      fieldElement = (
+        <FieldSelect
+          value={condition[field]}
+          onChange={v => onChange({ ...condition, [field]: v })}
+          options={opts}
+          allowCustom
+          placeholder="value"
+        />
+      );
+    }
+    // trait_in values — multi-select from trait's options
+    else if (field === 'values' && condType === 'trait_in') {
+      const traitDef = (campaign?.attribute_definitions || []).find(a => a.key === condition.trait);
+      const opts = traitDef?.options || [];
+      fieldElement = (
+        <MultiCheckboxSelect
+          values={condition[field]}
+          onChange={v => onChange({ ...condition, [field]: v })}
+          options={opts}
+          allowCustom
         />
       );
     }

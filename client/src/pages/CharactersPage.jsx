@@ -126,7 +126,7 @@ function CharacterForm({ campaignId, attrs, character, onClose, onSave }) {
   const [baseAttrs, setBaseAttrs] = useState(() => {
     const base = character?.base_attributes || {};
     const result = {};
-    attrs.forEach(a => { result[a.key] = base[a.key] ?? 10; });
+    attrs.forEach(a => { result[a.key] = base[a.key] ?? (a.type === 'tag' ? '' : 10); });
     return result;
   });
 
@@ -181,11 +181,21 @@ function CharacterForm({ campaignId, attrs, character, onClose, onSave }) {
                 {attrs.map(a => (
                   <div key={a.key} className="form-group" style={{ marginBottom: 0 }}>
                     <label>{a.label}</label>
-                    <input
-                      type="number"
-                      value={baseAttrs[a.key] ?? 10}
-                      onChange={e => setBaseAttrs({ ...baseAttrs, [a.key]: Number(e.target.value) })}
-                    />
+                    {a.type === 'tag' ? (
+                      <select
+                        value={baseAttrs[a.key] ?? ''}
+                        onChange={e => setBaseAttrs({ ...baseAttrs, [a.key]: e.target.value })}
+                      >
+                        <option value="">—</option>
+                        {(a.options || []).map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                      </select>
+                    ) : (
+                      <input
+                        type="number"
+                        value={baseAttrs[a.key] ?? 10}
+                        onChange={e => setBaseAttrs({ ...baseAttrs, [a.key]: Number(e.target.value) })}
+                      />
+                    )}
                   </div>
                 ))}
               </div>

@@ -3,6 +3,7 @@ const router = express.Router({ mergeParams: true });
 const db = require('../db');
 
 const { RULE_TEMPLATES, TEMPLATE_CATEGORIES } = require('../ruleTemplates');
+const { extractAllConditions } = require('../importExportUtils');
 
 function parseRule(rule) {
   return {
@@ -19,7 +20,7 @@ function parseRule(rule) {
 // GET rule references for entities
 router.get('/references', (req, res) => {
   const { entity_type, entity_name, entity_id } = req.query;
-  const rules = db.prepare('SELECT * FROM rule_definitions WHERE campaign_id = ? AND enabled = 1')
+  const rules = db.prepare('SELECT * FROM rule_definitions WHERE campaign_id = ?')
     .all(req.params.id);
 
   const matches = [];
@@ -30,7 +31,7 @@ router.get('/references', (req, res) => {
 
     const refs = scanForReferences(conditions, actions, targetConfig, entity_type, entity_name, entity_id);
     if (refs.length > 0) {
-      matches.push({ rule_id: rule.id, rule_name: rule.name, references: refs });
+      matches.push({ rule_id: rule.id, rule_name: rule.name, enabled: !!rule.enabled, references: refs });
     }
   }
   res.json(matches);
@@ -38,7 +39,7 @@ router.get('/references', (req, res) => {
 
 function scanForReferences(conditions, actions, targetConfig, entityType, entityName, entityId) {
   const refs = [];
-  const condItems = conditions?.all || conditions?.any || [];
+  const condItems = extractAllConditions(conditions);
 
   for (const cond of condItems) {
     if (entityType === 'effect' || !entityType) {
@@ -55,6 +56,25 @@ function scanForReferences(conditions, actions, targetConfig, entityType, entity
       if (cond.type === 'location_is' && entityId && cond.location_id == entityId) {
         refs.push({ location: 'condition', detail: `location_is: #${entityId}` });
       }
+      if (cond.type === 'location_in' && entityId && (cond.location_ids || []).includes(Number(entityId))) {
+        refs.push({ location: 'condition', detail: `location_in: #${entityId}` });
+      }
+    }
+    if (entityType === 'weather' || !entityType) {
+      if (cond.type === 'weather_is' && cond.value === entityName) {
+        refs.push({ location: 'condition', detail: `weather_is: ${cond.value}` });
+      }
+      if (cond.type === 'weather_in' && (cond.values || []).includes(entityName)) {
+        refs.push({ location: 'condition', detail: `weather_in: ${entityName}` });
+      }
+    }
+    if (entityType === 'attribute' || !entityType) {
+      if (['attribute_gte', 'attribute_lte', 'attribute_eq'].includes(cond.type) && cond.attribute === entityName) {
+        refs.push({ location: 'condition', detail: `${cond.type}: ${cond.attribute}` });
+      }
+      if (['trait_equals', 'trait_in'].includes(cond.type) && cond.trait === entityName) {
+        refs.push({ location: 'condition', detail: `${cond.type}: ${cond.trait}` });
+      }
     }
   }
 
@@ -67,6 +87,16 @@ function scanForReferences(conditions, actions, targetConfig, entityType, entity
     if (entityType === 'item' || !entityType) {
       if (['consume_item', 'grant_item'].includes(action.type) && action.item_name === entityName) {
         refs.push({ location: 'action', detail: `${action.type}: ${action.item_name}` });
+      }
+    }
+    if (entityType === 'weather' || !entityType) {
+      if (action.type === 'set_weather' && action.weather === entityName) {
+        refs.push({ location: 'action', detail: `set_weather: ${action.weather}` });
+      }
+    }
+    if (entityType === 'attribute' || !entityType) {
+      if (action.type === 'modify_attribute' && action.attribute === entityName) {
+        refs.push({ location: 'action', detail: `modify_attribute: ${action.attribute}` });
       }
     }
   }

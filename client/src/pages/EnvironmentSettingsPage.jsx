@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback, useContext } from 'react';
 import { UNSAFE_NavigationContext as NavigationContext } from 'react-router-dom';
 import * as api from '../api';
+import RuleRefBadge from '../components/RuleRefBadge';
 
 export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate }) {
   const [env, setEnv] = useState(null);
   const [attrs, setAttrs] = useState([]);
   const [newAttrKey, setNewAttrKey] = useState('');
   const [newAttrLabel, setNewAttrLabel] = useState('');
+  const [newAttrType, setNewAttrType] = useState('numeric');
+  const [newAttrOptions, setNewAttrOptions] = useState('');
   const [thresholds, setThresholds] = useState([]);
   const [calendarConfig, setCalendarConfig] = useState(null);
   const [weatherOptions, setWeatherOptions] = useState([]);
@@ -174,26 +177,71 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
         <div className="card">
           <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 12 }}>Attribute Definitions</h3>
           <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>These are the attributes all characters in this campaign use.</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {attrs.map((a, i) => (
-              <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <input type="text" value={a.key} onChange={e => {
-                  const updated = [...attrs]; updated[i] = { ...a, key: e.target.value }; setAttrs(updated);
-                }} style={{ width: 120, fontFamily: 'var(--font-mono)', fontSize: 12 }} />
-                <input type="text" value={a.label} onChange={e => {
-                  const updated = [...attrs]; updated[i] = { ...a, label: e.target.value }; setAttrs(updated);
-                }} style={{ flex: 1 }} />
-                <button className="btn btn-danger btn-sm" onClick={() => setAttrs(attrs.filter((_, idx) => idx !== i))}>&#x2715;</button>
-              </div>
-            ))}
+
+          {/* Numeric Attributes */}
+          <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6, display: 'block' }}>Numeric Attributes</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
+            {attrs.filter(a => a.type !== 'tag').map((a, i) => {
+              const realIdx = attrs.indexOf(a);
+              return (
+                <div key={realIdx} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <input type="text" value={a.key} onChange={e => {
+                    const updated = [...attrs]; updated[realIdx] = { ...a, key: e.target.value }; setAttrs(updated);
+                  }} style={{ width: 120, fontFamily: 'var(--font-mono)', fontSize: 12 }} />
+                  <input type="text" value={a.label} onChange={e => {
+                    const updated = [...attrs]; updated[realIdx] = { ...a, label: e.target.value }; setAttrs(updated);
+                  }} style={{ flex: 1 }} />
+                  <RuleRefBadge campaignId={campaignId} entityType="attribute" entityName={a.key} />
+                  <button className="btn btn-danger btn-sm" onClick={() => setAttrs(attrs.filter((_, idx) => idx !== realIdx))}>&#x2715;</button>
+                </div>
+              );
+            })}
           </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-            <input type="text" placeholder="key" value={newAttrKey} onChange={e => setNewAttrKey(e.target.value)} style={{ width: 120, fontFamily: 'var(--font-mono)', fontSize: 12 }} />
-            <input type="text" placeholder="Label" value={newAttrLabel} onChange={e => setNewAttrLabel(e.target.value)} style={{ flex: 1 }} />
+
+          {/* Tag Attributes */}
+          <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6, display: 'block' }}>Tag Attributes</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
+            {attrs.filter(a => a.type === 'tag').map((a) => {
+              const realIdx = attrs.indexOf(a);
+              return (
+                <div key={realIdx} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <input type="text" value={a.key} onChange={e => {
+                    const updated = [...attrs]; updated[realIdx] = { ...a, key: e.target.value }; setAttrs(updated);
+                  }} style={{ width: 120, fontFamily: 'var(--font-mono)', fontSize: 12 }} />
+                  <input type="text" value={a.label} onChange={e => {
+                    const updated = [...attrs]; updated[realIdx] = { ...a, label: e.target.value }; setAttrs(updated);
+                  }} style={{ width: 120 }} />
+                  <input type="text" value={(a.options || []).join(', ')} onChange={e => {
+                    const opts = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                    const updated = [...attrs]; updated[realIdx] = { ...a, options: opts }; setAttrs(updated);
+                  }} placeholder="Option1, Option2, ..." style={{ flex: 1, fontSize: 12 }} />
+                  <RuleRefBadge campaignId={campaignId} entityType="attribute" entityName={a.key} />
+                  <button className="btn btn-danger btn-sm" onClick={() => setAttrs(attrs.filter((_, idx) => idx !== realIdx))}>&#x2715;</button>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Add new attribute */}
+          <div style={{ display: 'flex', gap: 8, marginTop: 8, alignItems: 'center' }}>
+            <select value={newAttrType} onChange={e => setNewAttrType(e.target.value)} style={{ width: 100, fontSize: 12 }}>
+              <option value="numeric">Numeric</option>
+              <option value="tag">Tag</option>
+            </select>
+            <input type="text" placeholder="key" value={newAttrKey} onChange={e => setNewAttrKey(e.target.value)} style={{ width: 100, fontFamily: 'var(--font-mono)', fontSize: 12 }} />
+            <input type="text" placeholder="Label" value={newAttrLabel} onChange={e => setNewAttrLabel(e.target.value)} style={{ width: 100 }} />
+            {newAttrType === 'tag' && (
+              <input type="text" placeholder="Option1, Option2, ..." value={newAttrOptions} onChange={e => setNewAttrOptions(e.target.value)} style={{ flex: 1, fontSize: 12 }} />
+            )}
             <button className="btn btn-secondary btn-sm" onClick={() => {
               if (newAttrKey && newAttrLabel) {
-                setAttrs([...attrs, { key: newAttrKey, label: newAttrLabel }]);
-                setNewAttrKey(''); setNewAttrLabel('');
+                const newAttr = { key: newAttrKey, label: newAttrLabel };
+                if (newAttrType === 'tag') {
+                  newAttr.type = 'tag';
+                  newAttr.options = newAttrOptions.split(',').map(s => s.trim()).filter(Boolean);
+                }
+                setAttrs([...attrs, newAttr]);
+                setNewAttrKey(''); setNewAttrLabel(''); setNewAttrOptions(''); setNewAttrType('numeric');
               }
             }}>Add</button>
           </div>
@@ -268,6 +316,7 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
             {weatherOptions.map((w, i) => (
               <span key={i} className="tag" style={{ gap: 6 }}>
                 {w}
+                <RuleRefBadge campaignId={campaignId} entityType="weather" entityName={w} />
                 <button style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 0, fontSize: 11 }}
                   onClick={() => setWeatherOptions(weatherOptions.filter((_, idx) => idx !== i))}>&#x2715;</button>
               </span>

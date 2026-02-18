@@ -98,46 +98,58 @@ export default function CharacterDetailPage({ campaignId, campaign }) {
       {/* Attributes Table */}
       <div className="card" style={{ marginBottom: 16 }}>
         <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, color: 'var(--text-secondary)' }}>Attributes</h3>
-        <table className="attr-table">
-          <thead>
-            <tr>
-              <th>Attribute</th>
-              <th>Base</th>
-              <th>Modifiers</th>
-              <th>Effective</th>
-            </tr>
-          </thead>
-          <tbody>
-            {attrs.map(a => {
-              const b = base[a.key] ?? 0;
-              const e = effective[a.key] ?? 0;
-              const diff = e - b;
-              const breakdown = getAttrBreakdown(a.key);
-              return (
-                <tr key={a.key}>
-                  <td className="attr-name">{a.label}</td>
-                  <td>{b}</td>
-                  <td>
-                    {breakdown.length === 0 ? (
-                      <span className="mod-neutral">--</span>
-                    ) : (
-                      <span className="inline-flex gap-sm flex-wrap">
-                        {breakdown.map((s, i) => (
-                          <span key={i} className={s.delta > 0 ? 'mod-positive' : 'mod-negative'} title={`${s.name} (${s.type})`} style={{ cursor: 'help' }}>
-                            {formatModifier(s.delta)}
-                          </span>
-                        ))}
-                      </span>
-                    )}
-                  </td>
-                  <td style={{ fontWeight: 600, color: diff > 0 ? 'var(--green)' : diff < 0 ? 'var(--red)' : 'var(--text-primary)' }}>
-                    {e}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        {attrs.filter(a => a.type !== 'tag').length > 0 && (
+          <table className="attr-table">
+            <thead>
+              <tr>
+                <th>Attribute</th>
+                <th>Base</th>
+                <th>Modifiers</th>
+                <th>Effective</th>
+              </tr>
+            </thead>
+            <tbody>
+              {attrs.filter(a => a.type !== 'tag').map(a => {
+                const b = base[a.key] ?? 0;
+                const e = effective[a.key] ?? 0;
+                const diff = e - b;
+                const breakdown = getAttrBreakdown(a.key);
+                return (
+                  <tr key={a.key}>
+                    <td className="attr-name">{a.label}</td>
+                    <td>{b}</td>
+                    <td>
+                      {breakdown.length === 0 ? (
+                        <span className="mod-neutral">--</span>
+                      ) : (
+                        <span className="inline-flex gap-sm flex-wrap">
+                          {breakdown.map((s, i) => (
+                            <span key={i} className={s.delta > 0 ? 'mod-positive' : 'mod-negative'} title={`${s.name} (${s.type})`} style={{ cursor: 'help' }}>
+                              {formatModifier(s.delta)}
+                            </span>
+                          ))}
+                        </span>
+                      )}
+                    </td>
+                    <td style={{ fontWeight: 600, color: diff > 0 ? 'var(--green)' : diff < 0 ? 'var(--red)' : 'var(--text-primary)' }}>
+                      {e}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+        {attrs.filter(a => a.type === 'tag').length > 0 && (
+          <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: '8px 16px' }}>
+            {attrs.filter(a => a.type === 'tag').map(a => (
+              <div key={a.key}>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{a.label}: </span>
+                <span style={{ fontSize: 13 }}>{base[a.key] || '—'}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
@@ -337,7 +349,7 @@ function EditCharacterModal({ campaignId, character, attrs, onClose, onSaved }) 
   const [portraitUrl, setPortraitUrl] = useState(character.portrait_url || '');
   const [baseAttrs, setBaseAttrs] = useState(() => {
     const result = {};
-    attrs.forEach(a => { result[a.key] = base[a.key] ?? 10; });
+    attrs.forEach(a => { result[a.key] = base[a.key] ?? (a.type === 'tag' ? '' : 10); });
     return result;
   });
 
@@ -389,7 +401,17 @@ function EditCharacterModal({ campaignId, character, attrs, onClose, onSaved }) 
                 {attrs.map(a => (
                   <div key={a.key} className="form-group" style={{ marginBottom: 0 }}>
                     <label>{a.label}</label>
-                    <input type="number" value={baseAttrs[a.key] ?? 10} onChange={e => setBaseAttrs({ ...baseAttrs, [a.key]: Number(e.target.value) })} />
+                    {a.type === 'tag' ? (
+                      <select
+                        value={baseAttrs[a.key] ?? ''}
+                        onChange={e => setBaseAttrs({ ...baseAttrs, [a.key]: e.target.value })}
+                      >
+                        <option value="">—</option>
+                        {(a.options || []).map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                      </select>
+                    ) : (
+                      <input type="number" value={baseAttrs[a.key] ?? 10} onChange={e => setBaseAttrs({ ...baseAttrs, [a.key]: Number(e.target.value) })} />
+                    )}
                   </div>
                 ))}
               </div>
