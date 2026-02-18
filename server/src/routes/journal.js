@@ -3,7 +3,12 @@ const router = express.Router({ mergeParams: true });
 const db = require('../db');
 
 function parseNote(n) {
-  return { ...n, tags: JSON.parse(n.tags || '[]'), starred: !!n.starred };
+  let tags = [];
+  try {
+    const parsed = JSON.parse(n.tags || '[]');
+    tags = Array.isArray(parsed) ? parsed : String(parsed).split(',').map(t => t.trim()).filter(Boolean);
+  } catch { /* leave as empty array */ }
+  return { ...n, tags, starred: !!n.starred };
 }
 
 // GET list notes
@@ -66,7 +71,8 @@ router.get('/:noteId', (req, res) => {
 
 // POST create note
 router.post('/', (req, res) => {
-  const { title = '', content = '', tags = [], starred = false } = req.body;
+  let { title = '', content = '', tags = [], starred = false } = req.body;
+  if (typeof tags === 'string') tags = tags.split(',').map(t => t.trim()).filter(Boolean);
   const result = db.prepare(`
     INSERT INTO journal_notes (campaign_id, title, content, tags, starred) VALUES (?, ?, ?, ?, ?)
   `).run(req.params.id, title, content, JSON.stringify(tags), starred ? 1 : 0);
@@ -80,7 +86,8 @@ router.put('/:noteId', (req, res) => {
     .get(req.params.noteId, req.params.id);
   if (!existing) return res.status(404).json({ error: 'Note not found' });
 
-  const { title, content, tags, starred } = req.body;
+  let { title, content, tags, starred } = req.body;
+  if (typeof tags === 'string') tags = tags.split(',').map(t => t.trim()).filter(Boolean);
   db.prepare(`
     UPDATE journal_notes SET
       title = COALESCE(?, title),
