@@ -100,11 +100,11 @@ If you don't know your campaign ID, you can omit `ALMANAC_CAMPAIGN_ID` and ask t
 
 ## Toolbox: dynamic tool loading
 
-The server has 58 tools total, but to keep context overhead low, only **29 tools** are visible by default — the session play tools plus two meta-tools. The remaining tools are organized into loadable **toolsets** that the AI agent can open on demand:
+The server has 73 tools total, but to keep context overhead low, only **38 tools** are visible by default — the session play tools plus two meta-tools. The remaining tools are organized into loadable **toolsets** that the AI agent can open on demand:
 
 | Toolset | Tools | Contents |
 |---|---|---|
-| `world_building` | 19 | Campaign settings, character/effect/item/location/path/encounter CRUD |
+| `world_building` | 25 | Campaign settings, character/effect/item/location/path/encounter/journal/random-table CRUD |
 | `rules` | 8 | Rule CRUD, enable/disable, dry-run testing, entity reference scanning |
 | `import_export` | 2 | Full campaign JSON export and import |
 
@@ -117,9 +117,9 @@ The two meta-tools that manage this:
 
 When the agent needs to create a location or edit a rule, it calls `almanac_open_toolbox` first, does the work, then optionally calls `almanac_close_toolbox` to clean up. MCP clients are notified of tool list changes automatically via `notifications/tools/list_changed`.
 
-## Available tools (58 total)
+## Available tools (73 total)
 
-### Always available: Session Play (29 tools)
+### Always available: Session Play (38 tools)
 
 These tools are always visible — they power a live game session plus toolbox management.
 
@@ -176,6 +176,30 @@ These tools are always visible — they power a live game session plus toolbox m
 | `almanac_get_session_log` | Read the session log with pagination and type filters |
 | `almanac_add_log_entry` | Add a narrative entry to the log |
 
+#### Combat
+
+| Tool | Description |
+|---|---|
+| `almanac_get_combat` | Get combat state: round, initiative order, current turn, combatant stats/effects |
+| `almanac_start_combat` | Start combat with initiative-ordered combatants |
+| `almanac_end_combat` | End the current combat |
+| `almanac_next_turn` | Advance to next turn (decrements effects, fires rules on new round) |
+| `almanac_update_combat` | Update combatants or settings mid-fight |
+
+#### Journal
+
+| Tool | Description |
+|---|---|
+| `almanac_list_journal` | List DM journal notes (filterable by search, tag, starred) |
+| `almanac_get_journal_note` | Read a journal note's full content |
+
+#### Random Tables
+
+| Tool | Description |
+|---|---|
+| `almanac_list_random_tables` | List random tables (filterable by name) |
+| `almanac_roll_random_table` | Roll on a random table (result logged to session log) |
+
 #### Reference (read-only)
 
 | Tool | Description |
@@ -187,7 +211,7 @@ These tools are always visible — they power a live game session plus toolbox m
 | `almanac_list_locations` | Get all locations and edges (the map) |
 | `almanac_list_encounters` | List encounter definitions |
 
-### Toolset: `world_building` (19 tools)
+### Toolset: `world_building` (25 tools)
 
 Loaded via `almanac_open_toolbox({ toolset: "world_building" })`. Create and manage campaign content.
 
@@ -212,6 +236,12 @@ Loaded via `almanac_open_toolbox({ toolset: "world_building" })`. Create and man
 | `almanac_create_encounter` | Create a new encounter with trigger conditions |
 | `almanac_update_encounter` | Update an encounter |
 | `almanac_delete_encounter` | Delete an encounter |
+| `almanac_create_journal_note` | Create a DM journal note (supports wikilinks) |
+| `almanac_update_journal_note` | Update a journal note |
+| `almanac_delete_journal_note` | Delete a journal note |
+| `almanac_create_random_table` | Create a random table (weighted or sequential) |
+| `almanac_update_random_table` | Update a random table |
+| `almanac_delete_random_table` | Delete a random table |
 
 ### Toolset: `rules` (8 tools)
 
@@ -262,6 +292,20 @@ Once configured, you can interact with your campaign naturally through the AI as
 > "Create a rule that applies Frostbite to all PCs when the weather is Blizzard"
 > "Which rules reference the Poisoned effect?"
 
+**Combat:**
+> "Start combat with Thorin (initiative 18), Elara (14), and two goblins (9)"
+> "Next turn"
+> "What's the current combat state?"
+
+**Journal & notes:**
+> "Create a journal note about the party's deal with the thieves' guild"
+> "Show me my starred notes"
+> "Search my notes for anything about the prophecy"
+
+**Random tables:**
+> "Roll on the Random Encounters table"
+> "Create a loot table with weighted entries for gems, gold, and magic items"
+
 **Campaign management:**
 > "Export the full campaign so I can back it up"
 > "What campaigns do I have?"
@@ -310,12 +354,15 @@ mcp-server/
 │   └── tools/
 │       ├── campaigns.ts      # Campaign list, details, update
 │       ├── characters.ts     # Character CRUD + effects + inventory
+│       ├── combat.ts         # Combat tracker: start/end, turns, initiative
 │       ├── encounters.ts     # Encounter CRUD + start/end
 │       ├── entities.ts       # Status effect + item definition CRUD
 │       ├── environment.ts    # Time, weather, travel, rest
 │       ├── import-export.ts  # Full campaign import/export
+│       ├── journal.ts        # DM journal notes CRUD
 │       ├── locations.ts      # Location + edge (path) CRUD
 │       ├── notifications.ts  # Rule notification management
+│       ├── random-tables.ts  # Random table CRUD + rolling
 │       ├── rules.ts          # Rule CRUD + test + toggle + references
 │       └── session-log.ts    # Session log read/write
 └── dist/                     # Compiled output (after npm run build)

@@ -12,6 +12,9 @@ import { registerNotificationTools } from "./tools/notifications.js";
 import { registerRuleTools } from "./tools/rules.js";
 import { registerSessionLogTools } from "./tools/session-log.js";
 import { registerImportExportTools } from "./tools/import-export.js";
+import { registerCombatTools } from "./tools/combat.js";
+import { registerJournalTools } from "./tools/journal.js";
+import { registerRandomTableTools } from "./tools/random-tables.js";
 import {
   TOOLSETS,
   enableToolset,
@@ -36,6 +39,9 @@ registerNotificationTools(server);
 registerRuleTools(server);
 registerSessionLogTools(server);
 registerImportExportTools(server);
+registerCombatTools(server);
+registerJournalTools(server);
+registerRandomTableTools(server);
 
 // Disable non-core toolsets — agents load them on demand via almanac_open_toolbox
 disableAllToolsets(server);
