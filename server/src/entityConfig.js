@@ -170,6 +170,7 @@ const ENTITY_CONFIG = {
     modifierColumns: [],
     idMapKey: 'sessionPrepIdMap',
     relations: [],
+    postProcess: 'remapSessionPrepLocations',
   },
   rules: {
     table: 'rule_definitions',

@@ -9,6 +9,8 @@ const {
   remapEncounterNpcs,
   remapEncounterConditionLocations,
   remapLocationEdges,
+  remapSessionPrepLocations,
+  remapCharacterEncounterRefs,
   buildImportPreview,
   executeMergeImport,
 } = require('../importExportUtils');
@@ -162,10 +164,24 @@ router.post('/import', (req, res) => {
             remapEncounterConditionLocations(db, newCampaignId, newId, conds, locationIdMap, edgeIdMap);
           }
         }
+        // Remap character spawned_from_encounter_id now that encounterIdMap exists
+        const encounterIdMap = idMaps.encounterIdMap || {};
+        remapCharacterEncounterRefs(db, newCampaignId, data.characters || [], charIdMap, encounterIdMap);
       }
       if (config.postProcess === 'remapLocationEdges') {
         const locationIdMap = idMaps.locationIdMap || {};
         idMaps.edgeIdMap = remapLocationEdges(db, newCampaignId, data.edges, locationIdMap, insertionOrder);
+      }
+      if (config.postProcess === 'remapSessionPrepLocations') {
+        const locationIdMap = idMaps.locationIdMap || {};
+        for (const entity of entities) {
+          const newId = idMaps[config.idMapKey]?.[entity.id];
+          if (newId) {
+            const scenes = typeof entity.scenes === 'string' ? JSON.parse(entity.scenes) : (entity.scenes || []);
+            const secrets = typeof entity.secrets === 'string' ? JSON.parse(entity.secrets) : (entity.secrets || []);
+            remapSessionPrepLocations(db, newCampaignId, newId, scenes, secrets, locationIdMap);
+          }
+        }
       }
     }
 

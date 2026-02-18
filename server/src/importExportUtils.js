@@ -127,6 +127,42 @@ function remapEncounterConditionLocations(db, campaignId, encounterId, condition
     .run(JSON.stringify(remapped), encounterId);
 }
 
+// --- Session prep location remapping ---
+
+function remapSessionPrepLocations(db, campaignId, prepId, scenes, secrets, locationIdMap) {
+  let changed = false;
+  const remapList = (list) => {
+    if (!Array.isArray(list)) return list;
+    return list.map(entry => {
+      if (!Array.isArray(entry.location_ids) || entry.location_ids.length === 0) return entry;
+      const remapped = entry.location_ids
+        .map(id => locationIdMap[id] != null ? Number(locationIdMap[id]) : null)
+        .filter(id => id != null);
+      changed = true;
+      return { ...entry, location_ids: remapped };
+    });
+  };
+  const newScenes = remapList(scenes);
+  const newSecrets = remapList(secrets);
+  if (changed) {
+    db.prepare('UPDATE session_preps SET scenes = ?, secrets = ? WHERE id = ?')
+      .run(JSON.stringify(newScenes), JSON.stringify(newSecrets), prepId);
+  }
+}
+
+// --- Character encounter reference remapping ---
+
+function remapCharacterEncounterRefs(db, campaignId, characters, charIdMap, encounterIdMap) {
+  for (const character of characters) {
+    if (character.spawned_from_encounter_id == null) continue;
+    const newCharId = charIdMap[character.id];
+    if (!newCharId) continue;
+    const newEncounterId = encounterIdMap[character.spawned_from_encounter_id] ?? null;
+    db.prepare('UPDATE characters SET spawned_from_encounter_id = ? WHERE id = ?')
+      .run(newEncounterId, newCharId);
+  }
+}
+
 // --- Location edge import ---
 
 function remapLocationEdges(db, campaignId, edges, locationIdMap, locationOrder) {
@@ -489,10 +525,24 @@ function executeMergeImport(db, campaignId, importData, decisions, entityTypes) 
           remapEncounterConditionLocations(db, campaignId, newId, conds, locationIdMap, edgeIdMap);
         }
       }
+      // Remap character spawned_from_encounter_id now that encounterIdMap exists
+      const encounterIdMap = idMaps.encounterIdMap || {};
+      remapCharacterEncounterRefs(db, campaignId, data.characters || [], charIdMap, encounterIdMap);
     }
     if (config.postProcess === 'remapLocationEdges') {
       const locationIdMap = idMaps.locationIdMap || {};
       idMaps.edgeIdMap = remapLocationEdges(db, campaignId, data.edges, locationIdMap, insertionOrder);
+    }
+    if (config.postProcess === 'remapSessionPrepLocations') {
+      const locationIdMap = idMaps.locationIdMap || {};
+      for (const entity of entities) {
+        const newId = idMaps[config.idMapKey]?.[entity.id];
+        if (newId) {
+          const scenes = typeof entity.scenes === 'string' ? JSON.parse(entity.scenes) : (entity.scenes || []);
+          const secrets = typeof entity.secrets === 'string' ? JSON.parse(entity.secrets) : (entity.secrets || []);
+          remapSessionPrepLocations(db, campaignId, newId, scenes, secrets, locationIdMap);
+        }
+      }
     }
   }
 
@@ -511,6 +561,8 @@ module.exports = {
   remapEncounterNpcs,
   remapEncounterConditionLocations,
   remapLocationEdges,
+  remapSessionPrepLocations,
+  remapCharacterEncounterRefs,
   buildImportPreview,
   executeMergeImport,
   normalizeImportData,

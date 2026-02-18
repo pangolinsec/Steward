@@ -65,7 +65,19 @@ Generate content that fits the setting. Invent creative names, descriptions, and
     },
     "weather_options": ["Clear", "Overcast", "Rain", "Storm"],
     "encounter_settings": { "enabled": true, "base_rate": 0.15, "min_interval_hours": 2 },
-    "weather_volatility": 0.3
+    "weather_volatility": 0.3,
+    "rules_settings": { "cascade_depth_limit": 3, "engine_enabled": true },
+    "season_options": ["Spring", "Summer", "Autumn", "Winter"],
+    "time_advance_presets": [
+      { "label": "+10m", "hours": 0, "minutes": 10 },
+      { "label": "+1h", "hours": 1, "minutes": 0 },
+      { "label": "+8h", "hours": 8, "minutes": 0 }
+    ],
+    "dashboard_time_presets": [
+      { "label": "+15m", "hours": 0, "minutes": 15 },
+      { "label": "+1h", "hours": 1, "minutes": 0 },
+      { "label": "+4h", "hours": 4, "minutes": 0 }
+    ]
   },
   "status_effects": [
     {
@@ -163,6 +175,20 @@ Generate content that fits the setting. Invent creative names, descriptions, and
       "target_config": {}
     }
   ],
+  "session_preps": [
+    {
+      "title": "Session Title",
+      "status": "prep",
+      "strong_start": "A vivid opening scene description",
+      "scenes": [
+        { "text": "Scene description", "done": false, "location_ids": [1, 3] }
+      ],
+      "secrets": [
+        { "text": "A secret or clue", "done": false, "location_ids": [] }
+      ],
+      "notes": "Additional DM notes"
+    }
+  ],
   "environment": {
     "current_hour": 14,
     "current_minute": 0,
@@ -170,7 +196,9 @@ Generate content that fits the setting. Invent creative names, descriptions, and
     "current_month": 1,
     "current_year": 1,
     "weather": "Clear",
-    "environment_notes": ""
+    "environment_notes": "",
+    "current_edge_id": null,
+    "edge_progress": 0
   }
 }
 ```
@@ -214,6 +242,17 @@ Generate content that fits the setting. Invent creative names, descriptions, and
 - `conditions.edge_ids`: 1-indexed positions in the `edges` array. Encounters with edge_ids only trigger during travel along those paths. Omit or use `[]` for no path restriction.
 - `conditions.time_of_day` values must match labels in `time_of_day_thresholds`.
 - `conditions.weight`: relative probability (1.0 = normal, 2.0 = twice as likely).
+
+**Session preps:**
+- `scenes[].location_ids` and `secrets[].location_ids`: 1-indexed positions in the `locations` array. Links scenes/secrets to specific map locations. Use `[]` if not location-specific.
+- `status`: `"prep"` for upcoming sessions.
+- `strong_start`: a vivid opening scene the DM can read aloud.
+- Generate 1-2 session preps if the campaign has enough content to anchor them.
+
+**Campaign settings (optional):**
+- `rules_settings`: `{"cascade_depth_limit": 3, "engine_enabled": true}` — controls the automation engine. Defaults are fine for most campaigns.
+- `season_options`: array of season names. Default: `["Spring", "Summer", "Autumn", "Winter"]`. Customize for exotic settings.
+- `time_advance_presets` / `dashboard_time_presets`: quick-advance buttons shown in the UI. Each entry has `label`, `hours`, `minutes`. Defaults work for most campaigns.
 
 **Rules:**
 - Generate 3-5 automation rules appropriate to the setting.
