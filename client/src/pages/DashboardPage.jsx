@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as api from '../api';
 import DiceRoller from '../components/DiceRoller';
+import { useToast } from '../components/ToastContext';
 
 export default function DashboardPage({ campaignId, campaign }) {
   const navigate = useNavigate();
@@ -62,17 +63,26 @@ export default function DashboardPage({ campaignId, campaign }) {
     table_roll: 'var(--accent)', dice_roll: 'var(--text-muted)',
   };
 
-  const handleAdvance = async (hours, minutes) => {
-    await api.advanceTime(campaignId, { hours, minutes });
-    load();
+  const { addToast } = useToast();
+
+  const processEvents = (events) => {
+    if (!events) return;
+    for (const event of events) {
+      if (event.type === 'weather_change') {
+        addToast(`Weather: ${event.from} \u2192 ${event.to}`, 'info');
+      } else if (event.type === 'effect_expired') {
+        addToast(`Effect expired: ${event.effect_name} on ${event.character_name}`, 'info');
+      } else if (event.type === 'rule_notification') {
+        addToast(event.message || `Rule fired: ${event.rule_name}`, event.severity || 'info');
+      }
+    }
   };
 
-  // Collect all active effects across all characters
-  const allEffects = [];
-  characters.forEach(c => {
-    // We'd need computed stats for effects — use a simplified approach
-    // Effects are loaded per-character in detail view; for dashboard we'll show count
-  });
+  const handleAdvance = async (hours, minutes) => {
+    const result = await api.advanceTime(campaignId, { hours, minutes });
+    processEvents(result.events);
+    load();
+  };
 
   const pad = (n) => String(n).padStart(2, '0');
 
