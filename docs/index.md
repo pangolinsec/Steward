@@ -46,6 +46,9 @@ Rule actions generate notifications with severity levels. Auto-applied changes s
 **Tag Presets**
 Bundle a tag attribute definition with related rules into a reusable preset. Import presets to instantly add an attribute (like "faction" or "species") along with all the automation rules that go with it.
 
+**LLM Integration**
+Use any LLM to generate full campaigns, characters, items, encounters, and rules from ready-to-use prompts — then import the JSON directly. Or connect the [MCP server](using-llms.md) to Claude Code for an AI Dungeon Master that runs live sessions, or an AI world-building assistant that creates and manages content conversationally.
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -65,4 +68,5 @@ All data lives in a single SQLite file. No external database server required.
 | [User Guide](user-guide.md) | Complete feature guide for DMs |
 | [Rules Engine](rules-engine.md) | Building automation rules, conditions, actions, and templates |
 | [Administration](administration.md) | Deployment, backup, API reference, and troubleshooting |
-| [LLM Content Generation](llm-generation.md) | Use AI to generate characters, items, encounters, and more |
+| [Using LLMs](using-llms.md) | AI-powered DM, world-building assistant, and content generation |
+| [LLM Content Generation](llm-generation.md) | Ready-to-use prompts for generating importable JSON |

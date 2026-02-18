@@ -18,6 +18,7 @@ A self-hosted web application for tabletop RPG Dungeon Masters to manage homebre
 - **Import & Export** — Full campaign backup, partial merge import with conflict resolution, per-entity export/import
 - **Tag Presets** — Bundled attribute definitions with associated rules for easy reuse
 - **Multi-Campaign** — Independent campaigns with full data isolation
+- **LLM Integration** — Generate importable content with any LLM using ready-to-use prompts, or connect the MCP server for an AI Dungeon Master or world-building assistant
 
 ## Quick Start (Docker)
 
@@ -57,4 +58,6 @@ PORT=8080 docker compose up -d
 | [User Guide](docs/user-guide.md) | Complete feature guide for DMs |
 | [Rules Engine](docs/rules-engine.md) | Building automation rules, conditions, actions, and templates |
 | [Administration](docs/administration.md) | Deployment, database, backup, API reference, and troubleshooting |
-| [LLM Content Generation](docs/llm-generation.md) | Use AI to generate characters, items, encounters, and more |
+| [Using LLMs](docs/using-llms.md) | AI Dungeon Master, world-building assistant, and content generation |
+| [LLM Content Generation](docs/llm-generation.md) | Ready-to-use prompts for generating importable JSON |
+| [MCP Server Guide](MCP-server-usage.md) | Installation and tool reference for the Almanac MCP server |
