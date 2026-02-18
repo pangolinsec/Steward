@@ -113,7 +113,7 @@ export default function DashboardPage({ campaignId, campaign }) {
                   </div>
                 )}
                 <span style={{ fontWeight: 500, fontSize: 13, flex: 1 }}>{c.name}</span>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
                   {compactAttrs.map(a => {
                     const val = c.base_attributes?.[a.key];
                     const cat = a.category || 'stat';
@@ -126,6 +126,21 @@ export default function DashboardPage({ campaignId, campaign }) {
                       </span>
                     );
                   })}
+                  {(c.applied_effects || []).slice(0, 3).map(eff => {
+                    const isBuff = eff.tags?.includes('buff');
+                    const isDebuff = eff.tags?.includes('debuff') || eff.tags?.includes('poison');
+                    const cls = isDebuff ? 'tag-debuff' : isBuff ? 'tag-buff' : '';
+                    return (
+                      <span key={eff.id} className={`tag ${cls}`} style={{ fontSize: 9, padding: '1px 5px' }}>
+                        {eff.name}
+                        {eff.remaining_rounds != null && <span style={{ color: 'var(--text-muted)', marginLeft: 2 }}>({eff.remaining_rounds}r)</span>}
+                        {eff.remaining_hours != null && <span style={{ color: 'var(--text-muted)', marginLeft: 2 }}>({Math.ceil(eff.remaining_hours)}h)</span>}
+                      </span>
+                    );
+                  })}
+                  {(c.applied_effects || []).length > 3 && (
+                    <span className="tag" style={{ fontSize: 9, padding: '1px 5px' }}>+{c.applied_effects.length - 3}</span>
+                  )}
                 </div>
               </div>
             ))

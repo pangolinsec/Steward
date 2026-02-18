@@ -151,6 +151,25 @@ export default function CharactersPage({ campaignId, campaign }) {
                   );
                 })}
               </div>
+              {(c.applied_effects || []).length > 0 && (
+                <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                  {c.applied_effects.slice(0, 4).map(eff => {
+                    const isBuff = eff.tags?.includes('buff');
+                    const isDebuff = eff.tags?.includes('debuff') || eff.tags?.includes('poison');
+                    const cls = isDebuff ? 'tag-debuff' : isBuff ? 'tag-buff' : '';
+                    return (
+                      <span key={eff.id} className={`tag ${cls}`} style={{ fontSize: 10 }}>
+                        {eff.name}
+                        {eff.remaining_rounds != null && <span style={{ color: 'var(--text-muted)', marginLeft: 2 }}>({eff.remaining_rounds}r)</span>}
+                        {eff.remaining_hours != null && <span style={{ color: 'var(--text-muted)', marginLeft: 2 }}>({Math.ceil(eff.remaining_hours)}h)</span>}
+                      </span>
+                    );
+                  })}
+                  {c.applied_effects.length > 4 && (
+                    <span className="tag" style={{ fontSize: 10 }}>+{c.applied_effects.length - 4}</span>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>

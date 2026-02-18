@@ -32,10 +32,34 @@ router.get('/', (req, res) => {
 
   query += ' ORDER BY type, name';
   const characters = db.prepare(query).all(...params);
+  const charIds = characters.map(c => c.id);
+
+  // Bulk-fetch applied effects for all characters in one query
+  const effectsByChar = {};
+  if (charIds.length > 0) {
+    const placeholders = charIds.map(() => '?').join(',');
+    const effects = db.prepare(`
+      SELECT ae.id, ae.character_id, ae.remaining_rounds, ae.remaining_hours,
+             sed.name, sed.tags, sed.duration_type
+      FROM applied_effects ae
+      JOIN status_effect_definitions sed ON ae.status_effect_definition_id = sed.id
+      WHERE ae.character_id IN (${placeholders})
+    `).all(...charIds);
+    for (const e of effects) {
+      if (!effectsByChar[e.character_id]) effectsByChar[e.character_id] = [];
+      effectsByChar[e.character_id].push({
+        id: e.id, name: e.name, tags: JSON.parse(e.tags || '[]'),
+        duration_type: e.duration_type,
+        remaining_rounds: e.remaining_rounds, remaining_hours: e.remaining_hours,
+      });
+    }
+  }
+
   res.json(characters.map(c => ({
     ...c,
     base_attributes: JSON.parse(c.base_attributes),
     max_attributes: JSON.parse(c.max_attributes || '{}'),
+    applied_effects: effectsByChar[c.id] || [],
   })));
 });
 
