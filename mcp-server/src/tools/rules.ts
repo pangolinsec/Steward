@@ -56,7 +56,7 @@ function formatRule(r: Rule): string {
 
 export function registerRuleTools(server: McpServer): void {
   server.registerTool(
-    "almanac_list_rules",
+    "steward_list_rules",
     {
       title: "List Rules",
       description:
@@ -95,7 +95,7 @@ export function registerRuleTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_get_rule",
+    "steward_get_rule",
     {
       title: "Get Rule Details",
       description:
@@ -118,11 +118,11 @@ export function registerRuleTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_create_rule",
+    "steward_create_rule",
     {
       title: "Create Rule",
       description:
-        "Create a new automation rule. Rules trigger on game events and evaluate conditions to fire actions. Use almanac_get_campaign for attribute keys and almanac_list_status_effects/items for entity names used in conditions and actions.",
+        "Create a new automation rule. Rules trigger on game events and evaluate conditions to fire actions. Use steward_get_campaign for attribute keys and steward_list_status_effects/items for entity names used in conditions and actions.",
       inputSchema: {
         campaign_id: z.number().int().optional().describe("Campaign ID"),
         name: z.string().min(1).describe("Rule name"),
@@ -174,7 +174,7 @@ export function registerRuleTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_update_rule",
+    "steward_update_rule",
     {
       title: "Update Rule",
       description: "Update a rule's fields. Only include fields you want to change.",
@@ -219,7 +219,7 @@ export function registerRuleTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_delete_rule",
+    "steward_delete_rule",
     {
       title: "Delete Rule",
       description: "Permanently delete a rule.",
@@ -241,7 +241,7 @@ export function registerRuleTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_toggle_rule",
+    "steward_toggle_rule",
     {
       title: "Toggle Rule",
       description: "Enable or disable a rule. Toggles the current enabled state.",
@@ -264,7 +264,7 @@ export function registerRuleTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_test_rule",
+    "steward_test_rule",
     {
       title: "Test Rule (Dry Run)",
       description:
@@ -319,7 +319,7 @@ export function registerRuleTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_get_rule_references",
+    "steward_get_rule_references",
     {
       title: "Find Rule References",
       description:

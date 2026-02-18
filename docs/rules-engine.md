@@ -405,7 +405,7 @@ Each preset card displays:
 
 ### Built-in Presets
 
-Almanac ships with built-in presets in two categories:
+Steward ships with built-in presets in two categories:
 
 **Fantasy**
 

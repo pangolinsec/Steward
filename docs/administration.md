@@ -12,14 +12,14 @@ nav_order: 5
 
 ```yaml
 services:
-  almanac:
+  steward:
     build: .
     ports:
       - "${PORT:-3000}:3000"
     volumes:
       - ./data:/data
     environment:
-      - ALMANAC_DATA_DIR=/data
+      - STEWARD_DATA_DIR=/data
       - PORT=3000
     restart: unless-stopped
 ```
@@ -37,7 +37,7 @@ PORT=8080 docker compose up -d
 docker compose build && docker compose up -d
 
 # View logs
-docker compose logs -f almanac
+docker compose logs -f steward
 
 # Stop
 docker compose down
@@ -45,7 +45,7 @@ docker compose down
 
 ### Volumes
 
-The `./data` directory on the host is mounted to `/data` in the container. This is where the SQLite database file (`almanac.db`) lives. The volume ensures data persists across container restarts and rebuilds.
+The `./data` directory on the host is mounted to `/data` in the container. This is where the SQLite database file (`steward.db`) lives. The volume ensures data persists across container restarts and rebuilds.
 
 ### Restart Policy
 
@@ -72,13 +72,13 @@ The server serves the built frontend and API on the configured port (default 300
 
 ### Behind a Reverse Proxy
 
-Almanac runs on a single port serving both the frontend and API. Point your reverse proxy (nginx, Caddy, etc.) to `http://localhost:3000`:
+Steward runs on a single port serving both the frontend and API. Point your reverse proxy (nginx, Caddy, etc.) to `http://localhost:3000`:
 
 ```nginx
 # nginx example
 server {
     listen 80;
-    server_name almanac.example.com;
+    server_name steward.example.com;
 
     location / {
         proxy_pass http://localhost:3000;
@@ -95,9 +95,9 @@ server {
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PORT` | `3000` | Server port |
-| `ALMANAC_DATA_DIR` | `server/data/` | Directory for the SQLite database file |
+| `STEWARD_DATA_DIR` | `server/data/` | Directory for the SQLite database file |
 
-In Docker, `ALMANAC_DATA_DIR` is set to `/data` by default.
+In Docker, `STEWARD_DATA_DIR` is set to `/data` by default.
 
 ---
 
@@ -105,10 +105,10 @@ In Docker, `ALMANAC_DATA_DIR` is set to `/data` by default.
 
 ### Storage
 
-All data is stored in a single SQLite file: `almanac.db` in the configured data directory.
+All data is stored in a single SQLite file: `steward.db` in the configured data directory.
 
-- **Docker:** `./data/almanac.db` on the host (mounted from `/data` in the container)
-- **Bare-metal:** `server/data/almanac.db` by default
+- **Docker:** `./data/steward.db` on the host (mounted from `/data` in the container)
+- **Bare-metal:** `server/data/steward.db` by default
 
 ### SQLite Configuration
 
@@ -154,10 +154,10 @@ The simplest backup is copying the database file:
 
 ```bash
 # Docker
-cp ./data/almanac.db ./backups/almanac-$(date +%Y%m%d).db
+cp ./data/steward.db ./backups/steward-$(date +%Y%m%d).db
 
 # Bare-metal
-cp server/data/almanac.db ./backups/almanac-$(date +%Y%m%d).db
+cp server/data/steward.db ./backups/steward-$(date +%Y%m%d).db
 ```
 
 To restore, stop the server and replace the database file.
@@ -167,7 +167,7 @@ To restore, stop the server and replace the database file.
 Use the in-app export feature for portable, human-readable backups:
 
 1. **Export** each campaign from the UI (JSON file per campaign)
-2. To restore, create a new Almanac instance and **Import** each JSON file
+2. To restore, create a new Steward instance and **Import** each JSON file
 
 This approach is more portable (not tied to SQLite version) but doesn't include notifications or rule action history.
 
@@ -179,7 +179,7 @@ Load example data to explore features:
 
 ```bash
 # Docker
-docker compose exec almanac node server/src/seed.js
+docker compose exec steward node server/src/seed.js
 
 # Bare-metal
 cd server && npm run seed
@@ -460,7 +460,7 @@ PORT=8080 docker compose up -d
 
 ```bash
 # Check logs
-docker compose logs almanac
+docker compose logs steward
 
 # Rebuild from scratch
 docker compose build --no-cache && docker compose up -d
@@ -492,6 +492,6 @@ Common causes:
 
 ### Import Failures
 
-- **Version mismatch** — imports expect the Almanac export format with a version header
+- **Version mismatch** — imports expect the Steward export format with a version header
 - **Missing prerequisites** — imported rules may reference effects/items that don't exist. Create them first or edit the rules after import.
 - **ID conflicts** — the import system remaps IDs automatically, but cross-references (like encounter NPC IDs) require matching entities to exist

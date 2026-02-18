@@ -46,7 +46,7 @@ export default function CampaignModal({ campaigns, activeCampaignId, onClose, on
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `almanac-campaign-${id}.json`;
+    a.download = `steward-campaign-${id}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };

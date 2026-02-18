@@ -39,7 +39,7 @@ export default function ItemsPage({ campaignId, campaign }) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'almanac-items.json';
+    a.download = 'steward-items.json';
     a.click();
     URL.revokeObjectURL(url);
   };

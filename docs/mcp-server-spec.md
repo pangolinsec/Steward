@@ -1,24 +1,24 @@
-# Almanac MCP Server Specification
+# Steward MCP Server Specification
 
-An MCP (Model Context Protocol) server that enables LLMs to interact with Almanac — a self-hosted tabletop RPG campaign management tool. This allows AI assistants to serve as DM co-pilots: running game sessions, managing characters, advancing the world, and querying campaign state.
+An MCP (Model Context Protocol) server that enables LLMs to interact with Steward — a self-hosted tabletop RPG campaign management tool. This allows AI assistants to serve as DM co-pilots: running game sessions, managing characters, advancing the world, and querying campaign state.
 
 ## Architecture
 
-- **Name**: `almanac-mcp-server`
+- **Name**: `steward-mcp-server`
 - **Language**: TypeScript (MCP TypeScript SDK + Zod validation)
-- **Transport**: stdio (Almanac is self-hosted; the MCP server runs as a local subprocess)
-- **API**: Connects to Almanac's REST API at a configurable `ALMANAC_URL` (default `http://localhost:3001/api`)
-- **Auth**: None required (Almanac has no auth layer — it's a local-network tool)
+- **Transport**: stdio (Steward is self-hosted; the MCP server runs as a local subprocess)
+- **API**: Connects to Steward's REST API at a configurable `STEWARD_URL` (default `http://localhost:3001/api`)
+- **Auth**: None required (Steward has no auth layer — it's a local-network tool)
 
 ```
-almanac-mcp-server/
+steward-mcp-server/
 ├── package.json
 ├── tsconfig.json
 ├── src/
 │   ├── index.ts              # McpServer init + transport setup
-│   ├── client.ts             # Shared HTTP client for Almanac API
+│   ├── client.ts             # Shared HTTP client for Steward API
 │   ├── format.ts             # Markdown/JSON response formatting helpers
-│   ├── constants.ts          # ALMANAC_URL, CHARACTER_LIMIT, defaults
+│   ├── constants.ts          # STEWARD_URL, CHARACTER_LIMIT, defaults
 │   ├── tools/
 │   │   ├── campaigns.ts      # Campaign CRUD
 │   │   ├── characters.ts     # Characters + effects + inventory
@@ -37,8 +37,8 @@ almanac-mcp-server/
 
 | Env Variable | Default | Description |
 |---|---|---|
-| `ALMANAC_URL` | `http://localhost:3001/api` | Base URL for Almanac API |
-| `ALMANAC_CAMPAIGN_ID` | *(none)* | Optional default campaign ID. When set, tools use this campaign and the `campaign_id` parameter becomes optional. |
+| `STEWARD_URL` | `http://localhost:3001/api` | Base URL for Steward API |
+| `STEWARD_CAMPAIGN_ID` | *(none)* | Optional default campaign ID. When set, tools use this campaign and the `campaign_id` parameter becomes optional. |
 
 ---
 
@@ -50,27 +50,27 @@ These tools power a live game session. An LLM DM assistant needs these to run th
 
 | Tool | Method | Description | Annotations |
 |---|---|---|---|
-| `almanac_get_environment` | GET | Get full environment state: time, date, weather, location, calendar | readOnly |
-| `almanac_advance_time` | POST | Advance game clock by hours/minutes. Returns weather changes, rule events, encounter rolls | destructive |
-| `almanac_rest` | POST | Take short (1h) or long (8h) rest. Fires rest rules, expires effects | destructive |
-| `almanac_travel` | POST | Travel along a map edge. Advances time, rolls encounters, fires rules | destructive |
-| `almanac_set_party_position` | PATCH | Teleport party to a location (no time cost) | destructive |
-| `almanac_update_environment` | PATCH | Directly set weather, time, or environment notes | destructive |
-| `almanac_get_character` | GET | Get one character with computed stats, applied effects, and inventory | readOnly |
-| `almanac_list_characters` | GET | List all characters, filterable by type (PC/NPC) and search string | readOnly |
-| `almanac_apply_effect` | POST | Apply a status effect to a character | destructive |
-| `almanac_remove_effect` | DELETE | Remove an applied effect from a character | destructive |
-| `almanac_assign_item` | POST | Give an item to a character (with quantity) | destructive |
-| `almanac_update_item_quantity` | PATCH | Change quantity of an item a character holds | destructive |
-| `almanac_remove_item` | DELETE | Remove an item from a character's inventory | destructive |
-| `almanac_start_encounter` | POST | Start a specific encounter (applies env overrides, fires rules) | destructive |
-| `almanac_end_encounter` | POST | End an active encounter (fires rules) | destructive |
-| `almanac_get_notifications` | GET | Get pending notifications (rule suggestions, auto-applied alerts) | readOnly |
-| `almanac_apply_notification` | POST | Apply suggested actions from a rule notification | destructive |
-| `almanac_dismiss_notification` | PATCH | Dismiss a notification | destructive |
-| `almanac_undo_notification` | POST | Undo auto-applied rule actions via notification | destructive |
-| `almanac_get_session_log` | GET | Read session log entries with pagination and type filter | readOnly |
-| `almanac_add_log_entry` | POST | Add a narrative entry to the session log | destructive |
+| `steward_get_environment` | GET | Get full environment state: time, date, weather, location, calendar | readOnly |
+| `steward_advance_time` | POST | Advance game clock by hours/minutes. Returns weather changes, rule events, encounter rolls | destructive |
+| `steward_rest` | POST | Take short (1h) or long (8h) rest. Fires rest rules, expires effects | destructive |
+| `steward_travel` | POST | Travel along a map edge. Advances time, rolls encounters, fires rules | destructive |
+| `steward_set_party_position` | PATCH | Teleport party to a location (no time cost) | destructive |
+| `steward_update_environment` | PATCH | Directly set weather, time, or environment notes | destructive |
+| `steward_get_character` | GET | Get one character with computed stats, applied effects, and inventory | readOnly |
+| `steward_list_characters` | GET | List all characters, filterable by type (PC/NPC) and search string | readOnly |
+| `steward_apply_effect` | POST | Apply a status effect to a character | destructive |
+| `steward_remove_effect` | DELETE | Remove an applied effect from a character | destructive |
+| `steward_assign_item` | POST | Give an item to a character (with quantity) | destructive |
+| `steward_update_item_quantity` | PATCH | Change quantity of an item a character holds | destructive |
+| `steward_remove_item` | DELETE | Remove an item from a character's inventory | destructive |
+| `steward_start_encounter` | POST | Start a specific encounter (applies env overrides, fires rules) | destructive |
+| `steward_end_encounter` | POST | End an active encounter (fires rules) | destructive |
+| `steward_get_notifications` | GET | Get pending notifications (rule suggestions, auto-applied alerts) | readOnly |
+| `steward_apply_notification` | POST | Apply suggested actions from a rule notification | destructive |
+| `steward_dismiss_notification` | PATCH | Dismiss a notification | destructive |
+| `steward_undo_notification` | POST | Undo auto-applied rule actions via notification | destructive |
+| `steward_get_session_log` | GET | Read session log entries with pagination and type filter | readOnly |
+| `steward_add_log_entry` | POST | Add a narrative entry to the session log | destructive |
 
 ### Tier 2 — World Building & Reference
 
@@ -78,51 +78,51 @@ These tools let the LLM create and modify campaign content.
 
 | Tool | Method | Description | Annotations |
 |---|---|---|---|
-| `almanac_list_campaigns` | GET | List all campaigns | readOnly |
-| `almanac_get_campaign` | GET | Get campaign details (attributes, calendar, weather, encounter settings) | readOnly |
-| `almanac_update_campaign` | PUT | Update campaign settings | destructive |
-| `almanac_create_character` | POST | Create a new PC or NPC | destructive |
-| `almanac_update_character` | PUT | Update character fields (name, description, attributes) | destructive |
-| `almanac_delete_character` | DELETE | Delete a character | destructive |
-| `almanac_list_status_effects` | GET | List status effect definitions | readOnly |
-| `almanac_create_status_effect` | POST | Create a new status effect definition | destructive |
-| `almanac_update_status_effect` | PUT | Update a status effect definition | destructive |
-| `almanac_delete_status_effect` | DELETE | Delete a status effect definition | destructive |
-| `almanac_list_items` | GET | List item definitions | readOnly |
-| `almanac_create_item` | POST | Create a new item definition | destructive |
-| `almanac_update_item` | PUT | Update an item definition | destructive |
-| `almanac_delete_item` | DELETE | Delete an item definition | destructive |
-| `almanac_list_locations` | GET | Get all locations and edges (map data) | readOnly |
-| `almanac_create_location` | POST | Create a new location | destructive |
-| `almanac_update_location` | PUT | Update a location | destructive |
-| `almanac_delete_location` | DELETE | Delete a location and its edges | destructive |
-| `almanac_create_edge` | POST | Create a path between two locations | destructive |
-| `almanac_update_edge` | PUT | Update a path | destructive |
-| `almanac_delete_edge` | DELETE | Delete a path | destructive |
-| `almanac_list_encounters` | GET | List encounter definitions | readOnly |
-| `almanac_create_encounter` | POST | Create a new encounter definition | destructive |
-| `almanac_update_encounter` | PUT | Update an encounter definition | destructive |
-| `almanac_delete_encounter` | DELETE | Delete an encounter definition | destructive |
+| `steward_list_campaigns` | GET | List all campaigns | readOnly |
+| `steward_get_campaign` | GET | Get campaign details (attributes, calendar, weather, encounter settings) | readOnly |
+| `steward_update_campaign` | PUT | Update campaign settings | destructive |
+| `steward_create_character` | POST | Create a new PC or NPC | destructive |
+| `steward_update_character` | PUT | Update character fields (name, description, attributes) | destructive |
+| `steward_delete_character` | DELETE | Delete a character | destructive |
+| `steward_list_status_effects` | GET | List status effect definitions | readOnly |
+| `steward_create_status_effect` | POST | Create a new status effect definition | destructive |
+| `steward_update_status_effect` | PUT | Update a status effect definition | destructive |
+| `steward_delete_status_effect` | DELETE | Delete a status effect definition | destructive |
+| `steward_list_items` | GET | List item definitions | readOnly |
+| `steward_create_item` | POST | Create a new item definition | destructive |
+| `steward_update_item` | PUT | Update an item definition | destructive |
+| `steward_delete_item` | DELETE | Delete an item definition | destructive |
+| `steward_list_locations` | GET | Get all locations and edges (map data) | readOnly |
+| `steward_create_location` | POST | Create a new location | destructive |
+| `steward_update_location` | PUT | Update a location | destructive |
+| `steward_delete_location` | DELETE | Delete a location and its edges | destructive |
+| `steward_create_edge` | POST | Create a path between two locations | destructive |
+| `steward_update_edge` | PUT | Update a path | destructive |
+| `steward_delete_edge` | DELETE | Delete a path | destructive |
+| `steward_list_encounters` | GET | List encounter definitions | readOnly |
+| `steward_create_encounter` | POST | Create a new encounter definition | destructive |
+| `steward_update_encounter` | PUT | Update an encounter definition | destructive |
+| `steward_delete_encounter` | DELETE | Delete an encounter definition | destructive |
 
 ### Tier 3 — Rules & Automation
 
 | Tool | Method | Description | Annotations |
 |---|---|---|---|
-| `almanac_list_rules` | GET | List rules (filterable by trigger type, tag, search) | readOnly |
-| `almanac_get_rule` | GET | Get full rule details | readOnly |
-| `almanac_create_rule` | POST | Create a new automation rule | destructive |
-| `almanac_update_rule` | PUT | Update a rule | destructive |
-| `almanac_delete_rule` | DELETE | Delete a rule | destructive |
-| `almanac_toggle_rule` | PATCH | Enable or disable a rule | destructive |
-| `almanac_test_rule` | POST | Dry-run a rule and see what would fire | readOnly |
-| `almanac_get_rule_references` | GET | Find which rules reference a given entity | readOnly |
+| `steward_list_rules` | GET | List rules (filterable by trigger type, tag, search) | readOnly |
+| `steward_get_rule` | GET | Get full rule details | readOnly |
+| `steward_create_rule` | POST | Create a new automation rule | destructive |
+| `steward_update_rule` | PUT | Update a rule | destructive |
+| `steward_delete_rule` | DELETE | Delete a rule | destructive |
+| `steward_toggle_rule` | PATCH | Enable or disable a rule | destructive |
+| `steward_test_rule` | POST | Dry-run a rule and see what would fire | readOnly |
+| `steward_get_rule_references` | GET | Find which rules reference a given entity | readOnly |
 
 ### Tier 4 — Import/Export
 
 | Tool | Method | Description | Annotations |
 |---|---|---|---|
-| `almanac_export_campaign` | GET | Export full campaign as JSON | readOnly |
-| `almanac_import_campaign` | POST | Import a full campaign (creates new campaign) | destructive |
+| `steward_export_campaign` | GET | Export full campaign as JSON | readOnly |
+| `steward_import_campaign` | POST | Import a full campaign (creates new campaign) | destructive |
 
 **Total: 53 tools**
 
@@ -130,11 +130,11 @@ These tools let the LLM create and modify campaign content.
 
 ## Tool Specifications
 
-Every tool accepts an optional `campaign_id` (integer). If `ALMANAC_CAMPAIGN_ID` is set and `campaign_id` is omitted, the default is used. If neither is set, the tool returns an error prompting the user to specify a campaign.
+Every tool accepts an optional `campaign_id` (integer). If `STEWARD_CAMPAIGN_ID` is set and `campaign_id` is omitted, the default is used. If neither is set, the tool returns an error prompting the user to specify a campaign.
 
 ### Environment & Session
 
-#### `almanac_get_environment`
+#### `steward_get_environment`
 
 Returns the full current state of the game world.
 
@@ -152,7 +152,7 @@ Output: {
 }
 ```
 
-#### `almanac_advance_time`
+#### `steward_advance_time`
 
 Advances the game clock. Triggers weather transitions, rule evaluation, effect expiry, and encounter rolls.
 
@@ -171,14 +171,14 @@ Output: {
 }
 ```
 
-#### `almanac_rest`
+#### `steward_rest`
 
 ```
 Input: { campaign_id?, rest_type: "short" | "long" }
 Output: same as advance_time (short = 1h, long = 8h, plus rest-specific rules)
 ```
 
-#### `almanac_travel`
+#### `steward_travel`
 
 Travel along a map edge. Advances time by the edge's `travel_hours`, applies edge weather overrides, rolls encounters.
 
@@ -190,7 +190,7 @@ Output: {
 }
 ```
 
-#### `almanac_set_party_position`
+#### `steward_set_party_position`
 
 Instantly move the party to a location (no time advance, no encounter rolls).
 
@@ -199,7 +199,7 @@ Input: { campaign_id?, location_id: number }
 Output: { success, current_location_id, current_location_name }
 ```
 
-#### `almanac_update_environment`
+#### `steward_update_environment`
 
 Directly set environment fields. Use for manual overrides (e.g. "it starts snowing").
 
@@ -214,14 +214,14 @@ Input: {
 Output: updated environment state
 ```
 
-#### `almanac_get_session_log`
+#### `steward_get_session_log`
 
 ```
 Input: { campaign_id?, limit?: number (default 50), offset?: number, entry_type?: string }
 Output: { entries: [...], total, limit, offset }
 ```
 
-#### `almanac_add_log_entry`
+#### `steward_add_log_entry`
 
 ```
 Input: { campaign_id?, message: string, entry_type?: string (default "manual") }
@@ -230,14 +230,14 @@ Output: { id, timestamp, entry_type, message }
 
 ### Characters
 
-#### `almanac_list_characters`
+#### `steward_list_characters`
 
 ```
 Input: { campaign_id?, type?: "PC" | "NPC", search?: string }
 Output: Character[] — each includes base_attributes
 ```
 
-#### `almanac_get_character`
+#### `steward_get_character`
 
 Returns a single character with computed stats (base + item modifiers + effect modifiers = effective), applied effects, and inventory. This is the primary "character sheet" tool.
 
@@ -259,7 +259,7 @@ Output: {
 
 Implementation note: This tool calls three API endpoints in parallel: `GET /characters/:id`, `GET /characters/:id/computed`, and reconstructs the inventory/effects from the character data. The API already returns `applied_effects` and `items` on the character detail endpoint, so this may require only two calls.
 
-#### `almanac_create_character`
+#### `steward_create_character`
 
 ```
 Input: {
@@ -273,7 +273,7 @@ Input: {
 Output: created Character
 ```
 
-#### `almanac_update_character`
+#### `steward_update_character`
 
 ```
 Input: {
@@ -285,39 +285,39 @@ Input: {
 Output: updated Character
 ```
 
-#### `almanac_apply_effect`
+#### `steward_apply_effect`
 
 ```
 Input: { campaign_id?, character_id: number, status_effect_id: number }
 Output: AppliedEffect { id, character_id, status_effect_definition_id, applied_at, ... }
 ```
 
-The LLM should first use `almanac_list_status_effects` to find the effect's ID by name if needed.
+The LLM should first use `steward_list_status_effects` to find the effect's ID by name if needed.
 
-#### `almanac_remove_effect`
+#### `steward_remove_effect`
 
 ```
 Input: { campaign_id?, character_id: number, applied_effect_id: number }
 Output: { success: true }
 ```
 
-The `applied_effect_id` comes from the `applied_effects` array on `almanac_get_character`.
+The `applied_effect_id` comes from the `applied_effects` array on `steward_get_character`.
 
-#### `almanac_assign_item`
+#### `steward_assign_item`
 
 ```
 Input: { campaign_id?, character_id: number, item_definition_id: number, quantity?: number }
 Output: CharacterItem { id, character_id, item_definition_id, quantity }
 ```
 
-#### `almanac_update_item_quantity`
+#### `steward_update_item_quantity`
 
 ```
 Input: { campaign_id?, character_id: number, character_item_id: number, quantity: number }
 Output: CharacterItem | { success: true, deleted: true } (if quantity reaches 0)
 ```
 
-#### `almanac_remove_item`
+#### `steward_remove_item`
 
 ```
 Input: { campaign_id?, character_id: number, character_item_id: number }
@@ -328,14 +328,14 @@ Output: { success: true }
 
 These follow a uniform CRUD pattern.
 
-#### `almanac_list_status_effects`
+#### `steward_list_status_effects`
 
 ```
 Input: { campaign_id?, search?: string, tag?: string }
 Output: StatusEffect[] — each includes name, description, tags, modifiers, duration_type, duration_value
 ```
 
-#### `almanac_create_status_effect`
+#### `steward_create_status_effect`
 
 ```
 Input: {
@@ -349,18 +349,18 @@ Input: {
 Output: created StatusEffect
 ```
 
-#### `almanac_update_status_effect` / `almanac_delete_status_effect`
+#### `steward_update_status_effect` / `steward_delete_status_effect`
 
 Standard update (partial fields) and delete by ID.
 
-#### `almanac_list_items`
+#### `steward_list_items`
 
 ```
 Input: { campaign_id?, search?: string, item_type?: string }
 Output: Item[] — each includes name, description, item_type, properties, stackable, modifiers
 ```
 
-#### `almanac_create_item`
+#### `steward_create_item`
 
 ```
 Input: {
@@ -374,13 +374,13 @@ Input: {
 Output: created Item
 ```
 
-#### `almanac_update_item` / `almanac_delete_item`
+#### `steward_update_item` / `steward_delete_item`
 
 Standard update and delete by ID.
 
 ### Locations & Map
 
-#### `almanac_list_locations`
+#### `steward_list_locations`
 
 Returns all locations and edges for the campaign map.
 
@@ -396,7 +396,7 @@ Each location includes: `id, name, description, parent_id, encounter_modifier, p
 
 Each edge includes: `id, from_location_id, to_location_id, label, description, travel_hours, bidirectional, encounter_modifier, properties, weather_override`.
 
-#### `almanac_create_location`
+#### `steward_create_location`
 
 ```
 Input: {
@@ -411,7 +411,7 @@ Input: {
 Output: created Location
 ```
 
-#### `almanac_create_edge`
+#### `steward_create_edge`
 
 ```
 Input: {
@@ -428,14 +428,14 @@ Output: created Edge
 
 ### Encounters
 
-#### `almanac_list_encounters`
+#### `steward_list_encounters`
 
 ```
 Input: { campaign_id?, search?: string }
 Output: Encounter[] — each includes name, description, notes, npcs, loot_table, conditions, environment_overrides
 ```
 
-#### `almanac_create_encounter`
+#### `steward_create_encounter`
 
 ```
 Input: {
@@ -455,7 +455,7 @@ Input: {
 Output: created Encounter
 ```
 
-#### `almanac_start_encounter` / `almanac_end_encounter`
+#### `steward_start_encounter` / `steward_end_encounter`
 
 ```
 Input: { campaign_id?, encounter_id: number }
@@ -464,14 +464,14 @@ Output: { success, encounter_name, events: [...] }
 
 ### Rules
 
-#### `almanac_list_rules`
+#### `steward_list_rules`
 
 ```
 Input: { campaign_id?, search?: string, trigger_type?: string, tag?: string }
 Output: Rule[] — full rule objects
 ```
 
-#### `almanac_create_rule`
+#### `steward_create_rule`
 
 ```
 Input: {
@@ -492,14 +492,14 @@ Input: {
 Output: created Rule
 ```
 
-#### `almanac_toggle_rule`
+#### `steward_toggle_rule`
 
 ```
 Input: { campaign_id?, rule_id: number }
 Output: updated Rule (with toggled enabled state)
 ```
 
-#### `almanac_test_rule`
+#### `steward_test_rule`
 
 Dry-run a rule against current state without applying anything.
 
@@ -514,7 +514,7 @@ Output: {
 }
 ```
 
-#### `almanac_get_rule_references`
+#### `steward_get_rule_references`
 
 Find which rules reference a given entity (for impact analysis).
 
@@ -525,14 +525,14 @@ Output: RuleReference[]
 
 ### Notifications
 
-#### `almanac_get_notifications`
+#### `steward_get_notifications`
 
 ```
 Input: { campaign_id?, unread_only?: boolean, limit?: number, offset?: number }
 Output: Notification[] — includes notification_type, message, severity, actions_data, read, dismissed
 ```
 
-#### `almanac_apply_notification`
+#### `steward_apply_notification`
 
 Apply suggested actions from a "suggestion" type notification.
 
@@ -541,14 +541,14 @@ Input: { campaign_id?, notification_id: number }
 Output: { success, results: [...] }
 ```
 
-#### `almanac_dismiss_notification`
+#### `steward_dismiss_notification`
 
 ```
 Input: { campaign_id?, notification_id: number }
 Output: { success: true }
 ```
 
-#### `almanac_undo_notification`
+#### `steward_undo_notification`
 
 Undo auto-applied actions (reverts attribute changes, re-adds consumed items, etc).
 
@@ -559,14 +559,14 @@ Output: { success, undone: number }
 
 ### Campaigns
 
-#### `almanac_list_campaigns`
+#### `steward_list_campaigns`
 
 ```
 Input: {}
 Output: Campaign[] — id, name, created_at
 ```
 
-#### `almanac_get_campaign`
+#### `steward_get_campaign`
 
 ```
 Input: { campaign_id }
@@ -583,7 +583,7 @@ Output: {
 }
 ```
 
-#### `almanac_update_campaign`
+#### `steward_update_campaign`
 
 ```
 Input: { campaign_id, ...partial campaign fields }
@@ -592,14 +592,14 @@ Output: updated Campaign
 
 ### Import/Export
 
-#### `almanac_export_campaign`
+#### `steward_export_campaign`
 
 ```
 Input: { campaign_id }
 Output: Full campaign JSON (version, campaign, all entities, environment, log)
 ```
 
-#### `almanac_import_campaign`
+#### `steward_import_campaign`
 
 ```
 Input: { data: object }  // full campaign JSON
@@ -608,7 +608,7 @@ Output: { id, name } of newly created campaign
 
 ---
 
-## Compound Tool: `almanac_get_environment`
+## Compound Tool: `steward_get_environment`
 
 This is the most important tool for session play. It should return a rich, pre-formatted summary that gives the LLM full situational awareness in one call. The markdown format should look like:
 
@@ -640,34 +640,34 @@ All tools should return actionable error messages:
 
 | Scenario | Error Message |
 |---|---|
-| No campaign specified | `"No campaign specified. Set ALMANAC_CAMPAIGN_ID or pass campaign_id. Use almanac_list_campaigns to see available campaigns."` |
-| Campaign not found | `"Campaign #5 not found. Use almanac_list_campaigns to see available campaigns."` |
-| Character not found | `"Character #42 not found in campaign #1. Use almanac_list_characters to see available characters."` |
-| Effect not in catalog | `"Status effect #10 not found. Use almanac_list_status_effects to see available effects."` |
-| Almanac unreachable | `"Cannot reach Almanac at http://localhost:3001. Is the server running?"` |
-| Travel with no location | `"Party has no current location. Use almanac_set_party_position first."` |
+| No campaign specified | `"No campaign specified. Set STEWARD_CAMPAIGN_ID or pass campaign_id. Use steward_list_campaigns to see available campaigns."` |
+| Campaign not found | `"Campaign #5 not found. Use steward_list_campaigns to see available campaigns."` |
+| Character not found | `"Character #42 not found in campaign #1. Use steward_list_characters to see available characters."` |
+| Effect not in catalog | `"Status effect #10 not found. Use steward_list_status_effects to see available effects."` |
+| Steward unreachable | `"Cannot reach Steward at http://localhost:3001. Is the server running?"` |
+| Travel with no location | `"Party has no current location. Use steward_set_party_position first."` |
 
 ---
 
 ## Design Decisions
 
 ### Why stdio over HTTP?
-Almanac is a self-hosted, single-user tool. The MCP server runs on the same machine as the Almanac server and connects to it over localhost. There's no need for multi-client support or remote access. stdio is simpler to configure and has lower overhead.
+Steward is a self-hosted, single-user tool. The MCP server runs on the same machine as the Steward server and connects to it over localhost. There's no need for multi-client support or remote access. stdio is simpler to configure and has lower overhead.
 
 ### Why a default campaign ID?
 Most users run one campaign at a time. Requiring `campaign_id` on every call would be tedious. The env var default makes 90% of interactions smoother while still supporting multi-campaign use.
 
 ### Why combine character + computed stats + inventory into one tool?
-The LLM almost always needs the full picture when reasoning about a character. Three separate calls would waste context tokens and add latency. The single `almanac_get_character` tool is the "character sheet" — one call, full picture.
+The LLM almost always needs the full picture when reasoning about a character. Three separate calls would waste context tokens and add latency. The single `steward_get_character` tool is the "character sheet" — one call, full picture.
 
-### Why enrich `almanac_get_environment` beyond the API?
+### Why enrich `steward_get_environment` beyond the API?
 Same reasoning. The LLM needs situational awareness. Returning just the raw environment row would require follow-up calls for character state, notifications, etc. The enriched version gives the LLM everything it needs to make decisions in one round-trip.
 
 ### Why include destructive tools?
 An MCP server that can only read is of limited use for a DM assistant. The LLM needs to advance time, apply effects, manage inventory, and run encounters. The `destructiveHint` annotation lets clients prompt for confirmation on writes.
 
 ### Tool count
-53 tools is high but justified: Almanac has 60+ API endpoints across 8 entity types. Each tool maps to a clear, atomic operation. The tier system helps implementers prioritize — Tier 1 (21 tools) covers 90% of session-play use cases.
+53 tools is high but justified: Steward has 60+ API endpoints across 8 entity types. Each tool maps to a clear, atomic operation. The tier system helps implementers prioritize — Tier 1 (21 tools) covers 90% of session-play use cases.
 
 ---
 

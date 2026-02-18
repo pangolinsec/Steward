@@ -45,7 +45,7 @@ function formatPrep(p: SessionPrep): string {
 
 export function registerSessionPrepTools(server: McpServer): void {
   server.registerTool(
-    "almanac_list_session_preps",
+    "steward_list_session_preps",
     {
       title: "List Session Preps",
       description:
@@ -89,7 +89,7 @@ export function registerSessionPrepTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_get_session_prep",
+    "steward_get_session_prep",
     {
       title: "Get Session Prep",
       description: "Get full details of a session prep sheet.",
@@ -111,7 +111,7 @@ export function registerSessionPrepTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_get_active_session_prep",
+    "steward_get_active_session_prep",
     {
       title: "Get Active Session Prep",
       description: "Get the currently active session prep, if any.",
@@ -137,7 +137,7 @@ export function registerSessionPrepTools(server: McpServer): void {
   // --- World Building toolset: Session Prep CRUD ---
 
   server.registerTool(
-    "almanac_create_session_prep",
+    "steward_create_session_prep",
     {
       title: "Create Session Prep",
       description:
@@ -172,7 +172,7 @@ export function registerSessionPrepTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_update_session_prep",
+    "steward_update_session_prep",
     {
       title: "Update Session Prep",
       description: "Update a session prep sheet. Only include fields you want to change.",
@@ -200,7 +200,7 @@ export function registerSessionPrepTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_activate_session_prep",
+    "steward_activate_session_prep",
     {
       title: "Activate Session Prep",
       description: "Set a session prep as active. Any previously active prep becomes completed.",
@@ -222,7 +222,7 @@ export function registerSessionPrepTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_complete_session_prep",
+    "steward_complete_session_prep",
     {
       title: "Complete Session Prep",
       description: "Mark a session prep as completed.",
@@ -244,7 +244,7 @@ export function registerSessionPrepTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_delete_session_prep",
+    "steward_delete_session_prep",
     {
       title: "Delete Session Prep",
       description: "Permanently delete a session prep sheet.",

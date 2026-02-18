@@ -64,7 +64,7 @@ function formatCombatState(state: CombatState): string {
 
 export function registerCombatTools(server: McpServer): void {
   server.registerTool(
-    "almanac_get_combat",
+    "steward_get_combat",
     {
       title: "Get Combat State",
       description:
@@ -86,11 +86,11 @@ export function registerCombatTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_start_combat",
+    "steward_start_combat",
     {
       title: "Start Combat",
       description:
-        "Start combat with an initiative-ordered combatant list. Each combatant needs a character_id and initiative roll. Use almanac_list_characters to find character IDs.",
+        "Start combat with an initiative-ordered combatant list. Each combatant needs a character_id and initiative roll. Use steward_list_characters to find character IDs.",
       inputSchema: {
         campaign_id: z.number().int().optional().describe("Campaign ID"),
         combatants: z
@@ -123,7 +123,7 @@ export function registerCombatTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_end_combat",
+    "steward_end_combat",
     {
       title: "End Combat",
       description: "End the current combat and clear combat state.",
@@ -144,7 +144,7 @@ export function registerCombatTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_next_turn",
+    "steward_next_turn",
     {
       title: "Next Combat Turn",
       description:
@@ -166,7 +166,7 @@ export function registerCombatTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_update_combat",
+    "steward_update_combat",
     {
       title: "Update Combat",
       description:

@@ -103,7 +103,7 @@ function formatCharacterSheet(stats: ComputedStats): string {
 
 export function registerCharacterTools(server: McpServer): void {
   server.registerTool(
-    "almanac_list_characters",
+    "steward_list_characters",
     {
       title: "List Characters",
       description:
@@ -149,7 +149,7 @@ export function registerCharacterTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_get_character",
+    "steward_get_character",
     {
       title: "Get Character Sheet",
       description:
@@ -172,11 +172,11 @@ export function registerCharacterTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_apply_effect",
+    "steward_apply_effect",
     {
       title: "Apply Effect to Character",
       description:
-        "Apply a status effect to a character. Use almanac_list_status_effects to find the status_effect_id.",
+        "Apply a status effect to a character. Use steward_list_status_effects to find the status_effect_id.",
       inputSchema: {
         campaign_id: z.number().int().optional().describe("Campaign ID"),
         character_id: z.number().int().describe("Character ID"),
@@ -198,11 +198,11 @@ export function registerCharacterTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_remove_effect",
+    "steward_remove_effect",
     {
       title: "Remove Effect from Character",
       description:
-        "Remove an applied effect from a character. The applied_effect_id comes from almanac_get_character's effects list.",
+        "Remove an applied effect from a character. The applied_effect_id comes from steward_get_character's effects list.",
       inputSchema: {
         campaign_id: z.number().int().optional().describe("Campaign ID"),
         character_id: z.number().int().describe("Character ID"),
@@ -222,11 +222,11 @@ export function registerCharacterTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_assign_item",
+    "steward_assign_item",
     {
       title: "Give Item to Character",
       description:
-        "Assign an item to a character's inventory. Stackable items auto-stack. Use almanac_list_items to find item_definition_id.",
+        "Assign an item to a character's inventory. Stackable items auto-stack. Use steward_list_items to find item_definition_id.",
       inputSchema: {
         campaign_id: z.number().int().optional().describe("Campaign ID"),
         character_id: z.number().int().describe("Character ID"),
@@ -250,11 +250,11 @@ export function registerCharacterTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_update_item_quantity",
+    "steward_update_item_quantity",
     {
       title: "Update Item Quantity",
       description:
-        "Change the quantity of an item a character holds. Setting to 0 removes it. The character_item_id comes from almanac_get_character's inventory list.",
+        "Change the quantity of an item a character holds. Setting to 0 removes it. The character_item_id comes from steward_get_character's inventory list.",
       inputSchema: {
         campaign_id: z.number().int().optional().describe("Campaign ID"),
         character_id: z.number().int().describe("Character ID"),
@@ -279,11 +279,11 @@ export function registerCharacterTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_remove_item",
+    "steward_remove_item",
     {
       title: "Remove Item from Character",
       description:
-        "Remove an item entirely from a character's inventory. The character_item_id comes from almanac_get_character.",
+        "Remove an item entirely from a character's inventory. The character_item_id comes from steward_get_character.",
       inputSchema: {
         campaign_id: z.number().int().optional().describe("Campaign ID"),
         character_id: z.number().int().describe("Character ID"),
@@ -303,7 +303,7 @@ export function registerCharacterTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_modify_attribute",
+    "steward_modify_attribute",
     {
       title: "Modify Character Attribute",
       description:
@@ -373,11 +373,11 @@ export function registerCharacterTools(server: McpServer): void {
   // --- Phase 2: Character CRUD ---
 
   server.registerTool(
-    "almanac_create_character",
+    "steward_create_character",
     {
       title: "Create Character",
       description:
-        "Create a new PC or NPC. Use almanac_get_campaign to see available attribute keys for base_attributes.",
+        "Create a new PC or NPC. Use steward_get_campaign to see available attribute keys for base_attributes.",
       inputSchema: {
         campaign_id: z.number().int().optional().describe("Campaign ID"),
         name: z.string().min(1).describe("Character name"),
@@ -408,7 +408,7 @@ export function registerCharacterTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_update_character",
+    "steward_update_character",
     {
       title: "Update Character",
       description:
@@ -438,7 +438,7 @@ export function registerCharacterTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_delete_character",
+    "steward_delete_character",
     {
       title: "Delete Character",
       description:

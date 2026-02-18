@@ -74,7 +74,7 @@ export default function CharactersPage({ campaignId, campaign }) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'almanac-characters.json';
+    a.download = 'steward-characters.json';
     a.click();
     URL.revokeObjectURL(url);
   };

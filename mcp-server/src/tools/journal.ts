@@ -15,7 +15,7 @@ interface JournalNote {
 
 export function registerJournalTools(server: McpServer): void {
   server.registerTool(
-    "almanac_list_journal",
+    "steward_list_journal",
     {
       title: "List Journal Notes",
       description:
@@ -65,7 +65,7 @@ export function registerJournalTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_get_journal_note",
+    "steward_get_journal_note",
     {
       title: "Get Journal Note",
       description: "Get the full content of a journal note.",
@@ -95,7 +95,7 @@ export function registerJournalTools(server: McpServer): void {
   // --- World Building toolset: Journal CRUD ---
 
   server.registerTool(
-    "almanac_create_journal_note",
+    "steward_create_journal_note",
     {
       title: "Create Journal Note",
       description:
@@ -126,7 +126,7 @@ export function registerJournalTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_update_journal_note",
+    "steward_update_journal_note",
     {
       title: "Update Journal Note",
       description: "Update a journal note. Only include fields you want to change.",
@@ -153,7 +153,7 @@ export function registerJournalTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_delete_journal_note",
+    "steward_delete_journal_note",
     {
       title: "Delete Journal Note",
       description: "Permanently delete a journal note.",

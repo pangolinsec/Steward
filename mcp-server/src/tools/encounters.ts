@@ -27,11 +27,11 @@ interface EncounterResult {
 
 export function registerEncounterTools(server: McpServer): void {
   server.registerTool(
-    "almanac_start_encounter",
+    "steward_start_encounter",
     {
       title: "Start Encounter",
       description:
-        "Start a specific encounter. Applies any environment overrides (e.g., weather changes) and fires on_encounter rules. Use almanac_list_encounters to find encounter IDs.",
+        "Start a specific encounter. Applies any environment overrides (e.g., weather changes) and fires on_encounter rules. Use steward_list_encounters to find encounter IDs.",
       inputSchema: {
         campaign_id: z.number().int().optional().describe("Campaign ID"),
         encounter_id: z.number().int().describe("Encounter definition ID"),
@@ -66,7 +66,7 @@ export function registerEncounterTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_end_encounter",
+    "steward_end_encounter",
     {
       title: "End Encounter",
       description: "End an active encounter. Fires on_encounter end rules.",
@@ -98,11 +98,11 @@ export function registerEncounterTools(server: McpServer): void {
   // --- Phase 2: Encounter Definition CRUD ---
 
   server.registerTool(
-    "almanac_create_encounter",
+    "steward_create_encounter",
     {
       title: "Create Encounter",
       description:
-        "Create a new encounter definition. Conditions control when it can trigger (locations, paths, time of day, weather). Use almanac_list_locations to find location/edge IDs.",
+        "Create a new encounter definition. Conditions control when it can trigger (locations, paths, time of day, weather). Use steward_list_locations to find location/edge IDs.",
       inputSchema: {
         campaign_id: z.number().int().optional().describe("Campaign ID"),
         name: z.string().min(1).describe("Encounter name"),
@@ -157,7 +157,7 @@ export function registerEncounterTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_update_encounter",
+    "steward_update_encounter",
     {
       title: "Update Encounter",
       description: "Update an encounter definition. Only include fields you want to change.",
@@ -202,7 +202,7 @@ export function registerEncounterTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_delete_encounter",
+    "steward_delete_encounter",
     {
       title: "Delete Encounter",
       description: "Delete an encounter definition.",

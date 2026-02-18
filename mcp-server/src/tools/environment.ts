@@ -103,7 +103,7 @@ function formatEventsMarkdown(events: TimeEvent[]): string {
 
 export function registerEnvironmentTools(server: McpServer): void {
   server.registerTool(
-    "almanac_get_environment",
+    "steward_get_environment",
     {
       title: "Get Environment State",
       description:
@@ -131,7 +131,7 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_advance_time",
+    "steward_advance_time",
     {
       title: "Advance Time",
       description:
@@ -160,7 +160,7 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_rest",
+    "steward_rest",
     {
       title: "Take Rest",
       description:
@@ -187,11 +187,11 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_travel",
+    "steward_travel",
     {
       title: "Travel Along Path",
       description:
-        "Travel along a map edge (path between locations). Advances time by the edge's travel hours, rolls encounters, applies weather overrides. Use almanac_list_locations to find edge IDs.",
+        "Travel along a map edge (path between locations). Advances time by the edge's travel hours, rolls encounters, applies weather overrides. Use steward_list_locations to find edge IDs.",
       inputSchema: {
         campaign_id: z.number().int().optional().describe("Campaign ID"),
         edge_id: z.number().int().describe("Edge (path) ID to travel along"),
@@ -215,11 +215,11 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_set_party_position",
+    "steward_set_party_position",
     {
       title: "Set Party Position",
       description:
-        "Instantly move the party to a location (no time advance, no encounter rolls). Use almanac_list_locations to find location IDs.",
+        "Instantly move the party to a location (no time advance, no encounter rolls). Use steward_list_locations to find location IDs.",
       inputSchema: {
         campaign_id: z.number().int().optional().describe("Campaign ID"),
         location_id: z.number().int().describe("Location ID to place the party at"),
@@ -241,7 +241,7 @@ export function registerEnvironmentTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_update_environment",
+    "steward_update_environment",
     {
       title: "Update Environment",
       description:

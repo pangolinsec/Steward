@@ -51,5 +51,5 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Almanac server running on http://localhost:${PORT}`);
+  console.log(`Steward server running on http://localhost:${PORT}`);
 });

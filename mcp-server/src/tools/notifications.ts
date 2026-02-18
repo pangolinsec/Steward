@@ -36,7 +36,7 @@ function formatNotifications(notifications: Notification[]): string {
 
 export function registerNotificationTools(server: McpServer): void {
   server.registerTool(
-    "almanac_get_notifications",
+    "steward_get_notifications",
     {
       title: "Get Notifications",
       description:
@@ -63,7 +63,7 @@ export function registerNotificationTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_apply_notification",
+    "steward_apply_notification",
     {
       title: "Apply Suggested Actions",
       description:
@@ -88,7 +88,7 @@ export function registerNotificationTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_dismiss_notification",
+    "steward_dismiss_notification",
     {
       title: "Dismiss Notification",
       description: "Dismiss a notification without applying its actions.",
@@ -110,7 +110,7 @@ export function registerNotificationTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_undo_notification",
+    "steward_undo_notification",
     {
       title: "Undo Auto-Applied Actions",
       description:

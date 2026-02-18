@@ -1,7 +1,7 @@
 {
-  "name": "almanac-server",
+  "name": "steward-server",
   "version": "1.0.0",
-  "description": "Almanac DM Homebrew Manager - Backend",
+  "description": "Steward DM Homebrew Manager - Backend",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",

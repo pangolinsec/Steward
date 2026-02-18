@@ -26,7 +26,7 @@ interface Edge {
 
 export function registerLocationTools(server: McpServer): void {
   server.registerTool(
-    "almanac_list_locations",
+    "steward_list_locations",
     {
       title: "List Locations and Paths",
       description:
@@ -90,7 +90,7 @@ export function registerLocationTools(server: McpServer): void {
     .describe("Weather override for this location (null to clear)");
 
   server.registerTool(
-    "almanac_create_location",
+    "steward_create_location",
     {
       title: "Create Location",
       description: "Create a new map location.",
@@ -128,7 +128,7 @@ export function registerLocationTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_update_location",
+    "steward_update_location",
     {
       title: "Update Location",
       description: "Update a location's fields. Only include fields you want to change.",
@@ -159,7 +159,7 @@ export function registerLocationTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_delete_location",
+    "steward_delete_location",
     {
       title: "Delete Location",
       description: "Delete a location and all its connected edges. Clears party position if currently at this location.",
@@ -183,10 +183,10 @@ export function registerLocationTools(server: McpServer): void {
   // --- Phase 2: Edge (Path) CRUD ---
 
   server.registerTool(
-    "almanac_create_edge",
+    "steward_create_edge",
     {
       title: "Create Path",
-      description: "Create a path (edge) between two locations. Use almanac_list_locations to find location IDs.",
+      description: "Create a path (edge) between two locations. Use steward_list_locations to find location IDs.",
       inputSchema: {
         campaign_id: z.number().int().optional().describe("Campaign ID"),
         from_location_id: z.number().int().describe("Starting location ID"),
@@ -223,7 +223,7 @@ export function registerLocationTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_update_edge",
+    "steward_update_edge",
     {
       title: "Update Path",
       description: "Update a path's fields. Only include fields you want to change.",
@@ -253,7 +253,7 @@ export function registerLocationTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_delete_edge",
+    "steward_delete_edge",
     {
       title: "Delete Path",
       description: "Delete a path (edge) between locations.",

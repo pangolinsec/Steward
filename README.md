@@ -1,4 +1,4 @@
-# Almanac — DM Homebrew Manager
+# Steward — DM Homebrew Manager
 
 A self-hosted web application for tabletop RPG Dungeon Masters to manage homebrew content, characters, world state, and session automation. System-agnostic — define your own attributes, effects, items, and rules for any game system.
 
@@ -32,7 +32,7 @@ The app will be available at `http://localhost:3000`.
 To load example seed data (optional):
 
 ```bash
-docker compose exec almanac node server/src/seed.js
+docker compose exec steward node server/src/seed.js
 ```
 
 To use a custom port:
@@ -54,11 +54,11 @@ PORT=8080 docker compose up -d
 
 | Document | Description |
 |----------|-------------|
-| [Overview](docs/index.md) | What Almanac is and feature highlights |
+| [Overview](docs/index.md) | What Steward is and feature highlights |
 | [Getting Started](docs/getting-started.md) | Installation, setup, and creating your first campaign |
 | [User Guide](docs/user-guide.md) | Complete feature guide for DMs |
 | [Rules Engine](docs/rules-engine.md) | Building automation rules, conditions, actions, and templates |
 | [Administration](docs/administration.md) | Deployment, database, backup, API reference, and troubleshooting |
 | [Using LLMs](docs/using-llms.md) | AI Dungeon Master, world-building assistant, and content generation |
 | [LLM Content Generation](docs/llm-generation.md) | Ready-to-use prompts for generating importable JSON |
-| [MCP Server Guide](MCP-server-usage.md) | Installation and tool reference for the Almanac MCP server |
+| [MCP Server Guide](MCP-server-usage.md) | Installation and tool reference for the Steward MCP server |

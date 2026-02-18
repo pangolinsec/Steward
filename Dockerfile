@@ -18,7 +18,7 @@ COPY server/ ./server/
 
 # Data directory
 RUN mkdir -p /data
-ENV ALMANAC_DATA_DIR=/data
+ENV STEWARD_DATA_DIR=/data
 ENV PORT=3000
 
 EXPOSE 3000

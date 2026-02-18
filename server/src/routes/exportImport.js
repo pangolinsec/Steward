@@ -58,7 +58,7 @@ router.get('/export', (req, res) => {
   exportData.environment = db.prepare('SELECT * FROM environment_state WHERE campaign_id = ?').get(campaignId);
   exportData.session_log = db.prepare('SELECT * FROM session_log WHERE campaign_id = ?').all(campaignId);
 
-  res.setHeader('Content-Disposition', `attachment; filename="almanac-${campaign.name.replace(/\s+/g, '-')}.json"`);
+  res.setHeader('Content-Disposition', `attachment; filename="steward-${campaign.name.replace(/\s+/g, '-')}.json"`);
   res.json(exportData);
 });
 

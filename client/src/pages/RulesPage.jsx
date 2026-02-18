@@ -380,7 +380,7 @@ export default function RulesPage({ campaignId, campaign }) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'almanac-rules.json';
+    a.download = 'steward-rules.json';
     a.click();
     URL.revokeObjectURL(url);
   };

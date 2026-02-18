@@ -6,7 +6,7 @@ nav_order: 7
 
 # Generating Content with LLMs
 
-You can use any large language model (ChatGPT, Claude, Gemini, etc.) to generate characters, items, encounters, locations, rules, and more — then import the output directly into Almanac. This page provides ready-to-use prompts with the exact JSON format Almanac expects.
+You can use any large language model (ChatGPT, Claude, Gemini, etc.) to generate characters, items, encounters, locations, rules, and more — then import the output directly into Steward. This page provides ready-to-use prompts with the exact JSON format Steward expects.
 
 ## How It Works
 
@@ -14,7 +14,7 @@ You can use any large language model (ChatGPT, Claude, Gemini, etc.) to generate
 2. Fill in the placeholder sections (marked with `[brackets]`) to describe your world
 3. Paste it into your LLM of choice
 4. Copy the JSON output
-5. In Almanac, go to the relevant page (Characters, Items, Rules, etc.) and click **Import**
+5. In Steward, go to the relevant page (Characters, Items, Rules, etc.) and click **Import**
 6. Paste or upload the JSON
 
 You can also generate a **full campaign** JSON and import it via **Import Campaign** to create a complete campaign in one step.
@@ -26,7 +26,7 @@ You can also generate a **full campaign** JSON and import it via **Import Campai
 Generates a complete importable campaign with settings, characters, effects, items, encounters, locations, and rules.
 
 ````
-Generate a complete campaign for the Almanac tabletop RPG tool. Output valid JSON matching the schema below.
+Generate a complete campaign for the Steward tabletop RPG tool. Output valid JSON matching the schema below.
 
 **Setting:** [Describe your world. Examples: "A classic high-fantasy game set in a realm of warring kingdoms, ancient magic, and dragon lords" / "A gritty cyberpunk sci-fi world set on the mining colony of Yelez V" / "A gothic horror campaign in Victorian-era London with supernatural threats"]
 
@@ -233,7 +233,7 @@ Output ONLY the JSON object. No commentary.
 ## Prompt: Characters Only
 
 ````
-Generate characters for a tabletop RPG campaign in the Almanac tool format.
+Generate characters for a tabletop RPG campaign in the Steward tool format.
 
 **Setting:** [Describe your world]
 **Number of PCs:** [e.g. 4]
@@ -272,7 +272,7 @@ Rules:
 ## Prompt: Status Effects
 
 ````
-Generate status effects for a tabletop RPG campaign in the Almanac tool format.
+Generate status effects for a tabletop RPG campaign in the Steward tool format.
 
 **Setting:** [Describe your world]
 **Number of effects:** [e.g. 8]
@@ -312,7 +312,7 @@ Rules:
 ## Prompt: Items
 
 ````
-Generate items for a tabletop RPG campaign in the Almanac tool format.
+Generate items for a tabletop RPG campaign in the Steward tool format.
 
 **Setting:** [Describe your world]
 **Number of items:** [e.g. 10]
@@ -351,7 +351,7 @@ Rules:
 ## Prompt: Encounters
 
 ````
-Generate encounters for a tabletop RPG campaign in the Almanac tool format.
+Generate encounters for a tabletop RPG campaign in the Steward tool format.
 
 **Setting:** [Describe your world]
 **Number of encounters:** [e.g. 6]
@@ -406,7 +406,7 @@ Rules:
 ## Prompt: Locations and Map
 
 ````
-Generate locations and connecting paths for a tabletop RPG campaign in the Almanac tool format.
+Generate locations and connecting paths for a tabletop RPG campaign in the Steward tool format.
 
 **Setting:** [Describe your world]
 **Number of locations:** [e.g. 8]
@@ -459,7 +459,7 @@ Rules:
 ## Prompt: Rules
 
 ````
-Generate automation rules for a tabletop RPG campaign in the Almanac tool format.
+Generate automation rules for a tabletop RPG campaign in the Steward tool format.
 
 **Setting:** [Describe your world]
 **Number of rules:** [e.g. 6]
@@ -561,7 +561,7 @@ Output a JSON object matching this schema:
 For generating just the attribute definitions and world configuration, without any entities.
 
 ````
-Generate campaign settings for a tabletop RPG in the Almanac tool format.
+Generate campaign settings for a tabletop RPG in the Steward tool format.
 
 **Setting:** [Describe your world]
 **Tone:** [e.g. "Heroic fantasy", "Grimdark survival", "Space opera", "Urban supernatural"]

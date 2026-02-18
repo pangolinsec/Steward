@@ -84,7 +84,7 @@ export default function App() {
   if (!activeCampaignId && campaigns.length === 0) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', flexDirection: 'column', gap: 16 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 700 }}>Almanac</h1>
+        <h1 style={{ fontSize: 28, fontWeight: 700 }}>Steward</h1>
         <p style={{ color: 'var(--text-secondary)' }}>No campaigns found. Create one to get started.</p>
         <button className="btn btn-primary" onClick={() => setShowCampaignModal(true)}>Create Campaign</button>
         {showCampaignModal && (
@@ -104,7 +104,7 @@ export default function App() {
       <div className="app-layout">
         <aside className="sidebar">
           <div className="sidebar-header">
-            <h1>Almanac</h1>
+            <h1>Steward</h1>
             <div className="campaign-name" onClick={() => setShowCampaignModal(true)}>
               {activeCampaign?.name || 'Select Campaign'} &#9662;
             </div>

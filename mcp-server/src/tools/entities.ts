@@ -33,11 +33,11 @@ interface Encounter {
 
 export function registerEntityTools(server: McpServer): void {
   server.registerTool(
-    "almanac_list_status_effects",
+    "steward_list_status_effects",
     {
       title: "List Status Effects",
       description:
-        "List all status effect definitions in the campaign. Shows IDs needed for almanac_apply_effect. Filterable by name search or tag.",
+        "List all status effect definitions in the campaign. Shows IDs needed for steward_apply_effect. Filterable by name search or tag.",
       inputSchema: {
         campaign_id: z.number().int().optional().describe("Campaign ID"),
         search: z.string().optional().describe("Search by name"),
@@ -71,11 +71,11 @@ export function registerEntityTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_list_items",
+    "steward_list_items",
     {
       title: "List Items",
       description:
-        "List all item definitions in the campaign. Shows IDs needed for almanac_assign_item. Filterable by name search or item type.",
+        "List all item definitions in the campaign. Shows IDs needed for steward_assign_item. Filterable by name search or item type.",
       inputSchema: {
         campaign_id: z.number().int().optional().describe("Campaign ID"),
         search: z.string().optional().describe("Search by name"),
@@ -109,11 +109,11 @@ export function registerEntityTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_list_encounters",
+    "steward_list_encounters",
     {
       title: "List Encounters",
       description:
-        "List all encounter definitions. Shows IDs needed for almanac_start_encounter/end_encounter. Filterable by name search.",
+        "List all encounter definitions. Shows IDs needed for steward_start_encounter/end_encounter. Filterable by name search.",
       inputSchema: {
         campaign_id: z.number().int().optional().describe("Campaign ID"),
         search: z.string().optional().describe("Search by name"),
@@ -157,11 +157,11 @@ export function registerEntityTools(server: McpServer): void {
   });
 
   server.registerTool(
-    "almanac_create_status_effect",
+    "steward_create_status_effect",
     {
       title: "Create Status Effect",
       description:
-        "Create a new status effect definition. Use almanac_get_campaign to see available attribute keys for modifiers.",
+        "Create a new status effect definition. Use steward_get_campaign to see available attribute keys for modifiers.",
       inputSchema: {
         campaign_id: z.number().int().optional().describe("Campaign ID"),
         name: z.string().min(1).describe("Effect name"),
@@ -192,7 +192,7 @@ export function registerEntityTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_update_status_effect",
+    "steward_update_status_effect",
     {
       title: "Update Status Effect",
       description: "Update a status effect definition. Only include fields you want to change.",
@@ -221,7 +221,7 @@ export function registerEntityTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_delete_status_effect",
+    "steward_delete_status_effect",
     {
       title: "Delete Status Effect",
       description: "Delete a status effect definition. Also removes all applied instances from characters.",
@@ -245,11 +245,11 @@ export function registerEntityTools(server: McpServer): void {
   // --- Phase 2: Item Definition CRUD ---
 
   server.registerTool(
-    "almanac_create_item",
+    "steward_create_item",
     {
       title: "Create Item",
       description:
-        "Create a new item definition. Use almanac_get_campaign to see available attribute keys for modifiers.",
+        "Create a new item definition. Use steward_get_campaign to see available attribute keys for modifiers.",
       inputSchema: {
         campaign_id: z.number().int().optional().describe("Campaign ID"),
         name: z.string().min(1).describe("Item name"),
@@ -280,7 +280,7 @@ export function registerEntityTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_update_item",
+    "steward_update_item",
     {
       title: "Update Item",
       description: "Update an item definition. Only include fields you want to change.",
@@ -309,7 +309,7 @@ export function registerEntityTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_delete_item",
+    "steward_delete_item",
     {
       title: "Delete Item",
       description: "Delete an item definition. Also removes all instances from character inventories.",

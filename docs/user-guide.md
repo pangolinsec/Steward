@@ -6,13 +6,13 @@ nav_order: 3
 
 # User Guide
 
-This guide covers every feature in Almanac from the DM's perspective.
+This guide covers every feature in Steward from the DM's perspective.
 
 ---
 
 ## Campaigns
 
-Almanac supports multiple independent campaigns. Each campaign has its own characters, effects, items, encounters, locations, rules, environment state, and session log.
+Steward supports multiple independent campaigns. Each campaign has its own characters, effects, items, encounters, locations, rules, environment state, and session log.
 
 **Switching campaigns** — Use the campaign selector at the top of the sidebar. The current campaign name is always visible.
 
@@ -365,7 +365,7 @@ Individual pages (Characters, Rules, Encounters, etc.) have their own export/imp
 
 ### Import Validation
 
-On import, Almanac checks for prerequisite references. If imported rules reference effects or items that don't exist in the target campaign, a warning is shown listing the missing prerequisites.
+On import, Steward checks for prerequisite references. If imported rules reference effects or items that don't exist in the target campaign, a warning is shown listing the missing prerequisites.
 
 ---
 
@@ -435,7 +435,7 @@ Define the property keys available for locations and edges. Each key has a name 
 
 ### Tag Presets
 
-Bundle a tag attribute definition with associated rules into a reusable preset. Almanac includes built-in presets for common fantasy archetypes (Race, Class, Creature Type, Alignment), and you can create custom presets from your campaign's existing attributes and rules. Custom presets can be exported as JSON files and shared between campaigns.
+Bundle a tag attribute definition with associated rules into a reusable preset. Steward includes built-in presets for common fantasy archetypes (Race, Class, Creature Type, Alignment), and you can create custom presets from your campaign's existing attributes and rules. Custom presets can be exported as JSON files and shared between campaigns.
 
 Click **Presets** in the Attribute Definitions section to open the preset browser. See the [Tag Presets](rules-engine.md#tag-presets) section of the Rules Engine Guide for full details.
 

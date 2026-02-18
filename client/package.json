@@ -1,7 +1,7 @@
 {
-  "name": "almanac-client",
+  "name": "steward-client",
   "version": "1.0.0",
-  "description": "Almanac DM Homebrew Manager - Frontend",
+  "description": "Steward DM Homebrew Manager - Frontend",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -26,7 +26,7 @@ import {
 import { TOOLBOX_ENABLED } from "./constants.js";
 
 const server = new McpServer({
-  name: "almanac",
+  name: "steward",
   version: "1.0.0",
 });
 
@@ -47,7 +47,7 @@ registerRandomTableTools(server);
 registerSessionPrepTools(server);
 
 if (TOOLBOX_ENABLED) {
-  // Disable non-core toolsets — agents load them on demand via almanac_open_toolbox
+  // Disable non-core toolsets — agents load them on demand via steward_open_toolbox
   disableAllToolsets(server);
 
   // Meta-tools for dynamic toolset management
@@ -58,10 +58,10 @@ if (TOOLBOX_ENABLED) {
     .join("\n");
 
   server.registerTool(
-    "almanac_open_toolbox",
+    "steward_open_toolbox",
     {
       title: "Open Toolbox",
-      description: `Load additional tools for a specific task. Session play tools are always available; use this to access specialized toolsets:\n${toolsetDescriptions}\n\nCall almanac_close_toolbox when done to reduce context.`,
+      description: `Load additional tools for a specific task. Session play tools are always available; use this to access specialized toolsets:\n${toolsetDescriptions}\n\nCall steward_close_toolbox when done to reduce context.`,
       inputSchema: {
         toolset: toolsetEnum.describe("Toolset to load"),
       },
@@ -82,7 +82,7 @@ if (TOOLBOX_ENABLED) {
   );
 
   server.registerTool(
-    "almanac_close_toolbox",
+    "steward_close_toolbox",
     {
       title: "Close Toolbox",
       description:

@@ -21,7 +21,7 @@ interface Campaign extends CampaignSummary {
 
 export function registerCampaignTools(server: McpServer): void {
   server.registerTool(
-    "almanac_list_campaigns",
+    "steward_list_campaigns",
     {
       title: "List Campaigns",
       description: "List all campaigns. Use this to discover campaign IDs.",
@@ -44,7 +44,7 @@ export function registerCampaignTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_get_campaign",
+    "steward_get_campaign",
     {
       title: "Get Campaign Details",
       description:
@@ -105,7 +105,7 @@ export function registerCampaignTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_update_campaign",
+    "steward_update_campaign",
     {
       title: "Update Campaign Settings",
       description:

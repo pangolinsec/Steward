@@ -33,7 +33,7 @@ export default function StatusEffectsPage({ campaignId, campaign }) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'almanac-status-effects.json';
+    a.download = 'steward-status-effects.json';
     a.click();
     URL.revokeObjectURL(url);
   };

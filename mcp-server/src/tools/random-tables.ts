@@ -20,11 +20,11 @@ interface RollResult {
 
 export function registerRandomTableTools(server: McpServer): void {
   server.registerTool(
-    "almanac_list_random_tables",
+    "steward_list_random_tables",
     {
       title: "List Random Tables",
       description:
-        "List all random tables in the campaign. Filterable by name search. Shows IDs needed for almanac_roll_random_table.",
+        "List all random tables in the campaign. Filterable by name search. Shows IDs needed for steward_roll_random_table.",
       inputSchema: {
         campaign_id: z.number().int().optional().describe("Campaign ID"),
         search: z.string().optional().describe("Search by table name"),
@@ -54,11 +54,11 @@ export function registerRandomTableTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_roll_random_table",
+    "steward_roll_random_table",
     {
       title: "Roll on Random Table",
       description:
-        "Roll on a random table and get a result. The roll is logged to the session log. Use almanac_list_random_tables to find table IDs.",
+        "Roll on a random table and get a result. The roll is logged to the session log. Use steward_list_random_tables to find table IDs.",
       inputSchema: {
         campaign_id: z.number().int().optional().describe("Campaign ID"),
         table_id: z.number().int().describe("Random table ID"),
@@ -86,7 +86,7 @@ export function registerRandomTableTools(server: McpServer): void {
   // --- World Building toolset: Random Table CRUD ---
 
   server.registerTool(
-    "almanac_create_random_table",
+    "steward_create_random_table",
     {
       title: "Create Random Table",
       description:
@@ -128,7 +128,7 @@ export function registerRandomTableTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_update_random_table",
+    "steward_update_random_table",
     {
       title: "Update Random Table",
       description: "Update a random table. Only include fields you want to change.",
@@ -158,7 +158,7 @@ export function registerRandomTableTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_delete_random_table",
+    "steward_delete_random_table",
     {
       title: "Delete Random Table",
       description: "Delete a random table.",

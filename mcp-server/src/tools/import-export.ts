@@ -4,7 +4,7 @@ import { get, post, campaignId, handleError } from "../client.js";
 
 export function registerImportExportTools(server: McpServer): void {
   server.registerTool(
-    "almanac_export_campaign",
+    "steward_export_campaign",
     {
       title: "Export Campaign",
       description:
@@ -32,11 +32,11 @@ export function registerImportExportTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_import_campaign",
+    "steward_import_campaign",
     {
       title: "Import Campaign",
       description:
-        "Import a full campaign from JSON (creates a new campaign). The data should be in the same format as almanac_export_campaign output.",
+        "Import a full campaign from JSON (creates a new campaign). The data should be in the same format as steward_export_campaign output.",
       inputSchema: {
         data: z.record(z.unknown()).describe("Full campaign JSON (same structure as export output)"),
       },

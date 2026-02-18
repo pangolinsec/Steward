@@ -1,11 +1,11 @@
 {
-  "name": "almanac-mcp-server",
+  "name": "steward-mcp-server",
   "version": "1.0.0",
-  "description": "MCP server for Almanac tabletop RPG campaign manager",
+  "description": "MCP server for Steward tabletop RPG campaign manager",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "almanac-mcp-server": "dist/index.js"
+    "steward-mcp-server": "dist/index.js"
   },
   "scripts": {
     "start": "node dist/index.js",

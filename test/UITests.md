@@ -1,4 +1,4 @@
-# Almanac UI Tests
+# Steward UI Tests
 
 **App URL:** http://localhost:3000
 **Approach:** All tests start from a fresh state. Tests are ordered sequentially — later tests depend on data created by earlier ones.
@@ -18,7 +18,7 @@ Before running tests:
 
 ### T-01.1: First Load — Empty State
 1. Navigate to http://localhost:3000
-2. **Verify** the page shows "Almanac" heading, "No campaigns found" message, and a "Create Campaign" button
+2. **Verify** the page shows "Steward" heading, "No campaigns found" message, and a "Create Campaign" button
 3. **Verify** no sidebar or navigation is visible
 
 ### T-01.2: Create Campaign
@@ -807,7 +807,7 @@ Before running tests:
 ### T-13.1: Export Campaign
 1. Click the campaign name to open the campaign modal
 2. Find "Test Campaign" and click the export (download) button
-3. **Verify** a JSON file is downloaded named "almanac-campaign-{id}.json"
+3. **Verify** a JSON file is downloaded named "steward-campaign-{id}.json"
 
 ### T-13.2: Import Campaign as New
 1. In the campaign modal, click "Import Campaign from JSON"

@@ -1,4 +1,4 @@
-# Almanac UI Test Results
+# Steward UI Test Results
 
 **Date:** 2026-02-15
 **Tester:** Claude (automated via Chrome browser extension)

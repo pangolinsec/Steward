@@ -1,12 +1,12 @@
 ---
-title: Using LLMs with Almanac
+title: Using LLMs with Steward
 layout: default
 nav_order: 6
 ---
 
-# Using LLMs with Almanac
+# Using LLMs with Steward
 
-Almanac is designed to work with large language models in three ways:
+Steward is designed to work with large language models in three ways:
 
 1. **Generate static content** — Use any LLM to produce importable JSON (characters, encounters, full campaigns)
 2. **AI Dungeon Master** — Use the MCP server with Claude Code to run a live game session
@@ -18,7 +18,7 @@ Each approach is independent. You can use any combination, or none at all.
 
 ## 1. Generate importable content with any LLM
 
-The simplest way to use AI with Almanac. No server integration needed — just copy-paste between your LLM and Almanac's import feature.
+The simplest way to use AI with Steward. No server integration needed — just copy-paste between your LLM and Steward's import feature.
 
 ### How it works
 
@@ -26,7 +26,7 @@ The simplest way to use AI with Almanac. No server integration needed — just c
 2. Copy a prompt and fill in the bracketed placeholders with your world details
 3. Paste it into any LLM (ChatGPT, Claude, Gemini, etc.)
 4. Copy the JSON output
-5. In Almanac, import via the relevant page's **Import** button, or use **Import Campaign** for a full campaign
+5. In Steward, import via the relevant page's **Import** button, or use **Import Campaign** for a full campaign
 
 ### Available prompts
 
@@ -53,18 +53,18 @@ See [LLM Content Generation](llm-generation.md) for the full prompt library and 
 
 ## 2. AI Dungeon Master with the MCP server
 
-Use Claude Code with the Almanac MCP server to run a full tabletop RPG session. The AI acts as DM — narrating the world, running NPCs, rolling dice, tracking state, and managing combat — while the player interacts through natural conversation.
+Use Claude Code with the Steward MCP server to run a full tabletop RPG session. The AI acts as DM — narrating the world, running NPCs, rolling dice, tracking state, and managing combat — while the player interacts through natural conversation.
 
 ### Prerequisites
 
-- [Almanac MCP server](../MCP-server-usage.md) installed and configured
+- [Steward MCP server](../MCP-server-usage.md) installed and configured
 - Claude Code with the MCP server connected
 - A campaign with content (characters, locations, encounters, etc.)
 
 ### Setup
 
-1. Start Almanac (`docker compose up -d`)
-2. Open Claude Code with the Almanac MCP server configured
+1. Start Steward (`docker compose up -d`)
+2. Open Claude Code with the Steward MCP server configured
 3. Set the DM system prompt as your initial message or in a CLAUDE.md file
 
 ### DM system prompts
@@ -92,7 +92,7 @@ Start a Claude Code session and paste the DM system prompt as your first message
 
 > "Load campaign 1. I'm playing Pip. Start the session."
 
-The DM will call `almanac_get_environment` and `almanac_get_session_log` to load the world state, give you a recap, and ask "What do you do?"
+The DM will call `steward_get_environment` and `steward_get_session_log` to load the world state, give you a recap, and ask "What do you do?"
 
 From there, play naturally:
 
@@ -122,7 +122,7 @@ Use the MCP server conversationally to build and manage campaign content without
 
 ### Prerequisites
 
-Same as the DM setup: Almanac running, MCP server configured in Claude Code.
+Same as the DM setup: Steward running, MCP server configured in Claude Code.
 
 ### Examples
 
@@ -156,7 +156,7 @@ The MCP server organizes tools into groups. Session play tools (time, travel, ch
 
 > "Create a new location..." → The AI opens the world_building toolbox automatically
 
-If your MCP client doesn't support dynamic tool loading (you'll know because tools fail after opening the toolbox), set `ALMANAC_TOOLBOX=off` in your MCP server configuration. See the [MCP Server Guide](../MCP-server-usage.md) for details.
+If your MCP client doesn't support dynamic tool loading (you'll know because tools fail after opening the toolbox), set `STEWARD_TOOLBOX=off` in your MCP server configuration. See the [MCP Server Guide](../MCP-server-usage.md) for details.
 
 ---
 
@@ -168,4 +168,4 @@ These approaches work well together:
 2. **Refine with the world-building assistant** — Tweak attributes, add missing NPCs, adjust encounter conditions, and set up rules conversationally
 3. **Play with the AI DM** — Run live sessions with the DM prompt, and the AI keeps the world state updated as you play
 
-Or use just one approach. Generate a campaign from a prompt and play it entirely through the web UI. Or skip generation entirely and build everything through the MCP world-building tools. Almanac doesn't require any LLM integration to function — it just makes it more convenient.
+Or use just one approach. Generate a campaign from a prompt and play it entirely through the web UI. Or skip generation entirely and build everything through the MCP world-building tools. Steward doesn't require any LLM integration to function — it just makes it more convenient.

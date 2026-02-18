@@ -12,7 +12,7 @@ interface LogEntry {
 
 export function registerSessionLogTools(server: McpServer): void {
   server.registerTool(
-    "almanac_get_session_log",
+    "steward_get_session_log",
     {
       title: "Get Session Log",
       description:
@@ -51,7 +51,7 @@ export function registerSessionLogTools(server: McpServer): void {
   );
 
   server.registerTool(
-    "almanac_add_log_entry",
+    "steward_add_log_entry",
     {
       title: "Add Session Log Entry",
       description:

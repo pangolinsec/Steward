@@ -8,10 +8,10 @@ nav_order: 2
 
 ## Quick Start (Docker)
 
-The fastest way to run Almanac:
+The fastest way to run Steward:
 
 ```bash
-git clone <repo-url> && cd almanac
+git clone <repo-url> && cd steward
 docker compose up -d
 ```
 
@@ -28,7 +28,7 @@ PORT=8080 docker compose up -d
 Seed data creates an example campaign with characters, effects, items, encounters, locations, and environment state — useful for exploring features before building your own campaign.
 
 ```bash
-docker compose exec almanac node server/src/seed.js
+docker compose exec steward node server/src/seed.js
 ```
 
 This creates:
@@ -89,15 +89,15 @@ The frontend dev server runs on `http://localhost:5173` with API requests proxie
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PORT` | `3000` | Server port |
-| `ALMANAC_DATA_DIR` | `server/data/` | Directory for the SQLite database file |
+| `STEWARD_DATA_DIR` | `server/data/` | Directory for the SQLite database file |
 
-In Docker, `ALMANAC_DATA_DIR` is set to `/data` and the `./data` host directory is mounted as a volume for persistence.
+In Docker, `STEWARD_DATA_DIR` is set to `/data` and the `./data` host directory is mounted as a volume for persistence.
 
 ---
 
 ## Creating Your First Campaign
 
-When you first open Almanac, you'll see an empty campaign list.
+When you first open Steward, you'll see an empty campaign list.
 
 ### 1. Create a Campaign
 
@@ -119,7 +119,7 @@ Go to **Settings** and add the attributes your game system uses. Each attribute 
 
 For tag attributes, also define the available **options** (e.g., a "faction" attribute with options "Alliance", "Horde", "Neutral").
 
-You can add as many attributes as you need. There are no hardcoded stats — Almanac adapts to your system.
+You can add as many attributes as you need. There are no hardcoded stats — Steward adapts to your system.
 
 ### 3. Add Characters
 

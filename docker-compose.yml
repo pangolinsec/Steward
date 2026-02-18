@@ -1,11 +1,11 @@
 services:
-  almanac:
+  steward:
     build: .
     ports:
       - "${PORT:-3000}:3000"
     volumes:
       - ./data:/data
     environment:
-      - ALMANAC_DATA_DIR=/data
+      - STEWARD_DATA_DIR=/data
       - PORT=3000
     restart: unless-stopped
