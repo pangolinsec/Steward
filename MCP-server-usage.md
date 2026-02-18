@@ -44,7 +44,7 @@ The MCP server is configured via environment variables:
 |---|---|---|
 | `ALMANAC_URL` | `http://localhost:3001/api` | Base URL for the Almanac REST API. If Almanac runs on port 3000 (the default Docker setup), set this to `http://localhost:3000/api`. |
 | `ALMANAC_CAMPAIGN_ID` | *(none)* | Default campaign ID. When set, all tools use this campaign automatically and the `campaign_id` parameter becomes optional. Recommended for single-campaign use. |
-| `ALMANAC_TOOLBOX` | `on` | Set to `off` to disable the dynamic toolbox and expose all 73 tools at once. Use this if your MCP client doesn't support dynamic tool list changes (e.g., tools aren't available after calling `almanac_open_toolbox`). |
+| `ALMANAC_TOOLBOX` | `off` | Set to `on` to enable the dynamic toolbox, which hides world-building/rules/import tools behind `almanac_open_toolbox` to reduce context. Most MCP clients (including Claude Code and Claude Desktop) don't support dynamic tool list changes, so this is off by default. |
 
 ## Setting up your MCP client
 
