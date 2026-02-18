@@ -10,6 +10,7 @@ interface Character {
   description: string;
   portrait_url: string;
   base_attributes: Record<string, unknown>;
+  max_attributes: Record<string, unknown>;
 }
 
 interface EffectBreakdown {
@@ -36,6 +37,7 @@ interface ItemBreakdown {
 interface ComputedStats {
   character: Character;
   base: Record<string, unknown>;
+  max_attributes: Record<string, unknown>;
   effective: Record<string, unknown>;
   effects_breakdown: EffectBreakdown[];
   items_breakdown: ItemBreakdown[];
@@ -48,14 +50,26 @@ function formatCharacterSheet(stats: ComputedStats): string {
   if (ch.description) lines.push(`*${ch.description}*\n`);
 
   // Effective attributes
+  const maxAttrs = stats.max_attributes || {};
+  const hasAnyMax = Object.keys(maxAttrs).length > 0;
   lines.push("### Attributes\n");
-  lines.push("| Attribute | Base | Effective |");
-  lines.push("|-----------|------|-----------|");
+  if (hasAnyMax) {
+    lines.push("| Attribute | Base | Max | Effective |");
+    lines.push("|-----------|------|-----|-----------|");
+  } else {
+    lines.push("| Attribute | Base | Effective |");
+    lines.push("|-----------|------|-----------|");
+  }
   for (const [key, baseVal] of Object.entries(stats.base)) {
     const effVal = stats.effective[key];
     const diff = typeof baseVal === "number" && typeof effVal === "number" ? effVal - baseVal : 0;
     const diffStr = diff > 0 ? ` (+${diff})` : diff < 0 ? ` (${diff})` : "";
-    lines.push(`| ${key} | ${baseVal} | ${effVal}${diffStr} |`);
+    if (hasAnyMax) {
+      const maxVal = maxAttrs[key] != null ? String(maxAttrs[key]) : "—";
+      lines.push(`| ${key} | ${baseVal} | ${maxVal} | ${effVal}${diffStr} |`);
+    } else {
+      lines.push(`| ${key} | ${baseVal} | ${effVal}${diffStr} |`);
+    }
   }
   lines.push("");
 
@@ -288,6 +302,74 @@ export function registerCharacterTools(server: McpServer): void {
     },
   );
 
+  server.registerTool(
+    "almanac_modify_attribute",
+    {
+      title: "Modify Character Attribute",
+      description:
+        "Change a single attribute on a character without replacing all attributes. " +
+        "Use `delta` for relative changes (e.g. -5 damage) or `value` for absolute sets. " +
+        "Defaults to base attributes; set target to 'max' for max values.",
+      inputSchema: {
+        campaign_id: z.number().int().optional().describe("Campaign ID"),
+        character_id: z.number().int().describe("Character ID"),
+        attribute: z.string().describe("Attribute key to modify (e.g. 'hp', 'strength')"),
+        delta: z.number().optional().describe("Relative change (e.g. -5 for damage, +3 for healing). Mutually exclusive with value."),
+        value: z.number().optional().describe("Absolute value to set. Mutually exclusive with delta."),
+        target: z.enum(["base", "max"]).default("base").describe("Which attribute set: 'base' (current values) or 'max' (maximum values)"),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+    },
+    async (params) => {
+      try {
+        if (params.delta == null && params.value == null) {
+          return { content: [{ type: "text", text: "Error: provide either `delta` or `value`." }], isError: true };
+        }
+        if (params.delta != null && params.value != null) {
+          return { content: [{ type: "text", text: "Error: provide `delta` or `value`, not both." }], isError: true };
+        }
+
+        const cId = campaignId(params.campaign_id);
+        const stats = await get<ComputedStats>(c(cId, `/characters/${params.character_id}/computed`));
+
+        const isMax = params.target === "max";
+        const attrs = isMax
+          ? { ...(stats.max_attributes || {}) }
+          : { ...(stats.base || {}) };
+
+        const key = params.attribute;
+        const oldVal = typeof attrs[key] === "number" ? (attrs[key] as number) : 0;
+
+        let newVal: number;
+        if (params.delta != null) {
+          newVal = oldVal + params.delta;
+        } else {
+          newVal = params.value!;
+        }
+        attrs[key] = newVal;
+
+        const updatePayload = isMax
+          ? { max_attributes: attrs }
+          : { base_attributes: attrs };
+
+        // For base, we need to send the full base_attributes to avoid losing other attributes
+        if (!isMax) {
+          updatePayload.base_attributes = { ...stats.base, [key]: newVal };
+        }
+
+        await put<Character>(c(cId, `/characters/${params.character_id}`), updatePayload);
+
+        const label = isMax ? "max" : "base";
+        const changeDesc = params.delta != null
+          ? `${params.delta >= 0 ? "+" : ""}${params.delta} (${oldVal} → ${newVal})`
+          : `set to ${newVal} (was ${oldVal})`;
+        return { content: [{ type: "text", text: `**${stats.character.name}** ${label} ${key}: ${changeDesc}` }] };
+      } catch (error) {
+        return { content: [{ type: "text", text: handleError(error) }], isError: true };
+      }
+    },
+  );
+
   // --- Phase 2: Character CRUD ---
 
   server.registerTool(
@@ -303,6 +385,7 @@ export function registerCharacterTools(server: McpServer): void {
         description: z.string().optional().describe("Character description/backstory"),
         portrait_url: z.string().optional().describe("Portrait image URL"),
         base_attributes: z.record(z.union([z.number(), z.string()])).optional().describe("Base attributes (e.g. { strength: 14, class: 'Fighter' })"),
+        max_attributes: z.record(z.number()).optional().describe("Max values for resource attributes (e.g. { hp: 20 })"),
       },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
@@ -315,6 +398,7 @@ export function registerCharacterTools(server: McpServer): void {
           description: params.description ?? "",
           portrait_url: params.portrait_url ?? "",
           base_attributes: params.base_attributes ?? {},
+          max_attributes: params.max_attributes ?? {},
         });
         return { content: [{ type: "text", text: `Character **${result.name}** created (id: ${result.id})` }] };
       } catch (error) {
@@ -337,6 +421,7 @@ export function registerCharacterTools(server: McpServer): void {
         description: z.string().optional().describe("Character description"),
         portrait_url: z.string().optional().describe("Portrait URL"),
         base_attributes: z.record(z.union([z.number(), z.string()])).optional().describe("Base attributes (replaces all)"),
+        max_attributes: z.record(z.number()).optional().describe("Max values for resource attributes (replaces all)"),
       },
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
     },
