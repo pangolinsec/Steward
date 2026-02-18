@@ -15,6 +15,7 @@ const statusEffectsRouter = require('./routes/statusEffects');
 const itemsRouter = require('./routes/items');
 const encountersRouter = require('./routes/encounters');
 const environmentRouter = require('./routes/environment');
+const locationsRouter = require('./routes/locations');
 const sessionLogRouter = require('./routes/sessionLog');
 const exportImportRouter = require('./routes/exportImport');
 
@@ -24,6 +25,7 @@ app.use('/api/campaigns/:id/status-effects', statusEffectsRouter);
 app.use('/api/campaigns/:id/items', itemsRouter);
 app.use('/api/campaigns/:id/encounters', encountersRouter);
 app.use('/api/campaigns/:id/environment', environmentRouter);
+app.use('/api/campaigns/:id/locations', locationsRouter);
 app.use('/api/campaigns/:id/session-log', sessionLogRouter);
 app.use('/api/campaigns/:id', exportImportRouter);
 

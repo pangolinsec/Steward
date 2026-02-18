@@ -106,6 +106,42 @@ function remapEncounterNpcs(db, campaignId, encounterId, npcs, charIdMap) {
     .run(JSON.stringify(remapped), encounterId);
 }
 
+// --- Encounter condition location remapping ---
+
+function remapEncounterConditionLocations(db, campaignId, encounterId, conditions, locationIdMap) {
+  if (!conditions || !conditions.location_ids || conditions.location_ids.length === 0) return;
+  const remapped = {
+    ...conditions,
+    location_ids: conditions.location_ids
+      .map(id => locationIdMap[id] != null ? Number(locationIdMap[id]) : id)
+      .filter(id => id != null),
+  };
+  db.prepare(`UPDATE ${ENTITY_CONFIG.encounters.table} SET conditions = ? WHERE id = ?`)
+    .run(JSON.stringify(remapped), encounterId);
+}
+
+// --- Location edge import ---
+
+function remapLocationEdges(db, campaignId, edges, locationIdMap) {
+  // Insert edges with remapped from/to location IDs and campaign_id.
+  // Called once for all edges (not per-location).
+  if (!edges || !Array.isArray(edges)) return;
+  for (const edge of edges) {
+    const newFromId = locationIdMap[edge.from_location_id];
+    const newToId = locationIdMap[edge.to_location_id];
+    if (!newFromId || !newToId) continue;
+    db.prepare(`
+      INSERT INTO location_edges (campaign_id, from_location_id, to_location_id, label, travel_hours, bidirectional, encounter_modifier, properties)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      campaignId, Number(newFromId), Number(newToId),
+      edge.label || '', edge.travel_hours || 1.0,
+      edge.bidirectional ?? 1, edge.encounter_modifier || 1.0,
+      typeof edge.properties === 'string' ? edge.properties : JSON.stringify(edge.properties || '{}'),
+    );
+  }
+}
+
 // --- Modifier attribute validation ---
 
 function validateModifierAttributes(entityKey, entities, attrKeys) {
@@ -142,6 +178,7 @@ function normalizeImportData(importData, entityTypes) {
     // Include relation data if present
     result.applied_effects = importData.applied_effects || [];
     result.character_items = importData.character_items || [];
+    result.edges = importData.edges || [];
     return result;
   }
   // Bare array — interpret as the single entity type
@@ -159,6 +196,7 @@ function normalizeImportData(importData, entityTypes) {
   }
   result.applied_effects = importData.applied_effects || [];
   result.character_items = importData.character_items || [];
+  result.edges = importData.edges || [];
   return result;
 }
 
@@ -285,15 +323,24 @@ function executeMergeImport(db, campaignId, importData, decisions, entityTypes) 
       }
     }
 
-    // Post-process hook (encounter NPC remapping)
+    // Post-process hooks
     if (config.postProcess === 'remapEncounterNpcs') {
       const charIdMap = idMaps.charIdMap || {};
+      const locationIdMap = idMaps.locationIdMap || {};
       for (const entity of entities) {
         const newId = idMaps[config.idMapKey]?.[entity.id];
         if (newId && entity.npcs) {
           remapEncounterNpcs(db, campaignId, newId, entity.npcs, charIdMap);
         }
+        if (newId && entity.conditions) {
+          const conds = typeof entity.conditions === 'string' ? JSON.parse(entity.conditions) : entity.conditions;
+          remapEncounterConditionLocations(db, campaignId, newId, conds, locationIdMap);
+        }
       }
+    }
+    if (config.postProcess === 'remapLocationEdges') {
+      const locationIdMap = idMaps.locationIdMap || {};
+      remapLocationEdges(db, campaignId, data.edges, locationIdMap);
     }
   }
 
@@ -310,6 +357,8 @@ module.exports = {
   findExistingByName,
   validateModifierAttributes,
   remapEncounterNpcs,
+  remapEncounterConditionLocations,
+  remapLocationEdges,
   buildImportPreview,
   executeMergeImport,
   normalizeImportData,

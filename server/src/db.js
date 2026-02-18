@@ -120,6 +120,31 @@ function initialize() {
       environment_notes TEXT DEFAULT ''
     );
 
+    CREATE TABLE IF NOT EXISTS locations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      description TEXT DEFAULT '',
+      parent_id INTEGER REFERENCES locations(id) ON DELETE SET NULL,
+      weather_override TEXT DEFAULT NULL,
+      encounter_modifier REAL DEFAULT 1.0,
+      properties TEXT DEFAULT '{}',
+      position_x REAL DEFAULT 0,
+      position_y REAL DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS location_edges (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+      from_location_id INTEGER NOT NULL REFERENCES locations(id) ON DELETE CASCADE,
+      to_location_id INTEGER NOT NULL REFERENCES locations(id) ON DELETE CASCADE,
+      label TEXT DEFAULT '',
+      travel_hours REAL DEFAULT 1.0,
+      bidirectional INTEGER DEFAULT 1,
+      encounter_modifier REAL DEFAULT 1.0,
+      properties TEXT DEFAULT '{}'
+    );
+
     CREATE TABLE IF NOT EXISTS session_log (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
@@ -135,10 +160,30 @@ function initialize() {
     CREATE INDEX IF NOT EXISTS idx_applied_effects_character ON applied_effects(character_id);
     CREATE INDEX IF NOT EXISTS idx_character_items_character ON character_items(character_id);
     CREATE INDEX IF NOT EXISTS idx_session_log_campaign ON session_log(campaign_id);
+    CREATE INDEX IF NOT EXISTS idx_locations_campaign ON locations(campaign_id);
+    CREATE INDEX IF NOT EXISTS idx_location_edges_campaign ON location_edges(campaign_id);
   `);
 }
 
 initialize();
+
+// Idempotent ALTER TABLE migrations for new columns
+const migrations = [
+  `ALTER TABLE environment_state ADD COLUMN current_location_id INTEGER REFERENCES locations(id) ON DELETE SET NULL`,
+  `ALTER TABLE environment_state ADD COLUMN current_edge_id INTEGER REFERENCES location_edges(id) ON DELETE SET NULL`,
+  `ALTER TABLE environment_state ADD COLUMN edge_progress REAL DEFAULT 0`,
+  `ALTER TABLE environment_state ADD COLUMN last_encounter_at TEXT DEFAULT NULL`,
+  `ALTER TABLE campaigns ADD COLUMN encounter_settings TEXT DEFAULT '{"enabled":false,"base_rate":0.1,"min_interval_hours":1}'`,
+  `ALTER TABLE campaigns ADD COLUMN weather_volatility REAL DEFAULT 0.3`,
+  `ALTER TABLE campaigns ADD COLUMN weather_transition_table TEXT DEFAULT NULL`,
+  `ALTER TABLE encounter_definitions ADD COLUMN conditions TEXT DEFAULT '{}'`,
+];
+
+for (const sql of migrations) {
+  try { db.exec(sql); } catch (e) {
+    if (!e.message.includes('duplicate column')) throw e;
+  }
+}
 
 db.CAMPAIGN_DEFAULTS = {
   time_of_day_thresholds: [
@@ -168,6 +213,9 @@ db.CAMPAIGN_DEFAULTS = {
     weekdays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
   },
   weather_options: ["Clear", "Overcast", "Rain", "Heavy Rain", "Snow", "Fog", "Storm", "Windy", "Hail"],
+  encounter_settings: { enabled: false, base_rate: 0.1, min_interval_hours: 1 },
+  weather_volatility: 0.3,
+  weather_transition_table: null,
 };
 
 module.exports = db;

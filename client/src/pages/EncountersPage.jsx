@@ -59,6 +59,9 @@ export default function EncountersPage({ campaignId, campaign }) {
                   <div className="inline-flex gap-sm mt-sm" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                     <span>{enc.npcs?.length || 0} NPCs</span>
                     <span>{enc.loot_table?.length || 0} loot entries</span>
+                    {enc.conditions && (enc.conditions.location_ids?.length > 0 || enc.conditions.time_of_day?.length > 0 || enc.conditions.weather?.length > 0) && (
+                      <span className="tag" style={{ fontSize: 10 }}>Has conditions</span>
+                    )}
                   </div>
                 </div>
                 <div className="inline-flex gap-sm">
@@ -74,6 +77,15 @@ export default function EncountersPage({ campaignId, campaign }) {
                     <div style={{ marginBottom: 8 }}>
                       <strong>Environment:</strong>{' '}
                       {Object.entries(enc.environment_overrides).map(([k, v]) => `${k}: ${v}`).join(', ')}
+                    </div>
+                  )}
+                  {enc.conditions && (enc.conditions.location_ids?.length > 0 || enc.conditions.time_of_day?.length > 0 || enc.conditions.weather?.length > 0) && (
+                    <div style={{ marginBottom: 8 }}>
+                      <strong>Conditions:</strong>{' '}
+                      {enc.conditions.location_ids?.length > 0 && <span>Locations: {enc.conditions.location_ids.length} selected. </span>}
+                      {enc.conditions.time_of_day?.length > 0 && <span>Time: {enc.conditions.time_of_day.join(', ')}. </span>}
+                      {enc.conditions.weather?.length > 0 && <span>Weather: {enc.conditions.weather.join(', ')}. </span>}
+                      {enc.conditions.weight && enc.conditions.weight !== 1 && <span>Weight: {enc.conditions.weight}. </span>}
                     </div>
                   )}
                   {enc.loot_table?.length > 0 && (
@@ -95,6 +107,7 @@ export default function EncountersPage({ campaignId, campaign }) {
       {showForm && (
         <EncounterForm
           campaignId={campaignId}
+          campaign={campaign}
           encounter={editEnc}
           onClose={() => { setShowForm(false); setEditEnc(null); }}
           onSave={() => { setShowForm(false); setEditEnc(null); load(); }}
@@ -113,13 +126,35 @@ export default function EncountersPage({ campaignId, campaign }) {
   );
 }
 
-function EncounterForm({ campaignId, encounter, onClose, onSave }) {
+function EncounterForm({ campaignId, campaign, encounter, onClose, onSave }) {
   const [name, setName] = useState(encounter?.name || '');
   const [description, setDescription] = useState(encounter?.description || '');
   const [notes, setNotes] = useState(encounter?.notes || '');
   const [npcsStr, setNpcsStr] = useState(JSON.stringify(encounter?.npcs || [], null, 2));
   const [envStr, setEnvStr] = useState(JSON.stringify(encounter?.environment_overrides || {}, null, 2));
   const [lootStr, setLootStr] = useState(JSON.stringify(encounter?.loot_table || [], null, 2));
+
+  // Conditions
+  const [condLocationIds, setCondLocationIds] = useState(encounter?.conditions?.location_ids || []);
+  const [condTimeOfDay, setCondTimeOfDay] = useState(encounter?.conditions?.time_of_day || []);
+  const [condWeather, setCondWeather] = useState(encounter?.conditions?.weather || []);
+  const [condWeight, setCondWeight] = useState(encounter?.conditions?.weight || 1.0);
+
+  // Load locations for condition picker
+  const [locations, setLocations] = useState([]);
+  useEffect(() => {
+    if (campaignId) {
+      api.getLocations(campaignId).then(data => setLocations(data.locations || [])).catch(() => {});
+    }
+  }, [campaignId]);
+
+  const weatherOptions = campaign?.weather_options || [];
+  const timeLabels = [...new Set((campaign?.time_of_day_thresholds || []).map(t => t.label))];
+
+  const toggleArrayItem = (arr, setter, item) => {
+    if (arr.includes(item)) setter(arr.filter(i => i !== item));
+    else setter([...arr, item]);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -132,7 +167,13 @@ function EncounterForm({ campaignId, encounter, onClose, onSave }) {
       alert('Invalid JSON in one of the fields');
       return;
     }
-    const data = { name, description, notes, npcs, environment_overrides, loot_table };
+    const conditions = {
+      location_ids: condLocationIds,
+      time_of_day: condTimeOfDay,
+      weather: condWeather,
+      weight: condWeight,
+    };
+    const data = { name, description, notes, npcs, environment_overrides, loot_table, conditions };
     if (encounter) {
       await api.updateEncounter(campaignId, encounter.id, data);
     } else {
@@ -173,6 +214,67 @@ function EncounterForm({ campaignId, encounter, onClose, onSave }) {
             <div className="form-group">
               <label>Loot Table (JSON array)</label>
               <textarea value={lootStr} onChange={e => setLootStr(e.target.value)} rows={3} style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }} />
+            </div>
+
+            {/* Conditions Section */}
+            <div style={{ marginTop: 8, padding: 12, background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)' }}>
+              <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 8 }}>Random Encounter Conditions</h4>
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>
+                Leave empty for "any". Only matching encounters can trigger randomly.
+              </p>
+
+              {locations.length > 0 && (
+                <div className="form-group">
+                  <label style={{ fontSize: 12 }}>Locations</label>
+                  <div className="inline-flex gap-sm flex-wrap">
+                    {locations.map(loc => (
+                      <label key={loc.id} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, cursor: 'pointer' }}>
+                        <input type="checkbox" checked={condLocationIds.includes(loc.id)}
+                          onChange={() => toggleArrayItem(condLocationIds, setCondLocationIds, loc.id)} />
+                        {loc.name}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {timeLabels.length > 0 && (
+                <div className="form-group">
+                  <label style={{ fontSize: 12 }}>Time of Day</label>
+                  <div className="inline-flex gap-sm flex-wrap">
+                    {timeLabels.map(t => (
+                      <label key={t} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, cursor: 'pointer' }}>
+                        <input type="checkbox" checked={condTimeOfDay.includes(t)}
+                          onChange={() => toggleArrayItem(condTimeOfDay, setCondTimeOfDay, t)} />
+                        {t}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {weatherOptions.length > 0 && (
+                <div className="form-group">
+                  <label style={{ fontSize: 12 }}>Weather</label>
+                  <div className="inline-flex gap-sm flex-wrap">
+                    {weatherOptions.map(w => (
+                      <label key={w} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, cursor: 'pointer' }}>
+                        <input type="checkbox" checked={condWeather.includes(w)}
+                          onChange={() => toggleArrayItem(condWeather, setCondWeather, w)} />
+                        {w}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="form-group">
+                <label style={{ fontSize: 12 }}>Weight (relative probability)</label>
+                <input type="number" step="0.1" min="0.1" value={condWeight}
+                  onChange={e => setCondWeight(Number(e.target.value))}
+                  style={{ width: 80 }} />
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 4 }}>Higher = more likely vs other eligible encounters</span>
+              </div>
             </div>
           </div>
           <div className="modal-footer">

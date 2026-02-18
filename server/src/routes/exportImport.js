@@ -7,6 +7,8 @@ const {
   fetchRelations,
   insertEntity,
   remapEncounterNpcs,
+  remapEncounterConditionLocations,
+  remapLocationEdges,
   buildImportPreview,
   executeMergeImport,
 } = require('../importExportUtils');
@@ -28,6 +30,9 @@ router.get('/export', (req, res) => {
       time_of_day_thresholds: JSON.parse(campaign.time_of_day_thresholds),
       calendar_config: JSON.parse(campaign.calendar_config),
       weather_options: JSON.parse(campaign.weather_options),
+      encounter_settings: campaign.encounter_settings ? JSON.parse(campaign.encounter_settings) : null,
+      weather_volatility: campaign.weather_volatility,
+      weather_transition_table: campaign.weather_transition_table ? JSON.parse(campaign.weather_transition_table) : null,
     },
   };
 
@@ -36,12 +41,18 @@ router.get('/export', (req, res) => {
     exportData[config.exportKey] = fetchEntities(db, campaignId, entityKey);
   }
 
-  // Fetch relations (applied_effects, character_items)
-  const charConfig = ENTITY_CONFIG.characters;
-  const charIds = exportData[charConfig.exportKey].map(c => c.id);
-  for (const relation of charConfig.relations) {
-    exportData[relation.exportKey] = fetchRelations(db, charIds, relation);
+  // Fetch relations (applied_effects, character_items, edges)
+  for (const entityKey of IMPORT_ORDER) {
+    const config = ENTITY_CONFIG[entityKey];
+    if (!config.relations || config.relations.length === 0) continue;
+    const entityIds = exportData[config.exportKey].map(e => e.id);
+    for (const relation of config.relations) {
+      exportData[relation.exportKey] = fetchRelations(db, entityIds, relation);
+    }
   }
+
+  // Location edges (not relation-driven — has campaign_id column)
+  exportData.edges = db.prepare('SELECT * FROM location_edges WHERE campaign_id = ?').all(campaignId);
 
   // Environment & session log (not entity-config driven)
   exportData.environment = db.prepare('SELECT * FROM environment_state WHERE campaign_id = ?').get(campaignId);
@@ -59,14 +70,17 @@ router.post('/import', (req, res) => {
   const importTransaction = db.transaction(() => {
     // Create campaign
     const campaignResult = db.prepare(`
-      INSERT INTO campaigns (name, attribute_definitions, time_of_day_thresholds, calendar_config, weather_options)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO campaigns (name, attribute_definitions, time_of_day_thresholds, calendar_config, weather_options, encounter_settings, weather_volatility, weather_transition_table)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       data.campaign.name + ' (Imported)',
       JSON.stringify(data.campaign.attribute_definitions || []),
       JSON.stringify(data.campaign.time_of_day_thresholds || []),
       JSON.stringify(data.campaign.calendar_config || {}),
       JSON.stringify(data.campaign.weather_options || []),
+      JSON.stringify(data.campaign.encounter_settings || db.CAMPAIGN_DEFAULTS.encounter_settings),
+      data.campaign.weather_volatility ?? db.CAMPAIGN_DEFAULTS.weather_volatility,
+      data.campaign.weather_transition_table ? JSON.stringify(data.campaign.weather_transition_table) : null,
     );
     const newCampaignId = campaignResult.lastInsertRowid;
 
@@ -105,24 +119,37 @@ router.post('/import', (req, res) => {
         }
       }
 
-      // Post-process hook (encounter NPC remapping)
+      // Post-process hooks
       if (config.postProcess === 'remapEncounterNpcs') {
         const charIdMap = idMaps.charIdMap || {};
+        const locationIdMap = idMaps.locationIdMap || {};
         for (const entity of entities) {
           const newId = idMaps[config.idMapKey]?.[entity.id];
           if (newId && entity.npcs) {
             remapEncounterNpcs(db, newCampaignId, newId, entity.npcs, charIdMap);
           }
+          if (newId && entity.conditions) {
+            const conds = typeof entity.conditions === 'string' ? JSON.parse(entity.conditions) : entity.conditions;
+            remapEncounterConditionLocations(db, newCampaignId, newId, conds, locationIdMap);
+          }
         }
+      }
+      if (config.postProcess === 'remapLocationEdges') {
+        const locationIdMap = idMaps.locationIdMap || {};
+        remapLocationEdges(db, newCampaignId, data.edges, locationIdMap);
       }
     }
 
     // Import environment
     if (data.environment) {
+      const locationIdMap = idMaps.locationIdMap || {};
+      const newLocId = data.environment.current_location_id
+        ? (locationIdMap[data.environment.current_location_id] || null)
+        : null;
       db.prepare(`
-        INSERT INTO environment_state (campaign_id, current_hour, current_minute, current_day, current_month, current_year, weather, environment_notes)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(newCampaignId, data.environment.current_hour || 12, data.environment.current_minute || 0, data.environment.current_day || 1, data.environment.current_month || 1, data.environment.current_year || 1, data.environment.weather || 'Clear', data.environment.environment_notes || '');
+        INSERT INTO environment_state (campaign_id, current_hour, current_minute, current_day, current_month, current_year, weather, environment_notes, current_location_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(newCampaignId, data.environment.current_hour || 12, data.environment.current_minute || 0, data.environment.current_day || 1, data.environment.current_month || 1, data.environment.current_year || 1, data.environment.weather || 'Clear', data.environment.environment_notes || '', newLocId);
     } else {
       db.prepare('INSERT INTO environment_state (campaign_id) VALUES (?)').run(newCampaignId);
     }

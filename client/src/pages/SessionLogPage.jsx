@@ -47,7 +47,15 @@ export default function SessionLogPage({ campaignId }) {
     URL.revokeObjectURL(url);
   };
 
-  const entryTypes = ['general', 'manual', 'effect_applied', 'effect_removed', 'item_assigned', 'item_removed', 'time_advance', 'environment'];
+  const entryTypes = ['general', 'manual', 'effect_applied', 'effect_removed', 'item_assigned', 'item_removed', 'time_advance', 'environment', 'weather_change', 'encounter_roll', 'travel'];
+
+  const typeColors = {
+    weather_change: 'var(--accent)',
+    encounter_roll: 'var(--yellow)',
+    travel: 'var(--green)',
+    time_advance: 'var(--text-secondary)',
+    environment: 'var(--text-secondary)',
+  };
 
   return (
     <div className="page">
@@ -84,7 +92,7 @@ export default function SessionLogPage({ campaignId }) {
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                 {new Date(entry.timestamp + 'Z').toLocaleString()}
               </span>
-              <span className="tag" style={{ fontSize: 10 }}>{entry.entry_type}</span>
+              <span className="tag" style={{ fontSize: 10, borderColor: typeColors[entry.entry_type] || undefined, color: typeColors[entry.entry_type] || undefined }}>{entry.entry_type}</span>
               <span style={{ flex: 1 }}>{entry.message}</span>
             </div>
           ))}

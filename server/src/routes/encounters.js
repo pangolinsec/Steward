@@ -20,6 +20,7 @@ router.get('/', (req, res) => {
     npcs: JSON.parse(e.npcs),
     environment_overrides: JSON.parse(e.environment_overrides),
     loot_table: JSON.parse(e.loot_table),
+    conditions: JSON.parse(e.conditions || '{}'),
   })));
 });
 
@@ -33,22 +34,24 @@ router.get('/:encId', (req, res) => {
     npcs: JSON.parse(enc.npcs),
     environment_overrides: JSON.parse(enc.environment_overrides),
     loot_table: JSON.parse(enc.loot_table),
+    conditions: JSON.parse(enc.conditions || '{}'),
   });
 });
 
 // POST create
 router.post('/', (req, res) => {
-  const { name, description, notes, npcs, environment_overrides, loot_table } = req.body;
+  const { name, description, notes, npcs, environment_overrides, loot_table, conditions } = req.body;
   if (!name) return res.status(400).json({ error: 'Name is required' });
 
   const result = db.prepare(`
-    INSERT INTO encounter_definitions (campaign_id, name, description, notes, npcs, environment_overrides, loot_table)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO encounter_definitions (campaign_id, name, description, notes, npcs, environment_overrides, loot_table, conditions)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     req.params.id, name, description || '', notes || '',
     JSON.stringify(npcs || []),
     JSON.stringify(environment_overrides || {}),
     JSON.stringify(loot_table || []),
+    JSON.stringify(conditions || {}),
   );
 
   const enc = db.prepare('SELECT * FROM encounter_definitions WHERE id = ?').get(result.lastInsertRowid);
@@ -57,6 +60,7 @@ router.post('/', (req, res) => {
     npcs: JSON.parse(enc.npcs),
     environment_overrides: JSON.parse(enc.environment_overrides),
     loot_table: JSON.parse(enc.loot_table),
+    conditions: JSON.parse(enc.conditions || '{}'),
   });
 });
 
@@ -66,7 +70,7 @@ router.put('/:encId', (req, res) => {
     .get(req.params.encId, req.params.id);
   if (!enc) return res.status(404).json({ error: 'Encounter not found' });
 
-  const { name, description, notes, npcs, environment_overrides, loot_table } = req.body;
+  const { name, description, notes, npcs, environment_overrides, loot_table, conditions } = req.body;
 
   db.prepare(`
     UPDATE encounter_definitions SET
@@ -75,7 +79,8 @@ router.put('/:encId', (req, res) => {
       notes = COALESCE(?, notes),
       npcs = COALESCE(?, npcs),
       environment_overrides = COALESCE(?, environment_overrides),
-      loot_table = COALESCE(?, loot_table)
+      loot_table = COALESCE(?, loot_table),
+      conditions = COALESCE(?, conditions)
     WHERE id = ? AND campaign_id = ?
   `).run(
     name || null, description !== undefined ? description : null,
@@ -83,6 +88,7 @@ router.put('/:encId', (req, res) => {
     npcs ? JSON.stringify(npcs) : null,
     environment_overrides ? JSON.stringify(environment_overrides) : null,
     loot_table ? JSON.stringify(loot_table) : null,
+    conditions ? JSON.stringify(conditions) : null,
     req.params.encId, req.params.id,
   );
 
@@ -92,6 +98,7 @@ router.put('/:encId', (req, res) => {
     npcs: JSON.parse(updated.npcs),
     environment_overrides: JSON.parse(updated.environment_overrides),
     loot_table: JSON.parse(updated.loot_table),
+    conditions: JSON.parse(updated.conditions || '{}'),
   });
 });
 

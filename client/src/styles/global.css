@@ -735,3 +735,121 @@ textarea {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--border-light);
 }
+
+/* Toast Notifications */
+.toast-container {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  pointer-events: auto;
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 12px var(--shadow);
+  cursor: pointer;
+  animation: toast-in 0.3s ease;
+  max-width: 360px;
+}
+.toast-info { border-left: 3px solid var(--accent); }
+.toast-success { border-left: 3px solid var(--green); }
+.toast-warning { border-left: 3px solid var(--yellow); }
+.toast-error { border-left: 3px solid var(--red); }
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Location Map Editor */
+.location-node {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  min-width: 120px;
+  max-width: 200px;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.location-node.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(79, 142, 247, 0.3);
+}
+.location-node.party-here {
+  border-color: var(--green);
+  box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.2);
+}
+.location-node-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+.location-node-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.location-node-meta {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.location-party-marker {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: var(--green);
+  color: #000;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 8px;
+}
+.location-handle {
+  width: 8px !important;
+  height: 8px !important;
+  background: var(--border-light) !important;
+  border: 1px solid var(--bg-card) !important;
+}
+.location-detail-panel {
+  width: 320px;
+  min-width: 320px;
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+}
+/* React Flow overrides for dark theme */
+.react-flow__controls button {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border) !important;
+  border-bottom: none !important;
+}
+.react-flow__controls button:last-child {
+  border-bottom: 1px solid var(--border) !important;
+}
+.react-flow__controls button:hover {
+  background: var(--bg-hover) !important;
+}
+.react-flow__controls button svg {
+  fill: var(--text-primary) !important;
+}
+.react-flow__edge-text {
+  fill: var(--text-secondary) !important;
+}
+.react-flow__edge-textbg {
+  fill: var(--bg-card) !important;
+}

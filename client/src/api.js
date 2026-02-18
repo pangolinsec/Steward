@@ -57,6 +57,18 @@ export const createEncounter = (cId, data) => request(`/campaigns/${cId}/encount
 export const updateEncounter = (cId, id, data) => request(`/campaigns/${cId}/encounters/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 export const deleteEncounter = (cId, id) => request(`/campaigns/${cId}/encounters/${id}`, { method: 'DELETE' });
 
+// Locations
+export const getLocations = (cId) => request(`/campaigns/${cId}/locations`);
+export const getLocation = (cId, id) => request(`/campaigns/${cId}/locations/${id}`);
+export const createLocation = (cId, data) => request(`/campaigns/${cId}/locations`, { method: 'POST', body: JSON.stringify(data) });
+export const updateLocation = (cId, id, data) => request(`/campaigns/${cId}/locations/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+export const deleteLocation = (cId, id) => request(`/campaigns/${cId}/locations/${id}`, { method: 'DELETE' });
+export const createEdge = (cId, data) => request(`/campaigns/${cId}/locations/edges`, { method: 'POST', body: JSON.stringify(data) });
+export const updateEdge = (cId, id, data) => request(`/campaigns/${cId}/locations/edges/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+export const deleteEdge = (cId, id) => request(`/campaigns/${cId}/locations/edges/${id}`, { method: 'DELETE' });
+export const travel = (cId, edgeId) => request(`/campaigns/${cId}/locations/travel`, { method: 'POST', body: JSON.stringify({ edge_id: edgeId }) });
+export const updatePartyPosition = (cId, locationId) => request(`/campaigns/${cId}/locations/position`, { method: 'PATCH', body: JSON.stringify({ location_id: locationId }) });
+
 // Environment
 export const getEnvironment = (cId) => request(`/campaigns/${cId}/environment`);
 export const updateEnvironment = (cId, data) => request(`/campaigns/${cId}/environment`, { method: 'PATCH', body: JSON.stringify(data) });

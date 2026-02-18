@@ -2,29 +2,30 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
-// GET all campaigns
-router.get('/', (req, res) => {
-  const campaigns = db.prepare('SELECT * FROM campaigns ORDER BY created_at DESC').all();
-  res.json(campaigns.map(c => ({
+function parseCampaign(c) {
+  return {
     ...c,
     attribute_definitions: JSON.parse(c.attribute_definitions),
     time_of_day_thresholds: JSON.parse(c.time_of_day_thresholds),
     calendar_config: JSON.parse(c.calendar_config),
     weather_options: JSON.parse(c.weather_options),
-  })));
+    encounter_settings: c.encounter_settings ? JSON.parse(c.encounter_settings) : db.CAMPAIGN_DEFAULTS.encounter_settings,
+    weather_volatility: c.weather_volatility ?? db.CAMPAIGN_DEFAULTS.weather_volatility,
+    weather_transition_table: c.weather_transition_table ? JSON.parse(c.weather_transition_table) : null,
+  };
+}
+
+// GET all campaigns
+router.get('/', (req, res) => {
+  const campaigns = db.prepare('SELECT * FROM campaigns ORDER BY created_at DESC').all();
+  res.json(campaigns.map(parseCampaign));
 });
 
 // GET single campaign
 router.get('/:id', (req, res) => {
   const campaign = db.prepare('SELECT * FROM campaigns WHERE id = ?').get(req.params.id);
   if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
-  res.json({
-    ...campaign,
-    attribute_definitions: JSON.parse(campaign.attribute_definitions),
-    time_of_day_thresholds: JSON.parse(campaign.time_of_day_thresholds),
-    calendar_config: JSON.parse(campaign.calendar_config),
-    weather_options: JSON.parse(campaign.weather_options),
-  });
+  res.json(parseCampaign(campaign));
 });
 
 // POST create campaign
@@ -48,13 +49,7 @@ router.post('/', (req, res) => {
   db.prepare('INSERT INTO environment_state (campaign_id) VALUES (?)').run(result.lastInsertRowid);
 
   const campaign = db.prepare('SELECT * FROM campaigns WHERE id = ?').get(result.lastInsertRowid);
-  res.status(201).json({
-    ...campaign,
-    attribute_definitions: JSON.parse(campaign.attribute_definitions),
-    time_of_day_thresholds: JSON.parse(campaign.time_of_day_thresholds),
-    calendar_config: JSON.parse(campaign.calendar_config),
-    weather_options: JSON.parse(campaign.weather_options),
-  });
+  res.status(201).json(parseCampaign(campaign));
 });
 
 // PUT update campaign
@@ -62,7 +57,8 @@ router.put('/:id', (req, res) => {
   const campaign = db.prepare('SELECT * FROM campaigns WHERE id = ?').get(req.params.id);
   if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
 
-  const { name, attribute_definitions, time_of_day_thresholds, calendar_config, weather_options } = req.body;
+  const { name, attribute_definitions, time_of_day_thresholds, calendar_config, weather_options,
+    encounter_settings, weather_volatility, weather_transition_table } = req.body;
 
   db.prepare(`
     UPDATE campaigns SET
@@ -70,7 +66,10 @@ router.put('/:id', (req, res) => {
       attribute_definitions = COALESCE(?, attribute_definitions),
       time_of_day_thresholds = COALESCE(?, time_of_day_thresholds),
       calendar_config = COALESCE(?, calendar_config),
-      weather_options = COALESCE(?, weather_options)
+      weather_options = COALESCE(?, weather_options),
+      encounter_settings = COALESCE(?, encounter_settings),
+      weather_volatility = COALESCE(?, weather_volatility),
+      weather_transition_table = ?
     WHERE id = ?
   `).run(
     name || null,
@@ -78,17 +77,14 @@ router.put('/:id', (req, res) => {
     time_of_day_thresholds ? JSON.stringify(time_of_day_thresholds) : null,
     calendar_config ? JSON.stringify(calendar_config) : null,
     weather_options ? JSON.stringify(weather_options) : null,
+    encounter_settings ? JSON.stringify(encounter_settings) : null,
+    weather_volatility !== undefined ? weather_volatility : null,
+    weather_transition_table !== undefined ? (weather_transition_table ? JSON.stringify(weather_transition_table) : null) : campaign.weather_transition_table,
     req.params.id,
   );
 
   const updated = db.prepare('SELECT * FROM campaigns WHERE id = ?').get(req.params.id);
-  res.json({
-    ...updated,
-    attribute_definitions: JSON.parse(updated.attribute_definitions),
-    time_of_day_thresholds: JSON.parse(updated.time_of_day_thresholds),
-    calendar_config: JSON.parse(updated.calendar_config),
-    weather_options: JSON.parse(updated.weather_options),
-  });
+  res.json(parseCampaign(updated));
 });
 
 // DELETE campaign
