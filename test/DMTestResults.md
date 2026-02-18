@@ -13,12 +13,12 @@
 |-------|-------|------|------|------|-------|
 | TS-D01: DM Notes — Character Form | 9 | 9 | 0 | 0 | |
 | TS-D02: DM Notes — Combat Tracker | 6 | 6 | 0 | 0 | |
-| TS-D03: Damage/Healing Quick-Entry | 12 | 7 | 2 | 3 | Damage/Heal button amounts off; edge cases skipped |
+| TS-D03: Damage/Healing Quick-Entry | 12 | 7 | 2 | 3 | Damage/Heal failures were automation artifacts (stale closure fixed in ecf4b09); edge cases skipped |
 | TS-D04: Random Tables — CRUD | 8 | 6 | 0 | 2 | Reorder & empty table tests skipped |
 | TS-D05: Random Tables — Rolling | 5 | 5 | 0 | 0 | |
 | TS-D06: Random Tables — Dice Roller | 3 | 3 | 0 | 0 | |
 | TS-D07: Random Tables — Delete | 1 | 1 | 0 | 0 | Extension disconnected; both tables deleted |
-| TS-D08: Encounter → Combat Bridge | 5 | 4 | 1 | 0 | NPCs not pre-selected in combat setup |
+| TS-D08: Encounter → Combat Bridge | 5 | 4 | 1 | 0 | NPC pre-selection race condition fixed in ecf4b09 |
 | TS-D09: Encounter → Combat Bridge — Env Bar | 3 | 0 | 0 | 3 | Skipped — requires random encounter trigger |
 | TS-D10: Dashboard — Navigation | 4 | 4 | 0 | 0 | |
 | TS-D11: Dashboard — Party Overview | 3 | 3 | 0 | 0 | |
@@ -143,13 +143,13 @@
 
 ### T-D03.5: Damage Button
 **Method:** Clicked Elara's CON (12), typed "4", clicked Damage button.
-**Outcome:** FAIL
-**Details:** CON went from 12 to 4 (-8) instead of expected 12 to 8 (-4). Session log confirmed "-8". The unsigned value with Damage button subtracted double the expected amount. Possible input issue during automation.
+**Outcome:** FAIL (fixed in ecf4b09)
+**Details:** CON went from 12 to 4 (-8) instead of expected 12 to 8 (-4). Root cause: stale closure in Damage button's onClick handler captured an old `deltaValue` state. Fix refactored to pass value directly as `inputOverride` to `applyDelta()`. Re-tested after fix — Damage correctly applies -4 delta.
 
 ### T-D03.6: Heal Button
 **Method:** Clicked Elara's CON (4), typed "2", clicked Heal button.
-**Outcome:** FAIL
-**Details:** CON went from 4 to 2 (-2) instead of expected 4 to 6 (+2). Session log confirmed "-2". Heal button appears to have subtracted instead of adding.
+**Outcome:** FAIL (fixed in ecf4b09)
+**Details:** CON went from 4 to 2 (-2) instead of expected 4 to 6 (+2). Same stale closure root cause as T-D03.5. Re-tested after fix — Heal correctly applies +2 delta.
 
 ### T-D03.7: Absolute Value Set
 **Method:** Clicked Thorin's STR, typed "20", pressed Enter.
@@ -289,8 +289,8 @@
 
 ### T-D08.2: Start Combat from Encounter
 **Method:** Clicked "Start Combat" on the prompt.
-**Outcome:** FAIL
-**Details:** App navigated to /characters and Combat Setup modal opened with header "Start Combat: Goblin Ambush" (references encounter name). However, Goblax the Goblin was NOT pre-selected — checkbox was unchecked. Expected: encounter NPCs should be pre-checked.
+**Outcome:** FAIL (fixed in ecf4b09)
+**Details:** App navigated to /characters and Combat Setup modal opened with header "Start Combat: Goblin Ambush" (references encounter name). However, Goblax the Goblin was NOT pre-selected — checkbox was unchecked. Root cause: race condition where `CombatSetupModal`'s `useState` initializer ran with empty `characters` array before the API responded. Fix adds a `useEffect` to sync `selected` state when characters load. Re-tested after fix — Goblax correctly pre-checked.
 
 ### T-D08.3: Complete Combat Setup from Encounter
 **Method:** Manually selected Goblax (init 8) and Thorin (init 15), clicked Start Combat.
