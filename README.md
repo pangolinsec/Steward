@@ -29,7 +29,15 @@ docker compose up -d
 
 The app will be available at `http://localhost:3000`.
 
-To load example seed data (optional):
+To get started with a pre-built campaign, import the included oneshot from the campaign switcher (top-left menu → Import):
+
+```
+sample-data/classic-oneshot.json
+```
+
+This loads a complete fantasy oneshot with characters, items, effects, encounters, locations, and automation rules — ready to play or use as a reference for building your own campaign.
+
+Alternatively, load minimal seed data programmatically:
 
 ```bash
 docker compose exec steward node server/src/seed.js
