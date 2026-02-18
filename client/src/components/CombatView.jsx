@@ -282,7 +282,7 @@ export function CombatTracker({ campaignId, campaign, combatState, onUpdate, onE
                       {isEditingThis && (
                         <div className="delta-popover" onClick={e => e.stopPropagation()}>
                           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>
-                            {a.label}: <strong>{val ?? 0}</strong> (base {base ?? 0})
+                            {a.label}: <strong>{val ?? 0}</strong>{maxVal != null ? ` / ${maxVal}` : ''} (base {base ?? 0})
                           </div>
                           <input
                             className="delta-input"
