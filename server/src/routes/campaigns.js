@@ -32,15 +32,16 @@ router.post('/', (req, res) => {
   const { name, attribute_definitions, time_of_day_thresholds, calendar_config, weather_options } = req.body;
   if (!name) return res.status(400).json({ error: 'Name is required' });
 
+  const defaults = db.CAMPAIGN_DEFAULTS;
   const result = db.prepare(`
     INSERT INTO campaigns (name, attribute_definitions, time_of_day_thresholds, calendar_config, weather_options)
     VALUES (?, ?, ?, ?, ?)
   `).run(
     name,
     JSON.stringify(attribute_definitions || []),
-    time_of_day_thresholds ? JSON.stringify(time_of_day_thresholds) : undefined,
-    calendar_config ? JSON.stringify(calendar_config) : undefined,
-    weather_options ? JSON.stringify(weather_options) : undefined,
+    JSON.stringify(time_of_day_thresholds || defaults.time_of_day_thresholds),
+    JSON.stringify(calendar_config || defaults.calendar_config),
+    JSON.stringify(weather_options || defaults.weather_options),
   );
 
   // Create environment state for the campaign

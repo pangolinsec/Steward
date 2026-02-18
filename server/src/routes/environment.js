@@ -2,35 +2,43 @@ const express = require('express');
 const router = express.Router({ mergeParams: true });
 const db = require('../db');
 
+function getCampaignConfig(campaignId) {
+  const campaign = db.prepare('SELECT time_of_day_thresholds, calendar_config FROM campaigns WHERE id = ?')
+    .get(campaignId);
+  const defaults = db.CAMPAIGN_DEFAULTS;
+  const thresholds = campaign.time_of_day_thresholds
+    ? JSON.parse(campaign.time_of_day_thresholds)
+    : defaults.time_of_day_thresholds;
+  const calendarConfig = campaign.calendar_config
+    ? JSON.parse(campaign.calendar_config)
+    : defaults.calendar_config;
+  return { thresholds, calendarConfig };
+}
+
+function resolveTimeOfDay(thresholds, hour, minute) {
+  const totalMinutes = hour * 60 + minute;
+  let label = thresholds[0]?.label || 'Unknown';
+  for (const t of thresholds) {
+    if (totalMinutes >= t.start * 60) label = t.label;
+  }
+  return label;
+}
+
+function resolveMonthName(calendarConfig, monthNum) {
+  return calendarConfig.months[monthNum - 1]?.name || `Month ${monthNum}`;
+}
+
 // GET environment state
 router.get('/', (req, res) => {
   const env = db.prepare('SELECT * FROM environment_state WHERE campaign_id = ?').get(req.params.id);
   if (!env) return res.status(404).json({ error: 'Environment not found' });
 
-  // Get campaign for time-of-day thresholds and calendar config
-  const campaign = db.prepare('SELECT time_of_day_thresholds, calendar_config FROM campaigns WHERE id = ?')
-    .get(req.params.id);
-
-  const thresholds = JSON.parse(campaign.time_of_day_thresholds);
-  const calendarConfig = JSON.parse(campaign.calendar_config);
-
-  // Determine time-of-day label
-  const totalMinutes = env.current_hour * 60 + env.current_minute;
-  let timeOfDay = thresholds[0]?.label || 'Unknown';
-  for (const t of thresholds) {
-    if (totalMinutes >= t.start * 60) {
-      timeOfDay = t.label;
-    }
-  }
-
-  // Determine month name
-  const monthIndex = env.current_month - 1;
-  const monthName = calendarConfig.months[monthIndex]?.name || `Month ${env.current_month}`;
+  const { thresholds, calendarConfig } = getCampaignConfig(req.params.id);
 
   res.json({
     ...env,
-    time_of_day: timeOfDay,
-    month_name: monthName,
+    time_of_day: resolveTimeOfDay(thresholds, env.current_hour, env.current_minute),
+    month_name: resolveMonthName(calendarConfig, env.current_month),
     calendar_config: calendarConfig,
   });
 });
@@ -57,7 +65,6 @@ router.patch('/', (req, res) => {
     params.push(req.params.id);
     db.prepare(`UPDATE environment_state SET ${updates.join(', ')} WHERE campaign_id = ?`).run(...params);
 
-    // Log changes
     const changes = [];
     if (weather !== undefined) changes.push(`Weather changed to "${weather}"`);
     if (current_hour !== undefined || current_minute !== undefined) changes.push(`Time set manually`);
@@ -67,22 +74,15 @@ router.patch('/', (req, res) => {
     }
   }
 
-  // Return updated state
   const updated = db.prepare('SELECT * FROM environment_state WHERE campaign_id = ?').get(req.params.id);
-  const campaign = db.prepare('SELECT time_of_day_thresholds, calendar_config FROM campaigns WHERE id = ?')
-    .get(req.params.id);
-  const thresholds = JSON.parse(campaign.time_of_day_thresholds);
-  const calendarConfig = JSON.parse(campaign.calendar_config);
+  const { thresholds, calendarConfig } = getCampaignConfig(req.params.id);
 
-  const totalMinutes = updated.current_hour * 60 + updated.current_minute;
-  let timeOfDay = thresholds[0]?.label || 'Unknown';
-  for (const t of thresholds) {
-    if (totalMinutes >= t.start * 60) timeOfDay = t.label;
-  }
-
-  const monthName = calendarConfig.months[updated.current_month - 1]?.name || `Month ${updated.current_month}`;
-
-  res.json({ ...updated, time_of_day: timeOfDay, month_name: monthName, calendar_config: calendarConfig });
+  res.json({
+    ...updated,
+    time_of_day: resolveTimeOfDay(thresholds, updated.current_hour, updated.current_minute),
+    month_name: resolveMonthName(calendarConfig, updated.current_month),
+    calendar_config: calendarConfig,
+  });
 });
 
 // POST advance time
@@ -91,15 +91,13 @@ router.post('/advance', (req, res) => {
   const env = db.prepare('SELECT * FROM environment_state WHERE campaign_id = ?').get(req.params.id);
   if (!env) return res.status(404).json({ error: 'Environment not found' });
 
-  const campaign = db.prepare('SELECT calendar_config FROM campaigns WHERE id = ?').get(req.params.id);
-  const calendarConfig = JSON.parse(campaign.calendar_config);
+  const { thresholds, calendarConfig } = getCampaignConfig(req.params.id);
 
   let totalMinutes = env.current_hour * 60 + env.current_minute + hours * 60 + minutes;
   let day = env.current_day;
   let month = env.current_month;
   let year = env.current_year;
 
-  // Roll over days
   while (totalMinutes >= 1440) {
     totalMinutes -= 1440;
     day++;
@@ -130,19 +128,14 @@ router.post('/advance', (req, res) => {
   db.prepare(`INSERT INTO session_log (campaign_id, entry_type, message) VALUES (?, 'time_advance', ?)`)
     .run(req.params.id, `Time advanced by ${advanceDesc.join(' ')}`);
 
-  // Return updated state
   const updated = db.prepare('SELECT * FROM environment_state WHERE campaign_id = ?').get(req.params.id);
-  const thresholds = JSON.parse(
-    db.prepare('SELECT time_of_day_thresholds FROM campaigns WHERE id = ?').get(req.params.id).time_of_day_thresholds
-  );
-  const newTotalMin = updated.current_hour * 60 + updated.current_minute;
-  let timeOfDay = thresholds[0]?.label || 'Unknown';
-  for (const t of thresholds) {
-    if (newTotalMin >= t.start * 60) timeOfDay = t.label;
-  }
 
-  const monthName = calendarConfig.months[updated.current_month - 1]?.name || `Month ${updated.current_month}`;
-  res.json({ ...updated, time_of_day: timeOfDay, month_name: monthName, calendar_config: calendarConfig });
+  res.json({
+    ...updated,
+    time_of_day: resolveTimeOfDay(thresholds, updated.current_hour, updated.current_minute),
+    month_name: resolveMonthName(calendarConfig, updated.current_month),
+    calendar_config: calendarConfig,
+  });
 });
 
 module.exports = router;

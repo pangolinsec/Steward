@@ -140,4 +140,34 @@ function initialize() {
 
 initialize();
 
+db.CAMPAIGN_DEFAULTS = {
+  time_of_day_thresholds: [
+    { label: "Night", start: 0 },
+    { label: "Dawn", start: 5 },
+    { label: "Morning", start: 7 },
+    { label: "Afternoon", start: 12 },
+    { label: "Dusk", start: 17 },
+    { label: "Evening", start: 19 },
+    { label: "Night", start: 21 },
+  ],
+  calendar_config: {
+    months: [
+      { name: "January", days: 31 },
+      { name: "February", days: 28 },
+      { name: "March", days: 31 },
+      { name: "April", days: 30 },
+      { name: "May", days: 31 },
+      { name: "June", days: 30 },
+      { name: "July", days: 31 },
+      { name: "August", days: 31 },
+      { name: "September", days: 30 },
+      { name: "October", days: 31 },
+      { name: "November", days: 30 },
+      { name: "December", days: 31 },
+    ],
+    weekdays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+  },
+  weather_options: ["Clear", "Overcast", "Rain", "Heavy Rain", "Snow", "Fog", "Storm", "Windy", "Hail"],
+};
+
 module.exports = db;
