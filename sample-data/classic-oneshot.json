@@ -1,0 +1,2722 @@
+{
+  "version": 1,
+  "exported_at": "2026-02-18T16:34:43.726Z",
+  "campaign": {
+    "id": 12,
+    "name": "The Festival of the Fallen Star",
+    "created_at": "2026-02-18 14:31:05",
+    "attribute_definitions": [
+      {
+        "key": "hp",
+        "label": "Hit Points"
+      },
+      {
+        "key": "ac",
+        "label": "Armor Class"
+      },
+      {
+        "key": "strength",
+        "label": "Strength"
+      },
+      {
+        "key": "dexterity",
+        "label": "Dexterity"
+      },
+      {
+        "key": "constitution",
+        "label": "Constitution"
+      },
+      {
+        "key": "intelligence",
+        "label": "Intelligence"
+      },
+      {
+        "key": "wisdom",
+        "label": "Wisdom"
+      },
+      {
+        "key": "charisma",
+        "label": "Charisma"
+      },
+      {
+        "key": "race",
+        "label": "Race",
+        "type": "tag",
+        "options": [
+          "Human",
+          "Elf",
+          "Dwarf",
+          "Halfling"
+        ]
+      },
+      {
+        "key": "class",
+        "label": "Class",
+        "type": "tag",
+        "options": [
+          "Fighter",
+          "Wizard",
+          "Rogue",
+          "Cleric",
+          "Ranger",
+          "Druid",
+          "Commoner"
+        ]
+      }
+    ],
+    "time_of_day_thresholds": [
+      {
+        "label": "Night",
+        "start": 0
+      },
+      {
+        "label": "Dawn",
+        "start": 5
+      },
+      {
+        "label": "Morning",
+        "start": 7
+      },
+      {
+        "label": "Afternoon",
+        "start": 12
+      },
+      {
+        "label": "Dusk",
+        "start": 17
+      },
+      {
+        "label": "Evening",
+        "start": 19
+      },
+      {
+        "label": "Night",
+        "start": 21
+      }
+    ],
+    "calendar_config": {
+      "months": [
+        {
+          "name": "Frostmere",
+          "days": 30
+        },
+        {
+          "name": "Snowthaw",
+          "days": 28
+        },
+        {
+          "name": "Verdance",
+          "days": 31
+        },
+        {
+          "name": "Bloomtide",
+          "days": 30
+        },
+        {
+          "name": "Sunswake",
+          "days": 31
+        },
+        {
+          "name": "Highsun",
+          "days": 30
+        },
+        {
+          "name": "Hearthfire",
+          "days": 31
+        },
+        {
+          "name": "Goldfall",
+          "days": 30
+        },
+        {
+          "name": "Harvestmoon",
+          "days": 31
+        },
+        {
+          "name": "Windscour",
+          "days": 30
+        },
+        {
+          "name": "Duskember",
+          "days": 30
+        },
+        {
+          "name": "Longnight",
+          "days": 31
+        }
+      ],
+      "weekdays": [
+        "Moonday",
+        "Towerday",
+        "Windday",
+        "Thunderday",
+        "Starday",
+        "Soulday",
+        "Sunday"
+      ]
+    },
+    "weather_options": [
+      "Clear",
+      "Overcast",
+      "Rain",
+      "Heavy Rain",
+      "Fog",
+      "Storm",
+      "Windy",
+      "Snow",
+      "Hail"
+    ],
+    "encounter_settings": {
+      "enabled": true,
+      "base_rate": 0.15,
+      "min_interval_hours": 2
+    },
+    "weather_volatility": 0.25,
+    "weather_transition_table": null,
+    "rules_settings": {
+      "cascade_depth_limit": 3,
+      "engine_enabled": true
+    },
+    "property_key_registry": [],
+    "season_options": [
+      "Spring",
+      "Summer",
+      "Autumn",
+      "Winter"
+    ],
+    "custom_tag_presets": [],
+    "dice_settings": {
+      "log_rolls": false
+    },
+    "time_advance_presets": [
+      {
+        "label": "+10m",
+        "hours": 0,
+        "minutes": 10
+      },
+      {
+        "label": "+1h",
+        "hours": 1,
+        "minutes": 0
+      },
+      {
+        "label": "+8h",
+        "hours": 8,
+        "minutes": 0
+      }
+    ],
+    "dashboard_time_presets": [
+      {
+        "label": "+15m",
+        "hours": 0,
+        "minutes": 15
+      },
+      {
+        "label": "+1h",
+        "hours": 1,
+        "minutes": 0
+      },
+      {
+        "label": "+4h",
+        "hours": 4,
+        "minutes": 0
+      }
+    ]
+  },
+  "status_effects": [
+    {
+      "name": "Blessed",
+      "description": "A divine blessing that enhances wisdom and charisma.",
+      "tags": [
+        "buff",
+        "divine"
+      ],
+      "modifiers": [
+        {
+          "attribute": "wisdom",
+          "delta": 1
+        },
+        {
+          "attribute": "charisma",
+          "delta": 1
+        }
+      ],
+      "duration_type": "timed",
+      "duration_value": 4,
+      "id": 46,
+      "campaign_id": 12
+    },
+    {
+      "name": "Poisoned",
+      "description": "A toxic affliction that weakens constitution and strength.",
+      "tags": [
+        "debuff",
+        "poison"
+      ],
+      "modifiers": [
+        {
+          "attribute": "constitution",
+          "delta": -2
+        },
+        {
+          "attribute": "strength",
+          "delta": -1
+        }
+      ],
+      "duration_type": "timed",
+      "duration_value": 2,
+      "id": 47,
+      "campaign_id": 12
+    },
+    {
+      "name": "Inspired",
+      "description": "A surge of confidence and insight that bolsters charisma and wisdom.",
+      "tags": [
+        "buff",
+        "mental"
+      ],
+      "modifiers": [
+        {
+          "attribute": "charisma",
+          "delta": 2
+        },
+        {
+          "attribute": "wisdom",
+          "delta": 1
+        }
+      ],
+      "duration_type": "indefinite",
+      "duration_value": 0,
+      "id": 48,
+      "campaign_id": 12
+    },
+    {
+      "name": "Starfire Aura",
+      "description": "Arcane energy from the Fallen Star surges through the body, enhancing intellect and wisdom.",
+      "tags": [
+        "buff",
+        "magical"
+      ],
+      "modifiers": [
+        {
+          "attribute": "intelligence",
+          "delta": 2
+        },
+        {
+          "attribute": "wisdom",
+          "delta": 2
+        }
+      ],
+      "duration_type": "timed",
+      "duration_value": 1,
+      "id": 49,
+      "campaign_id": 12
+    },
+    {
+      "name": "Enraged",
+      "description": "A battle fury that grants immense strength at the cost of clear thinking.",
+      "tags": [
+        "buff",
+        "combat"
+      ],
+      "modifiers": [
+        {
+          "attribute": "strength",
+          "delta": 3
+        },
+        {
+          "attribute": "wisdom",
+          "delta": -2
+        }
+      ],
+      "duration_type": "rounds",
+      "duration_value": 3,
+      "id": 50,
+      "campaign_id": 12
+    },
+    {
+      "name": "Exhausted",
+      "description": "Physical weariness that diminishes all physical abilities.",
+      "tags": [
+        "debuff",
+        "physical"
+      ],
+      "modifiers": [
+        {
+          "attribute": "strength",
+          "delta": -1
+        },
+        {
+          "attribute": "dexterity",
+          "delta": -1
+        },
+        {
+          "attribute": "constitution",
+          "delta": -1
+        }
+      ],
+      "duration_type": "indefinite",
+      "duration_value": 0,
+      "id": 51,
+      "campaign_id": 12
+    },
+    {
+      "name": "Shielded",
+      "description": "A divine shield that deflects incoming attacks.",
+      "tags": [
+        "buff",
+        "divine"
+      ],
+      "modifiers": [
+        {
+          "attribute": "ac",
+          "delta": 2
+        }
+      ],
+      "duration_type": "rounds",
+      "duration_value": 5,
+      "id": 52,
+      "campaign_id": 12
+    },
+    {
+      "name": "Frightened",
+      "description": "Overcome with terror, reducing physical and social capabilities.",
+      "tags": [
+        "debuff",
+        "mental"
+      ],
+      "modifiers": [
+        {
+          "attribute": "strength",
+          "delta": -1
+        },
+        {
+          "attribute": "dexterity",
+          "delta": -1
+        },
+        {
+          "attribute": "charisma",
+          "delta": -2
+        }
+      ],
+      "duration_type": "rounds",
+      "duration_value": 3,
+      "id": 53,
+      "campaign_id": 12
+    },
+    {
+      "name": "Regenerating",
+      "description": "Natural healing accelerates, bolstering constitution.",
+      "tags": [
+        "buff",
+        "natural"
+      ],
+      "modifiers": [
+        {
+          "attribute": "constitution",
+          "delta": 1
+        }
+      ],
+      "duration_type": "timed",
+      "duration_value": 1,
+      "id": 54,
+      "campaign_id": 12
+    },
+    {
+      "name": "Slowed",
+      "description": "Magical lethargy severely impairs agility.",
+      "tags": [
+        "debuff",
+        "magical"
+      ],
+      "modifiers": [
+        {
+          "attribute": "dexterity",
+          "delta": -3
+        }
+      ],
+      "duration_type": "rounds",
+      "duration_value": 2,
+      "id": 55,
+      "campaign_id": 12
+    }
+  ],
+  "items": [
+    {
+      "name": "Battleaxe",
+      "description": "A sturdy dwarven battleaxe, well-balanced for combat.",
+      "item_type": "weapon",
+      "properties": {
+        "weight": 4,
+        "rarity": "common"
+      },
+      "stackable": false,
+      "modifiers": [
+        {
+          "attribute": "strength",
+          "delta": 2
+        }
+      ],
+      "id": 47,
+      "campaign_id": 12
+    },
+    {
+      "name": "Arcane Staff",
+      "description": "A staff carved from ancient oak, humming with arcane energy.",
+      "item_type": "weapon",
+      "properties": {
+        "weight": 3,
+        "rarity": "uncommon"
+      },
+      "stackable": false,
+      "modifiers": [
+        {
+          "attribute": "intelligence",
+          "delta": 2
+        }
+      ],
+      "id": 48,
+      "campaign_id": 12
+    },
+    {
+      "name": "Twin Daggers",
+      "description": "A matched pair of razor-sharp daggers, perfect for quick strikes.",
+      "item_type": "weapon",
+      "properties": {
+        "weight": 2,
+        "rarity": "common"
+      },
+      "stackable": false,
+      "modifiers": [
+        {
+          "attribute": "dexterity",
+          "delta": 2
+        }
+      ],
+      "id": 49,
+      "campaign_id": 12
+    },
+    {
+      "name": "Holy Mace",
+      "description": "A consecrated mace that glows faintly with divine light.",
+      "item_type": "weapon",
+      "properties": {
+        "weight": 4,
+        "rarity": "common"
+      },
+      "stackable": false,
+      "modifiers": [
+        {
+          "attribute": "wisdom",
+          "delta": 1
+        },
+        {
+          "attribute": "strength",
+          "delta": 1
+        }
+      ],
+      "id": 50,
+      "campaign_id": 12
+    },
+    {
+      "name": "Longbow",
+      "description": "A finely crafted longbow with excellent range.",
+      "item_type": "weapon",
+      "properties": {
+        "weight": 2,
+        "rarity": "common"
+      },
+      "stackable": false,
+      "modifiers": [
+        {
+          "attribute": "dexterity",
+          "delta": 1
+        }
+      ],
+      "id": 51,
+      "campaign_id": 12
+    },
+    {
+      "name": "Chain Mail",
+      "description": "Interlocking metal rings providing solid protection at the cost of mobility.",
+      "item_type": "armor",
+      "properties": {
+        "weight": 6,
+        "rarity": "common"
+      },
+      "stackable": false,
+      "modifiers": [
+        {
+          "attribute": "ac",
+          "delta": 3
+        },
+        {
+          "attribute": "dexterity",
+          "delta": -1
+        }
+      ],
+      "id": 52,
+      "campaign_id": 12
+    },
+    {
+      "name": "Leather Armor",
+      "description": "Light and flexible armor made from cured leather.",
+      "item_type": "armor",
+      "properties": {
+        "weight": 3,
+        "rarity": "common"
+      },
+      "stackable": false,
+      "modifiers": [
+        {
+          "attribute": "ac",
+          "delta": 1
+        }
+      ],
+      "id": 53,
+      "campaign_id": 12
+    },
+    {
+      "name": "Mage Robes",
+      "description": "Enchanted robes woven with threads of silver that enhance magical focus.",
+      "item_type": "armor",
+      "properties": {
+        "weight": 1,
+        "rarity": "common"
+      },
+      "stackable": false,
+      "modifiers": [
+        {
+          "attribute": "intelligence",
+          "delta": 1
+        }
+      ],
+      "id": 54,
+      "campaign_id": 12
+    },
+    {
+      "name": "Shield of Faith",
+      "description": "A blessed shield bearing a holy symbol that bolsters the wielder's defense.",
+      "item_type": "armor",
+      "properties": {
+        "weight": 3,
+        "rarity": "uncommon"
+      },
+      "stackable": false,
+      "modifiers": [
+        {
+          "attribute": "ac",
+          "delta": 2
+        }
+      ],
+      "id": 55,
+      "campaign_id": 12
+    },
+    {
+      "name": "Healing Potion",
+      "description": "A glowing red potion that restores health when consumed.",
+      "item_type": "consumable",
+      "properties": {
+        "weight": 0.5,
+        "rarity": "common"
+      },
+      "stackable": true,
+      "modifiers": [],
+      "id": 56,
+      "campaign_id": 12
+    },
+    {
+      "name": "Antidote",
+      "description": "A bitter herbal remedy that neutralizes poisons.",
+      "item_type": "consumable",
+      "properties": {
+        "weight": 0.5,
+        "rarity": "common"
+      },
+      "stackable": true,
+      "modifiers": [],
+      "id": 57,
+      "campaign_id": 12
+    },
+    {
+      "name": "Starfire Shard",
+      "description": "A fragment of the Fallen Star, pulsing with warm white-gold light. Key to restoring the ancient ward-stones.",
+      "item_type": "misc",
+      "properties": {
+        "weight": 0.5,
+        "rarity": "rare",
+        "quest_item": true
+      },
+      "stackable": true,
+      "modifiers": [],
+      "id": 58,
+      "campaign_id": 12
+    },
+    {
+      "name": "Festival Token",
+      "description": "A stamped brass token from the Starfall Festival, used as currency at festival stalls.",
+      "item_type": "misc",
+      "properties": {
+        "weight": 0,
+        "rarity": "common"
+      },
+      "stackable": true,
+      "modifiers": [],
+      "id": 59,
+      "campaign_id": 12
+    },
+    {
+      "name": "Ring of Fortitude",
+      "description": "A heavy iron ring engraved with runes of endurance.",
+      "item_type": "accessory",
+      "properties": {
+        "weight": 0,
+        "rarity": "rare"
+      },
+      "stackable": false,
+      "modifiers": [
+        {
+          "attribute": "constitution",
+          "delta": 2
+        }
+      ],
+      "id": 60,
+      "campaign_id": 12
+    }
+  ],
+  "characters": [
+    {
+      "name": "Thorin Ironshield",
+      "type": "PC",
+      "description": "A stout dwarven fighter with a magnificent braided beard and a no-nonsense attitude. Thorin left his mountain hold seeking adventure and glory.",
+      "portrait_url": "",
+      "base_attributes": {
+        "hp": 28,
+        "ac": 10,
+        "strength": 16,
+        "dexterity": 10,
+        "constitution": 15,
+        "intelligence": 8,
+        "wisdom": 12,
+        "charisma": 10,
+        "race": "Dwarf",
+        "class": "Fighter"
+      },
+      "max_attributes": {
+        "hp": 28
+      },
+      "dm_notes": "",
+      "spawned_from_encounter_id": null,
+      "archived": false,
+      "id": 78,
+      "campaign_id": 12
+    },
+    {
+      "name": "Elara Nightbloom",
+      "type": "PC",
+      "description": "An elven wizard with silver hair and keen violet eyes. A scholar of ancient magic who sensed the meteorite's power from miles away.",
+      "portrait_url": "",
+      "base_attributes": {
+        "hp": 16,
+        "ac": 10,
+        "strength": 8,
+        "dexterity": 14,
+        "constitution": 10,
+        "intelligence": 18,
+        "wisdom": 15,
+        "charisma": 12,
+        "race": "Elf",
+        "class": "Wizard"
+      },
+      "max_attributes": {
+        "hp": 16
+      },
+      "dm_notes": "",
+      "spawned_from_encounter_id": null,
+      "archived": false,
+      "id": 79,
+      "campaign_id": 12
+    },
+    {
+      "name": "Pip Quickfoot",
+      "type": "PC",
+      "description": "A charming halfling rogue with an infectious grin and nimble fingers. Came to the festival for fun but got swept up in something much bigger.",
+      "portrait_url": "",
+      "base_attributes": {
+        "hp": 20,
+        "ac": 10,
+        "strength": 10,
+        "dexterity": 18,
+        "constitution": 12,
+        "intelligence": 13,
+        "wisdom": 10,
+        "charisma": 16,
+        "race": "Halfling",
+        "class": "Rogue"
+      },
+      "max_attributes": {
+        "hp": 20
+      },
+      "dm_notes": "",
+      "spawned_from_encounter_id": null,
+      "archived": false,
+      "id": 80,
+      "campaign_id": 12
+    },
+    {
+      "name": "Brother Cedric",
+      "type": "PC",
+      "description": "A kind-hearted human cleric dedicated to the god of light. Was performing blessings at the festival when the star fell, and believes it is a divine sign.",
+      "portrait_url": "",
+      "base_attributes": {
+        "hp": 24,
+        "ac": 10,
+        "strength": 14,
+        "dexterity": 10,
+        "constitution": 14,
+        "intelligence": 12,
+        "wisdom": 18,
+        "charisma": 13,
+        "race": "Human",
+        "class": "Cleric"
+      },
+      "max_attributes": {
+        "hp": 24
+      },
+      "dm_notes": "",
+      "spawned_from_encounter_id": null,
+      "archived": false,
+      "id": 81,
+      "campaign_id": 12
+    },
+    {
+      "name": "Mayor Bramwell",
+      "type": "NPC",
+      "description": "Cresthaven's jovial mayor, a portly man with rosy cheeks and a booming laugh. Organized the Starfall Festival and is desperate to keep order after the meteorite impact.",
+      "portrait_url": "",
+      "base_attributes": {
+        "hp": 8,
+        "ac": 10,
+        "strength": 9,
+        "dexterity": 10,
+        "constitution": 10,
+        "intelligence": 14,
+        "wisdom": 13,
+        "charisma": 16,
+        "race": "Human",
+        "class": "Commoner"
+      },
+      "max_attributes": {
+        "hp": 8
+      },
+      "dm_notes": "",
+      "spawned_from_encounter_id": null,
+      "archived": false,
+      "id": 82,
+      "campaign_id": 12
+    },
+    {
+      "name": "Sage Ilara",
+      "type": "NPC",
+      "description": "An elderly elven scholar who has spent centuries studying the ancient ward-stones. She immediately recognizes the meteorite's significance.",
+      "portrait_url": "",
+      "base_attributes": {
+        "hp": 10,
+        "ac": 10,
+        "strength": 7,
+        "dexterity": 11,
+        "constitution": 9,
+        "intelligence": 19,
+        "wisdom": 17,
+        "charisma": 13,
+        "race": "Elf",
+        "class": "Wizard"
+      },
+      "max_attributes": {
+        "hp": 10
+      },
+      "dm_notes": "",
+      "spawned_from_encounter_id": null,
+      "archived": false,
+      "id": 83,
+      "campaign_id": 12
+    },
+    {
+      "name": "Captain Rowan",
+      "type": "NPC",
+      "description": "Head of Cresthaven's town guard. A tall, broad-shouldered woman with close-cropped hair and a commanding presence. Loyal and capable, she suspects the Crimson Fang are nearby.",
+      "portrait_url": "",
+      "base_attributes": {
+        "hp": 22,
+        "ac": 12,
+        "strength": 15,
+        "dexterity": 13,
+        "constitution": 14,
+        "intelligence": 11,
+        "wisdom": 12,
+        "charisma": 14,
+        "race": "Human",
+        "class": "Fighter"
+      },
+      "max_attributes": {
+        "hp": 22
+      },
+      "dm_notes": "",
+      "spawned_from_encounter_id": null,
+      "archived": false,
+      "id": 84,
+      "campaign_id": 12
+    },
+    {
+      "name": "Nessa the Innkeeper",
+      "type": "NPC",
+      "description": "A plump, cheerful halfling who runs the Starfall Tavern. Knows everyone's business and is the town's best source of gossip.",
+      "portrait_url": "",
+      "base_attributes": {
+        "hp": 6,
+        "ac": 10,
+        "strength": 8,
+        "dexterity": 12,
+        "constitution": 10,
+        "intelligence": 13,
+        "wisdom": 14,
+        "charisma": 17,
+        "race": "Halfling",
+        "class": "Commoner"
+      },
+      "max_attributes": {
+        "hp": 6
+      },
+      "dm_notes": "",
+      "spawned_from_encounter_id": null,
+      "archived": false,
+      "id": 85,
+      "campaign_id": 12
+    },
+    {
+      "name": "Garrick Ironhand",
+      "type": "NPC",
+      "description": "Cresthaven's master blacksmith, a burly dwarf with soot-stained hands and a gruff demeanor. Generous beneath the rough exterior.",
+      "portrait_url": "",
+      "base_attributes": {
+        "hp": 14,
+        "ac": 10,
+        "strength": 17,
+        "dexterity": 9,
+        "constitution": 16,
+        "intelligence": 12,
+        "wisdom": 11,
+        "charisma": 10,
+        "race": "Dwarf",
+        "class": "Fighter"
+      },
+      "max_attributes": {
+        "hp": 14
+      },
+      "dm_notes": "",
+      "spawned_from_encounter_id": null,
+      "archived": false,
+      "id": 86,
+      "campaign_id": 12
+    },
+    {
+      "name": "Raven",
+      "type": "NPC",
+      "description": "Leader of the Crimson Fang bandits. A tall, lean woman with raven-black hair and a cruel smile. Once a respected scout, she turned to banditry after her hometown was destroyed.",
+      "portrait_url": "",
+      "base_attributes": {
+        "hp": 26,
+        "ac": 13,
+        "strength": 14,
+        "dexterity": 16,
+        "constitution": 13,
+        "intelligence": 13,
+        "wisdom": 12,
+        "charisma": 15,
+        "race": "Human",
+        "class": "Ranger"
+      },
+      "max_attributes": {
+        "hp": 26
+      },
+      "dm_notes": "",
+      "spawned_from_encounter_id": null,
+      "archived": false,
+      "id": 87,
+      "campaign_id": 12
+    },
+    {
+      "name": "Jax",
+      "type": "NPC",
+      "description": "Raven's lieutenant in the Crimson Fang. A wiry, nervous man who joined the gang out of desperation. Secretly having doubts and can be convinced to help the party.",
+      "portrait_url": "",
+      "base_attributes": {
+        "hp": 18,
+        "ac": 11,
+        "strength": 12,
+        "dexterity": 15,
+        "constitution": 11,
+        "intelligence": 14,
+        "wisdom": 10,
+        "charisma": 13,
+        "race": "Human",
+        "class": "Rogue"
+      },
+      "max_attributes": {
+        "hp": 18
+      },
+      "dm_notes": "",
+      "spawned_from_encounter_id": null,
+      "archived": false,
+      "id": 88,
+      "campaign_id": 12
+    },
+    {
+      "name": "Old Willow",
+      "type": "NPC",
+      "description": "A reclusive elven druid who has lived in the Silverwood for centuries. She knows every path, creature, and secret of the forest.",
+      "portrait_url": "",
+      "base_attributes": {
+        "hp": 12,
+        "ac": 10,
+        "strength": 8,
+        "dexterity": 10,
+        "constitution": 11,
+        "intelligence": 16,
+        "wisdom": 19,
+        "charisma": 14,
+        "race": "Elf",
+        "class": "Druid"
+      },
+      "max_attributes": {
+        "hp": 12
+      },
+      "dm_notes": "",
+      "spawned_from_encounter_id": null,
+      "archived": false,
+      "id": 89,
+      "campaign_id": 12
+    },
+    {
+      "name": "Tessa",
+      "type": "NPC",
+      "description": "A bright-eyed young festival performer — a fire dancer and acrobat. She saw exactly where the star landed. Eager to help but easily frightened.",
+      "portrait_url": "",
+      "base_attributes": {
+        "hp": 5,
+        "ac": 10,
+        "strength": 8,
+        "dexterity": 14,
+        "constitution": 9,
+        "intelligence": 11,
+        "wisdom": 10,
+        "charisma": 16,
+        "race": "Human",
+        "class": "Commoner"
+      },
+      "max_attributes": {
+        "hp": 5
+      },
+      "dm_notes": "",
+      "spawned_from_encounter_id": null,
+      "archived": false,
+      "id": 90,
+      "campaign_id": 12
+    },
+    {
+      "name": "Gruff",
+      "type": "NPC",
+      "description": "A massive, moss-covered troll who guards the Old Bridge. Hired by Elder Moonwhisper to keep bandits away from the shrine. Demands payment but can be reasoned with.",
+      "portrait_url": "",
+      "base_attributes": {
+        "hp": 35,
+        "ac": 14,
+        "strength": 20,
+        "dexterity": 8,
+        "constitution": 18,
+        "intelligence": 6,
+        "wisdom": 9,
+        "charisma": 5
+      },
+      "max_attributes": {
+        "hp": 35
+      },
+      "dm_notes": "",
+      "spawned_from_encounter_id": null,
+      "archived": false,
+      "id": 91,
+      "campaign_id": 12
+    },
+    {
+      "name": "Fenris",
+      "type": "NPC",
+      "description": "A mysterious ranger clad in forest-green who has been tracking the Crimson Fang for weeks. Quiet and intense, appears at unexpected moments with cryptic warnings.",
+      "portrait_url": "",
+      "base_attributes": {
+        "hp": 20,
+        "ac": 12,
+        "strength": 13,
+        "dexterity": 16,
+        "constitution": 12,
+        "intelligence": 12,
+        "wisdom": 15,
+        "charisma": 11,
+        "race": "Human",
+        "class": "Ranger"
+      },
+      "max_attributes": {
+        "hp": 20
+      },
+      "dm_notes": "",
+      "spawned_from_encounter_id": null,
+      "archived": false,
+      "id": 92,
+      "campaign_id": 12
+    },
+    {
+      "name": "Elder Moonwhisper",
+      "type": "NPC",
+      "description": "The ancient elven keeper of the Moonrise Shrine. Serene and wise beyond measure, she understands the connection between the meteorite and the ward-stones.",
+      "portrait_url": "",
+      "base_attributes": {
+        "hp": 14,
+        "ac": 10,
+        "strength": 8,
+        "dexterity": 9,
+        "constitution": 11,
+        "intelligence": 15,
+        "wisdom": 20,
+        "charisma": 16,
+        "race": "Elf",
+        "class": "Cleric"
+      },
+      "max_attributes": {
+        "hp": 14
+      },
+      "dm_notes": "",
+      "spawned_from_encounter_id": null,
+      "archived": false,
+      "id": 93,
+      "campaign_id": 12
+    }
+  ],
+  "locations": [
+    {
+      "name": "Cresthaven",
+      "description": "A bustling mountain town nestled in a sheltered valley, currently celebrating the annual Starfall Festival. Lanterns hang from every eave, market stalls line the cobbled streets, and the sound of music fills the air.",
+      "parent_id": null,
+      "weather_override": null,
+      "encounter_modifier": 0.1,
+      "properties": {
+        "terrain": "mountain_town",
+        "population": "medium"
+      },
+      "position_x": 206.4061467815548,
+      "position_y": -216.92978950940207,
+      "id": 48,
+      "campaign_id": 12
+    },
+    {
+      "name": "The Silverwood",
+      "description": "An ancient forest of towering silver-barked trees. Dappled light filters through the canopy, and strange sounds echo between the trunks. Since the meteorite fell, an uneasy energy permeates the woods.",
+      "parent_id": null,
+      "weather_override": {
+        "mode": "weighted",
+        "value": {
+          "Fog": 30,
+          "Overcast": 30,
+          "Clear": 20,
+          "Rain": 20
+        }
+      },
+      "encounter_modifier": 1.2,
+      "properties": {
+        "terrain": "forest",
+        "danger": "moderate"
+      },
+      "position_x": 158.42448436969818,
+      "position_y": 204.21224218484906,
+      "id": 49,
+      "campaign_id": 12
+    },
+    {
+      "name": "Starfall Crater",
+      "description": "A smoldering impact crater deep in the Silverwood where the Fallen Star struck. The air shimmers with residual magic, and the trees around the rim are scorched silver-white. Fragments of glowing meteorite are scattered across the crater floor.",
+      "parent_id": null,
+      "weather_override": {
+        "mode": "fixed",
+        "value": "Fog"
+      },
+      "encounter_modifier": 1.5,
+      "properties": {
+        "terrain": "magical",
+        "danger": "high"
+      },
+      "position_x": 329.7420830725117,
+      "position_y": 684.7980296391207,
+      "id": 50,
+      "campaign_id": 12
+    },
+    {
+      "name": "Bandit Camp",
+      "description": "The hidden hideout of the Crimson Fang bandits, concealed among dense undergrowth and fallen logs. Rough tents surround a central firepit, and stolen goods are piled under oilskin tarps.",
+      "parent_id": null,
+      "weather_override": null,
+      "encounter_modifier": 1.8,
+      "properties": {
+        "terrain": "forest",
+        "danger": "high"
+      },
+      "position_x": 125.50963569516122,
+      "position_y": 479.9378552735755,
+      "id": 51,
+      "campaign_id": 12
+    },
+    {
+      "name": "The Old Bridge",
+      "description": "A crumbling stone bridge spanning a deep ravine. The rushing river far below echoes up the cliff walls. Something large appears to have made a nest underneath.",
+      "parent_id": null,
+      "weather_override": null,
+      "encounter_modifier": 0.8,
+      "properties": {
+        "terrain": "ravine",
+        "population": "none"
+      },
+      "position_x": 494.37694202270063,
+      "position_y": 77.09601849617378,
+      "id": 52,
+      "campaign_id": 12
+    },
+    {
+      "name": "Moonrise Shrine",
+      "description": "An ancient hilltop shrine dedicated to the moon goddess, surrounded by standing stones carved with celestial symbols. The air here is peaceful and the sky always seems clear. A sense of divine protection pervades the place.",
+      "parent_id": null,
+      "weather_override": {
+        "mode": "fixed",
+        "value": "Clear"
+      },
+      "encounter_modifier": 0,
+      "properties": {
+        "terrain": "hilltop",
+        "sacred": true
+      },
+      "position_x": 547.9816624118566,
+      "position_y": 289.5773832346599,
+      "id": 53,
+      "campaign_id": 12
+    },
+    {
+      "name": "Thornbrush Hollow",
+      "description": "A tangled, overgrown depression in the forest floor choked with thorny bushes and deadfall. Something has been using this as a den — bones and scattered refuse litter the ground.",
+      "parent_id": null,
+      "weather_override": null,
+      "encounter_modifier": 1.5,
+      "properties": {
+        "terrain": "thicket",
+        "danger": "high"
+      },
+      "position_x": -9.659733153585876,
+      "position_y": 354.01646998378516,
+      "id": 54,
+      "campaign_id": 12
+    },
+    {
+      "name": "Ridgeway Pass",
+      "description": "A narrow mountain pass cutting through the ridge above Cresthaven. Strong winds whip through the gap, and the path is treacherous in places. On a clear day, you can see for miles in every direction.",
+      "parent_id": null,
+      "weather_override": {
+        "mode": "weighted",
+        "value": {
+          "Windy": 40,
+          "Clear": 30,
+          "Overcast": 20,
+          "Snow": 10
+        }
+      },
+      "encounter_modifier": 1,
+      "properties": {
+        "terrain": "mountain",
+        "danger": "moderate"
+      },
+      "position_x": 736.5599794486959,
+      "position_y": -156.07521795693143,
+      "id": 55,
+      "campaign_id": 12
+    }
+  ],
+  "encounters": [
+    {
+      "name": "Wolf Pack",
+      "description": "A pack of hungry wolves emerges from the shadows, their eyes glinting in the darkness. The meteorite's energy has made them bold and aggressive.",
+      "notes": "",
+      "npcs": [
+        {
+          "name": "Forest Wolf",
+          "role": "hostile",
+          "count": 4
+        }
+      ],
+      "environment_overrides": {},
+      "loot_table": [
+        {
+          "item_name": "Healing Potion",
+          "quantity": 1,
+          "drop_chance": 0.4
+        }
+      ],
+      "conditions": {
+        "location_ids": [
+          49,
+          54
+        ],
+        "time_of_day": [
+          "Night",
+          "Dusk",
+          "Dawn"
+        ],
+        "weight": 1.5
+      },
+      "starts_combat": true,
+      "id": 29,
+      "campaign_id": 12
+    },
+    {
+      "name": "Bandit Ambush",
+      "description": "Three Crimson Fang bandits leap from the undergrowth, weapons drawn! \"Hand over your valuables and nobody gets hurt!\"",
+      "notes": "",
+      "npcs": [
+        {
+          "name": "Crimson Fang Bandit",
+          "role": "hostile",
+          "count": 3
+        }
+      ],
+      "environment_overrides": {},
+      "loot_table": [
+        {
+          "item_name": "Healing Potion",
+          "quantity": 1,
+          "drop_chance": 0.5
+        },
+        {
+          "item_name": "Festival Token",
+          "quantity": 5,
+          "drop_chance": 0.8
+        }
+      ],
+      "conditions": {
+        "edge_ids": [
+          33,
+          40
+        ],
+        "weight": 1
+      },
+      "starts_combat": true,
+      "id": 30,
+      "campaign_id": 12
+    },
+    {
+      "name": "Troll at the Bridge",
+      "description": "The ground shakes as a massive troll hauls itself up from beneath the bridge. Moss and mud cling to its thick hide. It holds up one enormous hand: \"TOLL. Pay toll or no cross.\"",
+      "notes": "",
+      "npcs": [
+        {
+          "character_id": 91,
+          "role": "neutral"
+        }
+      ],
+      "environment_overrides": {},
+      "loot_table": [],
+      "conditions": {
+        "location_ids": [
+          52
+        ],
+        "weight": 2
+      },
+      "starts_combat": false,
+      "id": 31,
+      "campaign_id": 12
+    },
+    {
+      "name": "Crimson Fang Hideout",
+      "description": "You've found the Crimson Fang's hidden camp. Raven stands at the center, arms crossed, flanked by her lieutenant Jax and several armed bandits. \"Well, well... looks like we have uninvited guests.\"",
+      "notes": "",
+      "npcs": [
+        {
+          "character_id": 87,
+          "role": "leader"
+        },
+        {
+          "character_id": 88,
+          "role": "member"
+        },
+        {
+          "name": "Crimson Fang Bandit",
+          "role": "hostile",
+          "count": 3
+        }
+      ],
+      "environment_overrides": {},
+      "loot_table": [
+        {
+          "item_name": "Longbow",
+          "quantity": 1,
+          "drop_chance": 0.6
+        },
+        {
+          "item_name": "Healing Potion",
+          "quantity": 3,
+          "drop_chance": 0.7
+        },
+        {
+          "item_name": "Starfire Shard",
+          "quantity": 1,
+          "drop_chance": 1
+        }
+      ],
+      "conditions": {
+        "location_ids": [
+          51
+        ],
+        "weight": 3
+      },
+      "starts_combat": true,
+      "id": 32,
+      "campaign_id": 12
+    },
+    {
+      "name": "Forest Sprite Prank",
+      "description": "A tiny glowing figure flits between the trees, giggling mischievously. It tugs at your hair, hides your belongings, and leads you in circles — but seems more playful than dangerous.",
+      "notes": "",
+      "npcs": [
+        {
+          "name": "Mischievous Sprite",
+          "role": "neutral"
+        }
+      ],
+      "environment_overrides": {},
+      "loot_table": [
+        {
+          "item_name": "Festival Token",
+          "quantity": 3,
+          "drop_chance": 0.9
+        }
+      ],
+      "conditions": {
+        "location_ids": [
+          49
+        ],
+        "time_of_day": [
+          "Afternoon",
+          "Morning"
+        ],
+        "weather": [
+          "Clear",
+          "Overcast"
+        ],
+        "weight": 1
+      },
+      "starts_combat": false,
+      "id": 33,
+      "campaign_id": 12
+    },
+    {
+      "name": "Starfire Anomaly",
+      "description": "The air crackles with arcane energy. Bolts of white-gold light arc between the meteorite fragments scattered across the crater floor. The ground hums beneath your feet, and you feel raw magical power washing over you in waves.",
+      "notes": "",
+      "npcs": [],
+      "environment_overrides": {},
+      "loot_table": [
+        {
+          "item_name": "Starfire Shard",
+          "quantity": 2,
+          "drop_chance": 1
+        }
+      ],
+      "conditions": {
+        "location_ids": [
+          50
+        ],
+        "weight": 3
+      },
+      "starts_combat": false,
+      "id": 34,
+      "campaign_id": 12
+    },
+    {
+      "name": "Traveling Merchant",
+      "description": "A cheerful gnome merchant with an overloaded donkey waves you down. \"Fine wares! Potions, trinkets, and curiosities! Special festival prices today only!\"",
+      "notes": "",
+      "npcs": [
+        {
+          "name": "Merchant Pip",
+          "role": "neutral"
+        }
+      ],
+      "environment_overrides": {},
+      "loot_table": [],
+      "conditions": {
+        "edge_ids": [
+          36,
+          39
+        ],
+        "time_of_day": [
+          "Morning",
+          "Afternoon"
+        ],
+        "weight": 1
+      },
+      "starts_combat": false,
+      "id": 35,
+      "campaign_id": 12
+    },
+    {
+      "name": "Owlbear Den",
+      "description": "A deep, guttural hoot-growl echoes from the hollow. An enormous owlbear bursts from the thicket, feathers bristling and beak snapping. It's protecting its territory — and it's not happy to see you.",
+      "notes": "",
+      "npcs": [
+        {
+          "name": "Owlbear",
+          "role": "hostile"
+        }
+      ],
+      "environment_overrides": {},
+      "loot_table": [
+        {
+          "item_name": "Ring of Fortitude",
+          "quantity": 1,
+          "drop_chance": 0.25
+        }
+      ],
+      "conditions": {
+        "location_ids": [
+          54
+        ],
+        "time_of_day": [
+          "Night",
+          "Dawn",
+          "Dusk"
+        ],
+        "weight": 2
+      },
+      "starts_combat": true,
+      "id": 36,
+      "campaign_id": 12
+    }
+  ],
+  "rules": [
+    {
+      "name": "Poison Damage",
+      "description": "Characters with the Poisoned effect take 1 HP damage each time the clock advances.",
+      "enabled": true,
+      "trigger_type": "on_time_advance",
+      "trigger_config": {},
+      "conditions": {
+        "all": [
+          {
+            "type": "has_effect",
+            "effect_name": "Poisoned"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "type": "modify_attribute",
+          "attribute": "hp",
+          "delta": -1
+        },
+        {
+          "type": "notify",
+          "message": "{character.name} takes 1 damage from poison!"
+        }
+      ],
+      "action_mode": "auto",
+      "priority": 100,
+      "tags": [
+        "combat",
+        "damage"
+      ],
+      "target_mode": "all_pcs",
+      "target_config": {},
+      "id": 74,
+      "campaign_id": 12
+    },
+    {
+      "name": "Critical Wound Alert",
+      "description": "Alerts when a PC's HP drops to 5 or below.",
+      "enabled": true,
+      "trigger_type": "on_threshold",
+      "trigger_config": {
+        "attribute": "hp",
+        "threshold": 5,
+        "direction": "falling"
+      },
+      "conditions": {
+        "all": []
+      },
+      "actions": [
+        {
+          "type": "notify",
+          "message": "{character.name} is critically wounded!",
+          "level": "warning"
+        }
+      ],
+      "action_mode": "auto",
+      "priority": 100,
+      "tags": [
+        "combat",
+        "alert"
+      ],
+      "target_mode": "all_pcs",
+      "target_config": {},
+      "id": 75,
+      "campaign_id": 12
+    },
+    {
+      "name": "Rest Healing",
+      "description": "PCs recover 5 HP and lose Exhausted status when resting.",
+      "enabled": true,
+      "trigger_type": "on_rest",
+      "trigger_config": {},
+      "conditions": {
+        "all": []
+      },
+      "actions": [
+        {
+          "type": "modify_attribute",
+          "attribute": "hp",
+          "delta": 5
+        },
+        {
+          "type": "remove_effect",
+          "effect_name": "Exhausted"
+        },
+        {
+          "type": "notify",
+          "message": "{character.name} rests and recovers 5 HP."
+        }
+      ],
+      "action_mode": "auto",
+      "priority": 100,
+      "tags": [
+        "rest",
+        "healing"
+      ],
+      "target_mode": "all_pcs",
+      "target_config": {},
+      "id": 76,
+      "campaign_id": 12
+    },
+    {
+      "name": "Travel Exhaustion",
+      "description": "PCs become exhausted after 16 hours without rest.",
+      "enabled": true,
+      "trigger_type": "on_time_advance",
+      "trigger_config": {},
+      "conditions": {
+        "all": [
+          {
+            "type": "hours_since_last_rest",
+            "operator": "gte",
+            "value": 16
+          },
+          {
+            "type": "lacks_effect",
+            "effect_name": "Exhausted"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "type": "apply_effect",
+          "effect_name": "Exhausted"
+        },
+        {
+          "type": "notify",
+          "message": "{character.name} is growing exhausted from lack of rest.",
+          "level": "warning"
+        }
+      ],
+      "action_mode": "suggest",
+      "priority": 100,
+      "tags": [
+        "travel",
+        "survival"
+      ],
+      "target_mode": "all_pcs",
+      "target_config": {},
+      "id": 77,
+      "campaign_id": 12
+    },
+    {
+      "name": "Healing Potion Use",
+      "description": "Suggests using a Healing Potion to restore 8 HP when a PC has one.",
+      "enabled": true,
+      "trigger_type": "on_item_change",
+      "trigger_config": {},
+      "conditions": {
+        "all": [
+          {
+            "type": "has_item",
+            "item_name": "Healing Potion"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "type": "consume_item",
+          "item_name": "Healing Potion"
+        },
+        {
+          "type": "modify_attribute",
+          "attribute": "hp",
+          "delta": 8
+        },
+        {
+          "type": "notify",
+          "message": "{character.name} drinks a Healing Potion and recovers 8 HP!"
+        }
+      ],
+      "action_mode": "suggest",
+      "priority": 100,
+      "tags": [
+        "consumable",
+        "healing"
+      ],
+      "target_mode": "all_pcs",
+      "target_config": {},
+      "id": 78,
+      "campaign_id": 12
+    },
+    {
+      "name": "Antidote Cure",
+      "description": "Suggests using an Antidote to cure Poisoned when a PC has both.",
+      "enabled": true,
+      "trigger_type": "on_item_change",
+      "trigger_config": {},
+      "conditions": {
+        "all": [
+          {
+            "type": "has_item",
+            "item_name": "Antidote"
+          },
+          {
+            "type": "has_effect",
+            "effect_name": "Poisoned"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "type": "consume_item",
+          "item_name": "Antidote"
+        },
+        {
+          "type": "remove_effect",
+          "effect_name": "Poisoned"
+        },
+        {
+          "type": "notify",
+          "message": "{character.name} uses an Antidote and is cured of poison!"
+        }
+      ],
+      "action_mode": "suggest",
+      "priority": 100,
+      "tags": [
+        "consumable",
+        "healing"
+      ],
+      "target_mode": "all_pcs",
+      "target_config": {},
+      "id": 79,
+      "campaign_id": 12
+    },
+    {
+      "name": "Silverwood Night Fog",
+      "description": "Fog rolls in when night falls in the Silverwood or Thornbrush Hollow.",
+      "enabled": true,
+      "trigger_type": "on_time_advance",
+      "trigger_config": {},
+      "conditions": {
+        "all": [
+          {
+            "type": "time_of_day_is",
+            "time_of_day": "Night"
+          },
+          {
+            "type": "location_in",
+            "location_ids": [
+              49,
+              54
+            ]
+          }
+        ]
+      },
+      "actions": [
+        {
+          "type": "set_weather",
+          "weather": "Fog"
+        },
+        {
+          "type": "notify",
+          "message": "An eerie mist rolls through the trees..."
+        }
+      ],
+      "action_mode": "auto",
+      "priority": 100,
+      "tags": [
+        "atmosphere",
+        "weather"
+      ],
+      "target_mode": "environment",
+      "target_config": {},
+      "id": 80,
+      "campaign_id": 12
+    },
+    {
+      "name": "Starfall Crater Aura",
+      "description": "PCs gain the Starfire Aura when entering the Starfall Crater.",
+      "enabled": true,
+      "trigger_type": "on_location_change",
+      "trigger_config": {},
+      "conditions": {
+        "all": [
+          {
+            "type": "location_is",
+            "location_id": 50
+          }
+        ]
+      },
+      "actions": [
+        {
+          "type": "apply_effect",
+          "effect_name": "Starfire Aura"
+        },
+        {
+          "type": "notify",
+          "message": "{character.name} feels arcane energy surge through them!"
+        }
+      ],
+      "action_mode": "auto",
+      "priority": 100,
+      "tags": [
+        "magical",
+        "location"
+      ],
+      "target_mode": "all_pcs",
+      "target_config": {},
+      "id": 81,
+      "campaign_id": 12
+    },
+    {
+      "name": "Festival Blessing",
+      "description": "PCs receive the Blessed effect when in Cresthaven during the festival.",
+      "enabled": true,
+      "trigger_type": "on_location_change",
+      "trigger_config": {},
+      "conditions": {
+        "all": [
+          {
+            "type": "location_is",
+            "location_id": 48
+          },
+          {
+            "type": "lacks_effect",
+            "effect_name": "Blessed"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "type": "apply_effect",
+          "effect_name": "Blessed"
+        },
+        {
+          "type": "notify",
+          "message": "The festive spirit of Cresthaven lifts {character.name}'s mood!"
+        }
+      ],
+      "action_mode": "suggest",
+      "priority": 100,
+      "tags": [
+        "blessing",
+        "location"
+      ],
+      "target_mode": "all_pcs",
+      "target_config": {},
+      "id": 82,
+      "campaign_id": 12
+    },
+    {
+      "name": "Moonrise Shrine Restoration",
+      "description": "The shrine's divine aura heals and purifies those who visit.",
+      "enabled": true,
+      "trigger_type": "on_location_change",
+      "trigger_config": {},
+      "conditions": {
+        "all": [
+          {
+            "type": "location_is",
+            "location_id": 53
+          }
+        ]
+      },
+      "actions": [
+        {
+          "type": "remove_effect",
+          "effect_name": "Exhausted"
+        },
+        {
+          "type": "remove_effect",
+          "effect_name": "Frightened"
+        },
+        {
+          "type": "modify_attribute",
+          "attribute": "hp",
+          "delta": 3
+        },
+        {
+          "type": "log",
+          "message": "The shrine's divine aura restores {character.name}."
+        }
+      ],
+      "action_mode": "auto",
+      "priority": 100,
+      "tags": [
+        "divine",
+        "healing",
+        "location"
+      ],
+      "target_mode": "all_pcs",
+      "target_config": {},
+      "id": 83,
+      "campaign_id": 12
+    },
+    {
+      "name": "Bridge Toll",
+      "description": "Gruff the troll demands payment when anyone arrives at the Old Bridge.",
+      "enabled": true,
+      "trigger_type": "on_location_change",
+      "trigger_config": {},
+      "conditions": {
+        "all": [
+          {
+            "type": "location_is",
+            "location_id": 52
+          }
+        ]
+      },
+      "actions": [
+        {
+          "type": "notify",
+          "message": "A massive troll emerges from beneath the bridge and demands payment for passage!",
+          "level": "warning"
+        }
+      ],
+      "action_mode": "auto",
+      "priority": 100,
+      "tags": [
+        "encounter",
+        "location"
+      ],
+      "target_mode": "environment",
+      "target_config": {},
+      "id": 84,
+      "campaign_id": 12
+    },
+    {
+      "name": "Storm Exposure",
+      "description": "PCs are slowed when caught in a storm.",
+      "enabled": true,
+      "trigger_type": "on_time_advance",
+      "trigger_config": {},
+      "conditions": {
+        "all": [
+          {
+            "type": "weather_is",
+            "weather": "Storm"
+          },
+          {
+            "type": "lacks_effect",
+            "effect_name": "Slowed"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "type": "apply_effect",
+          "effect_name": "Slowed"
+        },
+        {
+          "type": "notify",
+          "message": "{character.name} struggles against the howling storm!"
+        }
+      ],
+      "action_mode": "auto",
+      "priority": 100,
+      "tags": [
+        "weather",
+        "survival"
+      ],
+      "target_mode": "all_pcs",
+      "target_config": {},
+      "id": 85,
+      "campaign_id": 12
+    }
+  ],
+  "random_tables": [
+    {
+      "name": "Festival Activities",
+      "description": "Fun activities and events happening at the Starfall Festival in Cresthaven.",
+      "table_type": "sequential",
+      "entries": [
+        {
+          "text": "Pie-eating contest — the reigning champion is a surprisingly thin elf"
+        },
+        {
+          "text": "Juggling and fire-breathing show — Tessa is one of the performers"
+        },
+        {
+          "text": "Fortune teller's tent — an old woman with mismatched eyes offers cryptic readings"
+        },
+        {
+          "text": "Arm wrestling tournament — Garrick Ironhand is the favorite to win"
+        },
+        {
+          "text": "Archery competition — Captain Rowan is accepting challengers"
+        },
+        {
+          "text": "Bardic storytelling circle — tales of the ancient ward-stones and the first Starfall"
+        },
+        {
+          "text": "Dancing under the stars — couples and friends whirl to lively fiddle music"
+        },
+        {
+          "text": "Fireworks display — colorful explosions paint the night sky (before the meteorite steals the show)"
+        }
+      ],
+      "created_at": "2026-02-18 15:13:58",
+      "id": 6,
+      "campaign_id": 12
+    },
+    {
+      "name": "Silverwood Sounds",
+      "description": "Atmospheric sounds and sensory details for travel through the Silverwood forest.",
+      "table_type": "sequential",
+      "entries": [
+        {
+          "text": "Rustling leaves and snapping twigs — something is moving in the undergrowth"
+        },
+        {
+          "text": "A distant wolf howl — long, mournful, and answered by another deeper in the forest"
+        },
+        {
+          "text": "Strange glowing lights between the trees — residual energy from the meteorite's impact"
+        },
+        {
+          "text": "The sound of running water nearby — a hidden stream cutting through mossy rocks"
+        },
+        {
+          "text": "Complete eerie silence — even the insects have gone quiet"
+        },
+        {
+          "text": "A bird call that sounds almost like words — 'Turn back... turn back...'"
+        },
+        {
+          "text": "Thunder rumbling despite clear skies — the meteorite's energy disrupting the atmosphere"
+        },
+        {
+          "text": "Footsteps that aren't your own — they stop when you stop"
+        }
+      ],
+      "created_at": "2026-02-18 15:13:58",
+      "id": 7,
+      "campaign_id": 12
+    },
+    {
+      "name": "Found Treasure",
+      "description": "Random loot found while searching or after defeating enemies.",
+      "table_type": "weighted",
+      "entries": [
+        {
+          "text": "5 gold coins",
+          "weight": 3
+        },
+        {
+          "text": "Healing Potion",
+          "weight": 2
+        },
+        {
+          "text": "Antidote",
+          "weight": 2
+        },
+        {
+          "text": "Festival Token x3",
+          "weight": 3
+        },
+        {
+          "text": "Starfire Shard",
+          "weight": 1
+        },
+        {
+          "text": "A mysterious map fragment showing part of the Silverwood",
+          "weight": 1
+        },
+        {
+          "text": "A carved wooden charm shaped like a crescent moon",
+          "weight": 2
+        },
+        {
+          "text": "Nothing but a rusty nail",
+          "weight": 4
+        }
+      ],
+      "created_at": "2026-02-18 15:13:58",
+      "id": 8,
+      "campaign_id": 12
+    }
+  ],
+  "journal_notes": [
+    {
+      "title": "Campaign Overview",
+      "content": "## The Festival of the Fallen Star\n\n### Premise\nThe party arrives at the mountain town of **Cresthaven** during the annual **Starfall Festival**. Mid-celebration, a blazing meteorite — the **Fallen Star** — crashes into the nearby **Silverwood** forest. The town's sage reveals it could restore the ancient ward-stones that once protected the region. But a cunning bandit gang, the **Crimson Fang**, is also after it. The party must race through the forest, navigate a troll's bridge, explore ancient shrines, and confront the bandits before the meteorite's magic fades at moonrise.\n\n### Critical Path\n1. **Cresthaven** — Learn about the Fallen Star from [[Sage Ilara]] and gather info\n2. **The Silverwood** — Navigate the forest, meet [[Old Willow]]\n3. **Starfall Crater** — Find the meteorite, collect Starfire Shards\n4. **The Old Bridge** — Deal with [[Gruff]] the troll\n5. **Moonrise Shrine** — Learn from [[Elder Moonwhisper]] how to attune the star\n6. **Bandit Camp** — Confront [[Raven]] and the Crimson Fang\n7. **Cresthaven** — Return victorious, restore the ward-stones\n\n### Key NPCs\n- **[[Sage Ilara]]** — Quest giver, knows the ward-stone history\n- **[[Old Willow]]** — Forest guide, knows shortcuts\n- **[[Raven]]** — Main antagonist, Crimson Fang leader\n- **[[Jax]]** — Potential ally inside the Crimson Fang\n- **[[Gruff]]** — Troll guardian, obstacle/social encounter\n- **[[Elder Moonwhisper]]** — Shrine keeper, knows attunement ritual\n- **[[Fenris]]** — Helpful ranger tracking the bandits\n\n### Tone\nLighthearted high-fantasy adventure. Exciting combat, social encounters, exploration, and a satisfying climax. Think \"first session of a fun D&D campaign.\"",
+      "tags": [
+        "overview",
+        "reference"
+      ],
+      "starred": true,
+      "created_at": "2026-02-18 15:11:38",
+      "updated_at": "2026-02-18 15:11:38",
+      "id": 9,
+      "campaign_id": 12
+    },
+    {
+      "title": "NPC Quick Reference",
+      "content": "## NPC Personalities & Motivations\n\n### Cresthaven NPCs\n\n**[[Mayor Bramwell]]** — Jovial, boisterous, worried about the festival being ruined. Speaks in big, sweeping gestures. Wants order restored. Will offer a reward for retrieving the star.\n- *Voice:* Booming, jolly, slightly nervous\n- *Motivation:* Protect Cresthaven, save the festival\n\n**[[Sage Ilara]]** — Calm, scholarly, intense when discussing magic. Speaks precisely. Recognizes the meteorite's importance immediately.\n- *Voice:* Measured, wise, urgent when needed\n- *Motivation:* Restore the ward-stones, preserve ancient knowledge\n\n**[[Captain Rowan]]** — Direct, professional, suspicious of strangers. Respects competence. Can provide info on Crimson Fang sightings.\n- *Voice:* Clipped, military, dry humor\n- *Motivation:* Protect the town, catch the bandits\n\n**[[Nessa the Innkeeper]]** — Gossipy, warm, motherly. Knows everyone's business. Will feed the party and share rumors.\n- *Voice:* Chatty, conspiratorial whispers\n- *Motivation:* Keep the tavern busy, help her community\n\n**[[Garrick Ironhand]]** — Gruff, taciturn, secretly kind. Will forge/repair gear if asked nicely (or bribed with good ale).\n- *Voice:* Grumbling, few words, dwarvish expressions\n- *Motivation:* Practice his craft, help fellow dwarves especially\n\n### Forest NPCs\n\n**[[Old Willow]]** — Serene, cryptic, speaks in nature metaphors. Knows every inch of the Silverwood. Distrusts outsiders initially.\n- *Voice:* Whisper-soft, poetic, occasionally stern\n- *Motivation:* Protect the forest, guide worthy travelers\n\n**[[Tessa]]** — Excitable, dramatic, brave but easily spooked. Saw where the star fell. Will point the way if the party earns her trust.\n- *Voice:* Fast-talking, breathless, theatrical\n- *Motivation:* Be part of the adventure, impress people\n\n**[[Fenris]]** — Taciturn, intense, appears unexpectedly. Tracking the Crimson Fang. Will share intel but won't join the party.\n- *Voice:* Low, clipped, mysterious\n- *Motivation:* Personal vendetta against the Crimson Fang\n\n### Antagonists\n\n**[[Raven]]** — Charismatic, cruel, intelligent. Respects strength. Her backstory is tragic — can be used for dramatic effect.\n- *Voice:* Smooth, mocking, dangerous\n- *Motivation:* Power, wealth, proving she doesn't need anyone\n\n**[[Jax]]** — Nervous, conflicted, decent person in a bad situation. Can be turned with persuasion or proof that the party won't harm him.\n- *Voice:* Hesitant, quick to agree, whispered asides\n- *Motivation:* Survival, redemption if offered a way out\n\n### Special NPCs\n\n**[[Gruff]]** — Simple, direct, surprisingly fair. Demands \"toll\" but can be negotiated with. Accepts food, shiny objects, or a good riddle.\n- *Voice:* Deep, slow, simple sentences\n- *Motivation:* Do his job (guard bridge), collect tolls, eat\n\n**[[Elder Moonwhisper]]** — Ethereal, ancient, speaks in flowing sentences. Knows the attunement ritual. Will help if the party shows respect.\n- *Voice:* Musical, distant, prophetic\n- *Motivation:* Serve the moon goddess, protect the shrine, restore the ward-stones",
+      "tags": [
+        "npcs",
+        "reference"
+      ],
+      "starred": false,
+      "created_at": "2026-02-18 15:11:54",
+      "updated_at": "2026-02-18 15:11:54",
+      "id": 10,
+      "campaign_id": 12
+    }
+  ],
+  "session_preps": [
+    {
+      "title": "Session 1 — The Festival of the Fallen Star",
+      "status": "active",
+      "strong_start": "The party stands in Cresthaven's town square as the Starfall Festival reaches its peak. Lanterns sway in the warm summer breeze, musicians play a lively reel, and the smell of roasted chestnuts fills the air. [[Mayor Bramwell]] raises his goblet for a toast — and then the sky splits open. A blazing streak of white-gold light arcs across the heavens and slams into the Silverwood with a thunderous boom that shakes the ground. Festival-goers scream, goblets shatter, and the music stops. In the stunned silence, [[Sage Ilara]] pushes through the crowd, eyes wide: \"The ward-stones... that light — it could be the key to restoring them! Someone must retrieve it before its power fades — or before someone else claims it first.\"",
+      "scenes": [
+        {
+          "text": "Festival Celebration — Gather information at the Starfall Tavern, talk to NPCs, enjoy festival games.",
+          "done": false,
+          "location_ids": [
+            48
+          ]
+        },
+        {
+          "text": "Into the Silverwood — Navigate the forest, meet [[Old Willow]] for guidance on reaching the crater.",
+          "done": false,
+          "location_ids": [
+            49
+          ]
+        },
+        {
+          "text": "The Starfall Crater — Discover the meteorite and experience its magical energy. Collect Starfire Shards.",
+          "done": false,
+          "location_ids": [
+            50
+          ]
+        },
+        {
+          "text": "The Troll's Toll — Negotiate with or fight [[Gruff]] at the Old Bridge to cross the ravine.",
+          "done": false,
+          "location_ids": [
+            52
+          ]
+        },
+        {
+          "text": "The Moonrise Shrine — Learn the connection between the meteorite and the ward-stones from [[Elder Moonwhisper]].",
+          "done": false,
+          "location_ids": [
+            53
+          ]
+        },
+        {
+          "text": "Tracking the Crimson Fang — Follow signs of bandit activity through the forest. [[Fenris]] may appear with intel.",
+          "done": false,
+          "location_ids": [
+            49
+          ]
+        },
+        {
+          "text": "The Crimson Fang Hideout — Confront [[Raven]], potentially turn [[Jax]], recover the Fallen Star.",
+          "done": false,
+          "location_ids": [
+            51
+          ]
+        },
+        {
+          "text": "Festival Finale — Return the Fallen Star to [[Sage Ilara]] and celebrate victory at the festival.",
+          "done": false,
+          "location_ids": [
+            48
+          ]
+        }
+      ],
+      "secrets": [
+        {
+          "text": "The Fallen Star is a fragment of the original ward-stone that protected Cresthaven centuries ago. [[Sage Ilara]] can confirm this if asked.",
+          "revealed": false,
+          "location_ids": [
+            53,
+            48
+          ]
+        },
+        {
+          "text": "[[Raven]] was once a respected scout from a neighboring town before turning to banditry. [[Jax]] knows the full story.",
+          "revealed": false,
+          "location_ids": [
+            51
+          ]
+        },
+        {
+          "text": "The meteorite's energy is attracting dangerous creatures — the longer it stays in the open, the more monsters will appear.",
+          "revealed": false,
+          "location_ids": [
+            50,
+            49
+          ]
+        },
+        {
+          "text": "[[Gruff]] the troll was hired by [[Elder Moonwhisper]] to guard the bridge and keep bandits from the shrine. He can be reasoned with.",
+          "revealed": false,
+          "location_ids": [
+            52,
+            53
+          ]
+        },
+        {
+          "text": "[[Jax]] wants out of the Crimson Fang. If approached carefully, he'll help the party from inside.",
+          "revealed": false,
+          "location_ids": [
+            51
+          ]
+        },
+        {
+          "text": "The Moonrise Shrine can be used to attune the Fallen Star. Once attuned, it permanently restores the ward-stones.",
+          "revealed": false,
+          "location_ids": [
+            53
+          ]
+        },
+        {
+          "text": "[[Old Willow]] knows a hidden shortcut to the Bandit Camp that avoids the most dangerous parts of the forest.",
+          "revealed": false,
+          "location_ids": [
+            49,
+            51
+          ]
+        }
+      ],
+      "notes": "Key decision points: Will the party negotiate with Gruff or fight? Will they try to turn Jax? Will they go straight for the crater or explore first? The Crimson Fang encounter is the climax — try to steer toward it naturally. If the party is struggling, have Fenris appear with helpful information.",
+      "created_at": "2026-02-18 15:11:31",
+      "updated_at": "2026-02-18 15:15:01",
+      "id": 5,
+      "campaign_id": 12
+    }
+  ],
+  "applied_effects": [
+    {
+      "id": 44,
+      "character_id": 78,
+      "status_effect_definition_id": 46,
+      "applied_at": "2026-02-18 16:05:47",
+      "remaining_rounds": null,
+      "remaining_hours": 4
+    },
+    {
+      "id": 45,
+      "character_id": 79,
+      "status_effect_definition_id": 46,
+      "applied_at": "2026-02-18 16:05:47",
+      "remaining_rounds": null,
+      "remaining_hours": 4
+    },
+    {
+      "id": 46,
+      "character_id": 80,
+      "status_effect_definition_id": 46,
+      "applied_at": "2026-02-18 16:05:47",
+      "remaining_rounds": null,
+      "remaining_hours": 4
+    },
+    {
+      "id": 47,
+      "character_id": 81,
+      "status_effect_definition_id": 46,
+      "applied_at": "2026-02-18 16:05:47",
+      "remaining_rounds": null,
+      "remaining_hours": 4
+    }
+  ],
+  "character_items": [
+    {
+      "id": 17,
+      "character_id": 78,
+      "item_definition_id": 47,
+      "quantity": 1
+    },
+    {
+      "id": 18,
+      "character_id": 78,
+      "item_definition_id": 52,
+      "quantity": 1
+    },
+    {
+      "id": 19,
+      "character_id": 78,
+      "item_definition_id": 56,
+      "quantity": 2
+    },
+    {
+      "id": 20,
+      "character_id": 79,
+      "item_definition_id": 48,
+      "quantity": 1
+    },
+    {
+      "id": 21,
+      "character_id": 79,
+      "item_definition_id": 54,
+      "quantity": 1
+    },
+    {
+      "id": 22,
+      "character_id": 79,
+      "item_definition_id": 56,
+      "quantity": 1
+    },
+    {
+      "id": 23,
+      "character_id": 80,
+      "item_definition_id": 49,
+      "quantity": 1
+    },
+    {
+      "id": 24,
+      "character_id": 80,
+      "item_definition_id": 53,
+      "quantity": 1
+    },
+    {
+      "id": 25,
+      "character_id": 80,
+      "item_definition_id": 56,
+      "quantity": 1
+    },
+    {
+      "id": 26,
+      "character_id": 80,
+      "item_definition_id": 57,
+      "quantity": 1
+    },
+    {
+      "id": 27,
+      "character_id": 81,
+      "item_definition_id": 50,
+      "quantity": 1
+    },
+    {
+      "id": 28,
+      "character_id": 81,
+      "item_definition_id": 55,
+      "quantity": 1
+    },
+    {
+      "id": 29,
+      "character_id": 81,
+      "item_definition_id": 56,
+      "quantity": 2
+    },
+    {
+      "id": 30,
+      "character_id": 81,
+      "item_definition_id": 57,
+      "quantity": 1
+    },
+    {
+      "id": 31,
+      "character_id": 84,
+      "item_definition_id": 51,
+      "quantity": 1
+    },
+    {
+      "id": 32,
+      "character_id": 87,
+      "item_definition_id": 51,
+      "quantity": 1
+    },
+    {
+      "id": 33,
+      "character_id": 91,
+      "item_definition_id": 60,
+      "quantity": 1
+    }
+  ],
+  "edges": [
+    {
+      "id": 33,
+      "campaign_id": 12,
+      "from_location_id": 48,
+      "to_location_id": 49,
+      "label": "Forest Trail",
+      "travel_hours": 2,
+      "bidirectional": 1,
+      "encounter_modifier": 1,
+      "properties": "{}",
+      "description": "A well-worn path leading from Cresthaven into the Silverwood.",
+      "weather_override": null
+    },
+    {
+      "id": 34,
+      "campaign_id": 12,
+      "from_location_id": 49,
+      "to_location_id": 50,
+      "label": "Overgrown Path",
+      "travel_hours": 3,
+      "bidirectional": 1,
+      "encounter_modifier": 1.3,
+      "properties": "{}",
+      "description": "A barely visible trail through dense undergrowth leading to the crater.",
+      "weather_override": null
+    },
+    {
+      "id": 35,
+      "campaign_id": 12,
+      "from_location_id": 49,
+      "to_location_id": 51,
+      "label": "Hidden Trail",
+      "travel_hours": 1.5,
+      "bidirectional": 1,
+      "encounter_modifier": 1.5,
+      "properties": "{}",
+      "description": "A concealed path through the forest leading to the bandit camp.",
+      "weather_override": null
+    },
+    {
+      "id": 36,
+      "campaign_id": 12,
+      "from_location_id": 48,
+      "to_location_id": 52,
+      "label": "Mountain Road",
+      "travel_hours": 2,
+      "bidirectional": 1,
+      "encounter_modifier": 0.8,
+      "properties": "{}",
+      "description": "A winding road carved into the mountainside leading to the Old Bridge.",
+      "weather_override": null
+    },
+    {
+      "id": 37,
+      "campaign_id": 12,
+      "from_location_id": 52,
+      "to_location_id": 53,
+      "label": "Shrine Path",
+      "travel_hours": 1,
+      "bidirectional": 1,
+      "encounter_modifier": 0.3,
+      "properties": "{}",
+      "description": "A peaceful stone-paved path ascending to the Moonrise Shrine.",
+      "weather_override": null
+    },
+    {
+      "id": 38,
+      "campaign_id": 12,
+      "from_location_id": 49,
+      "to_location_id": 54,
+      "label": "Game Trail",
+      "travel_hours": 1,
+      "bidirectional": 1,
+      "encounter_modifier": 1.4,
+      "properties": "{}",
+      "description": "A narrow animal trail winding through the forest toward a tangled hollow.",
+      "weather_override": null
+    },
+    {
+      "id": 39,
+      "campaign_id": 12,
+      "from_location_id": 48,
+      "to_location_id": 55,
+      "label": "Ridge Trail",
+      "travel_hours": 3,
+      "bidirectional": 1,
+      "encounter_modifier": 1,
+      "properties": "{}",
+      "description": "A steep trail climbing from Cresthaven up to the mountain pass.",
+      "weather_override": null
+    },
+    {
+      "id": 40,
+      "campaign_id": 12,
+      "from_location_id": 52,
+      "to_location_id": 49,
+      "label": "Ravine Shortcut",
+      "travel_hours": 2,
+      "bidirectional": 1,
+      "encounter_modifier": 1.2,
+      "properties": "{}",
+      "description": "A rough path descending from the bridge into the forest via the ravine walls.",
+      "weather_override": null
+    },
+    {
+      "id": 41,
+      "campaign_id": 12,
+      "from_location_id": 55,
+      "to_location_id": 52,
+      "label": "Cliffside Path",
+      "travel_hours": 2,
+      "bidirectional": 1,
+      "encounter_modifier": 1.1,
+      "properties": "{}",
+      "description": "A narrow and precarious path along the cliff face connecting the pass to the bridge.",
+      "weather_override": null
+    }
+  ],
+  "environment": {
+    "campaign_id": 12,
+    "current_hour": 16,
+    "current_minute": 0,
+    "current_day": 14,
+    "current_month": 7,
+    "current_year": 1272,
+    "weather": "Clear",
+    "environment_notes": "",
+    "current_location_id": 48,
+    "current_edge_id": null,
+    "edge_progress": 0,
+    "last_encounter_at": null,
+    "combat_state": null
+  },
+  "session_log": [
+    {
+      "id": 589,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 15:09:29",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Battleaxe\" to \"Thorin Ironshield\"",
+      "game_time": "0001-01-01T12:00"
+    },
+    {
+      "id": 590,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 15:09:29",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Chain Mail\" to \"Thorin Ironshield\"",
+      "game_time": "0001-01-01T12:00"
+    },
+    {
+      "id": 591,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 15:09:29",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Healing Potion\" to \"Thorin Ironshield\"",
+      "game_time": "0001-01-01T12:00"
+    },
+    {
+      "id": 592,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 15:09:29",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Arcane Staff\" to \"Elara Nightbloom\"",
+      "game_time": "0001-01-01T12:00"
+    },
+    {
+      "id": 593,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 15:09:29",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Mage Robes\" to \"Elara Nightbloom\"",
+      "game_time": "0001-01-01T12:00"
+    },
+    {
+      "id": 594,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 15:09:30",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Healing Potion\" to \"Elara Nightbloom\"",
+      "game_time": "0001-01-01T12:00"
+    },
+    {
+      "id": 595,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 15:09:30",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Twin Daggers\" to \"Pip Quickfoot\"",
+      "game_time": "0001-01-01T12:00"
+    },
+    {
+      "id": 596,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 15:09:31",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Leather Armor\" to \"Pip Quickfoot\"",
+      "game_time": "0001-01-01T12:00"
+    },
+    {
+      "id": 597,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 15:09:31",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Healing Potion\" to \"Pip Quickfoot\"",
+      "game_time": "0001-01-01T12:00"
+    },
+    {
+      "id": 598,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 15:09:32",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Antidote\" to \"Pip Quickfoot\"",
+      "game_time": "0001-01-01T12:00"
+    },
+    {
+      "id": 599,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 15:09:33",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Holy Mace\" to \"Brother Cedric\"",
+      "game_time": "0001-01-01T12:00"
+    },
+    {
+      "id": 600,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 15:09:34",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Shield of Faith\" to \"Brother Cedric\"",
+      "game_time": "0001-01-01T12:00"
+    },
+    {
+      "id": 601,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 15:09:34",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Healing Potion\" to \"Brother Cedric\"",
+      "game_time": "0001-01-01T12:00"
+    },
+    {
+      "id": 602,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 15:09:35",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Antidote\" to \"Brother Cedric\"",
+      "game_time": "0001-01-01T12:00"
+    },
+    {
+      "id": 603,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 15:09:36",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Longbow\" to \"Captain Rowan\"",
+      "game_time": "0001-01-01T12:00"
+    },
+    {
+      "id": 604,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 15:09:37",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Longbow\" to \"Raven\"",
+      "game_time": "0001-01-01T12:00"
+    },
+    {
+      "id": 605,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 15:09:37",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Ring of Fortitude\" to \"Gruff\"",
+      "game_time": "0001-01-01T12:00"
+    },
+    {
+      "id": 606,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 15:14:10",
+      "entry_type": "environment",
+      "message": "Weather changed to \"Clear\"; Time set manually",
+      "game_time": "1272-07-14T16:00"
+    },
+    {
+      "id": 607,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 15:14:12",
+      "entry_type": "travel",
+      "message": "Party position set to Cresthaven",
+      "game_time": "1272-07-14T16:00"
+    },
+    {
+      "id": 608,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 16:05:47",
+      "entry_type": "effect_applied",
+      "message": "[Rule] Applied \"Blessed\" to \"Thorin Ironshield\"",
+      "game_time": "1272-07-14T16:00"
+    },
+    {
+      "id": 609,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 16:05:47",
+      "entry_type": "effect_applied",
+      "message": "[Rule] Applied \"Blessed\" to \"Elara Nightbloom\"",
+      "game_time": "1272-07-14T16:00"
+    },
+    {
+      "id": 610,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 16:05:47",
+      "entry_type": "effect_applied",
+      "message": "[Rule] Applied \"Blessed\" to \"Pip Quickfoot\"",
+      "game_time": "1272-07-14T16:00"
+    },
+    {
+      "id": 611,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 16:05:47",
+      "entry_type": "effect_applied",
+      "message": "[Rule] Applied \"Blessed\" to \"Brother Cedric\"",
+      "game_time": "1272-07-14T16:00"
+    },
+    {
+      "id": 612,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 16:27:52",
+      "entry_type": "table_roll",
+      "message": "Rolled on \"Festival Activities\": Dancing under the stars — couples and friends whirl to lively fiddle music",
+      "game_time": "1272-07-14T16:00"
+    },
+    {
+      "id": 613,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 16:27:56",
+      "entry_type": "table_roll",
+      "message": "Rolled on \"Festival Activities\": Fortune teller's tent — an old woman with mismatched eyes offers cryptic readings",
+      "game_time": "1272-07-14T16:00"
+    },
+    {
+      "id": 614,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 16:27:58",
+      "entry_type": "table_roll",
+      "message": "Rolled on \"Found Treasure\": 5 gold coins",
+      "game_time": "1272-07-14T16:00"
+    },
+    {
+      "id": 615,
+      "campaign_id": 12,
+      "timestamp": "2026-02-18 16:28:00",
+      "entry_type": "table_roll",
+      "message": "Rolled on \"Silverwood Sounds\": A distant wolf howl — long, mournful, and answered by another deeper in the forest",
+      "game_time": "1272-07-14T16:00"
+    }
+  ]
+}
