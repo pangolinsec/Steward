@@ -36,6 +36,9 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
   // Dice settings
   const [diceSettings, setDiceSettings] = useState({ log_rolls: false });
 
+  // Time advance presets
+  const [timeAdvancePresets, setTimeAdvancePresets] = useState([]);
+
   // Tag preset browser
   const [showTagPresets, setShowTagPresets] = useState(false);
   const [presetBuilderTagKey, setPresetBuilderTagKey] = useState(null);
@@ -57,9 +60,11 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
     attrs, thresholds, calendarConfig, weatherOptions,
     weatherVolatility, transitionTable, encounterSettings,
     rulesSettings, propertyKeyRegistry, seasonOptions, diceSettings,
+    timeAdvancePresets,
   }), [attrs, thresholds, calendarConfig, weatherOptions,
     weatherVolatility, transitionTable, encounterSettings,
-    rulesSettings, propertyKeyRegistry, seasonOptions, diceSettings]);
+    rulesSettings, propertyKeyRegistry, seasonOptions, diceSettings,
+    timeAdvancePresets]);
 
   const isDirty = savedSnapshot.current !== null && savedSnapshot.current !== getCurrentSettings();
 
@@ -95,6 +100,11 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
     setPropertyKeyRegistry(campaign.property_key_registry || []);
     setSeasonOptions(campaign.season_options || ["Spring", "Summer", "Autumn", "Winter"]);
     setDiceSettings(campaign.dice_settings || { log_rolls: false });
+    setTimeAdvancePresets(campaign.time_advance_presets || [
+      { label: "+10m", hours: 0, minutes: 10 },
+      { label: "+1h", hours: 1, minutes: 0 },
+      { label: "+8h", hours: 8, minutes: 0 },
+    ]);
     api.getEnvironment(campaignId).then(setEnv).catch(() => {});
     // Set saved snapshot after state settles
     requestAnimationFrame(() => {
@@ -110,6 +120,11 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
         propertyKeyRegistry: campaign.property_key_registry || [],
         seasonOptions: campaign.season_options || ["Spring", "Summer", "Autumn", "Winter"],
         diceSettings: campaign.dice_settings || { log_rolls: false },
+        timeAdvancePresets: campaign.time_advance_presets || [
+          { label: "+10m", hours: 0, minutes: 10 },
+          { label: "+1h", hours: 1, minutes: 0 },
+          { label: "+8h", hours: 8, minutes: 0 },
+        ],
       });
     });
   }, [campaignId, campaign]);
@@ -129,6 +144,7 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
         property_key_registry: propertyKeyRegistry,
         season_options: seasonOptions,
         dice_settings: diceSettings,
+        time_advance_presets: timeAdvancePresets,
       });
       savedSnapshot.current = getCurrentSettings();
       onUpdate();
@@ -601,6 +617,35 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
               Log dice rolls to session log
             </label>
           </div>
+        </div>
+
+        {/* Time Advance Presets */}
+        <div className="card">
+          <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 12 }}>Time Advance Presets</h3>
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
+            Quick-advance buttons shown in the environment bar and dashboard.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {timeAdvancePresets.map((p, i) => (
+              <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <input type="text" value={p.label} onChange={e => {
+                  const updated = [...timeAdvancePresets]; updated[i] = { ...p, label: e.target.value }; setTimeAdvancePresets(updated);
+                }} style={{ width: 100 }} placeholder="Label" />
+                <input type="number" min="0" value={p.hours} onChange={e => {
+                  const updated = [...timeAdvancePresets]; updated[i] = { ...p, hours: Number(e.target.value) }; setTimeAdvancePresets(updated);
+                }} style={{ width: 60 }} />
+                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>h</span>
+                <input type="number" min="0" max="59" value={p.minutes} onChange={e => {
+                  const updated = [...timeAdvancePresets]; updated[i] = { ...p, minutes: Number(e.target.value) }; setTimeAdvancePresets(updated);
+                }} style={{ width: 60 }} />
+                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>m</span>
+                <button className="btn btn-danger btn-sm" onClick={() => setTimeAdvancePresets(timeAdvancePresets.filter((_, idx) => idx !== i))}>&#x2715;</button>
+              </div>
+            ))}
+          </div>
+          <button className="btn btn-secondary btn-sm" style={{ marginTop: 8 }} onClick={() => setTimeAdvancePresets([...timeAdvancePresets, { label: '', hours: 0, minutes: 30 }])}>
+            + Add Preset
+          </button>
         </div>
 
         {/* Property Key Registry */}

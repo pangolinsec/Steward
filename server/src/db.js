@@ -281,6 +281,16 @@ const migrations = [
   `ALTER TABLE encounter_definitions ADD COLUMN starts_combat INTEGER DEFAULT 0`,
   `ALTER TABLE characters ADD COLUMN spawned_from_encounter_id INTEGER DEFAULT NULL`,
   `ALTER TABLE characters ADD COLUMN archived INTEGER DEFAULT 0`,
+  `ALTER TABLE campaigns ADD COLUMN time_advance_presets TEXT DEFAULT '${JSON.stringify([
+    { label: "+10m", hours: 0, minutes: 10 },
+    { label: "+1h", hours: 1, minutes: 0 },
+    { label: "+8h", hours: 8, minutes: 0 },
+  ])}'`,
+  `ALTER TABLE campaigns ADD COLUMN dashboard_time_presets TEXT DEFAULT '${JSON.stringify([
+    { label: "+15m", hours: 0, minutes: 15 },
+    { label: "+1h", hours: 1, minutes: 0 },
+    { label: "+4h", hours: 4, minutes: 0 },
+  ])}'`,
 ];
 
 for (const sql of migrations) {

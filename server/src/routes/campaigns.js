@@ -17,6 +17,16 @@ function parseCampaign(c) {
     season_options: c.season_options ? JSON.parse(c.season_options) : ["Spring", "Summer", "Autumn", "Winter"],
     custom_tag_presets: JSON.parse(c.custom_tag_presets || '[]'),
     dice_settings: c.dice_settings ? JSON.parse(c.dice_settings) : { log_rolls: false },
+    time_advance_presets: c.time_advance_presets ? JSON.parse(c.time_advance_presets) : [
+      { label: "+10m", hours: 0, minutes: 10 },
+      { label: "+1h", hours: 1, minutes: 0 },
+      { label: "+8h", hours: 8, minutes: 0 },
+    ],
+    dashboard_time_presets: c.dashboard_time_presets ? JSON.parse(c.dashboard_time_presets) : [
+      { label: "+15m", hours: 0, minutes: 15 },
+      { label: "+1h", hours: 1, minutes: 0 },
+      { label: "+4h", hours: 4, minutes: 0 },
+    ],
   };
 }
 
@@ -64,7 +74,7 @@ router.put('/:id', (req, res) => {
 
   const { name, attribute_definitions, time_of_day_thresholds, calendar_config, weather_options,
     encounter_settings, weather_volatility, weather_transition_table, rules_settings, property_key_registry,
-    season_options, custom_tag_presets, dice_settings } = req.body;
+    season_options, custom_tag_presets, dice_settings, time_advance_presets, dashboard_time_presets } = req.body;
 
   db.prepare(`
     UPDATE campaigns SET
@@ -80,7 +90,9 @@ router.put('/:id', (req, res) => {
       property_key_registry = COALESCE(?, property_key_registry),
       season_options = COALESCE(?, season_options),
       custom_tag_presets = COALESCE(?, custom_tag_presets),
-      dice_settings = COALESCE(?, dice_settings)
+      dice_settings = COALESCE(?, dice_settings),
+      time_advance_presets = COALESCE(?, time_advance_presets),
+      dashboard_time_presets = COALESCE(?, dashboard_time_presets)
     WHERE id = ?
   `).run(
     name || null,
@@ -96,6 +108,8 @@ router.put('/:id', (req, res) => {
     season_options ? JSON.stringify(season_options) : null,
     custom_tag_presets ? JSON.stringify(custom_tag_presets) : null,
     dice_settings ? JSON.stringify(dice_settings) : null,
+    time_advance_presets ? JSON.stringify(time_advance_presets) : null,
+    dashboard_time_presets ? JSON.stringify(dashboard_time_presets) : null,
     req.params.id,
   );
 

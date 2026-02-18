@@ -131,9 +131,13 @@ export default function EnvironmentBar({ environment, campaignId, onUpdate, camp
           </div>
         )}
         <div className="env-bar-item" style={{ marginLeft: 'auto' }}>
-          <button className="btn btn-sm btn-secondary" onClick={() => handleAdvance(0, 10)}>+10m</button>
-          <button className="btn btn-sm btn-secondary" onClick={() => handleAdvance(1, 0)}>+1h</button>
-          <button className="btn btn-sm btn-secondary" onClick={() => handleAdvance(8, 0)}>+8h</button>
+          {(campaign?.time_advance_presets || [
+            { label: '+10m', hours: 0, minutes: 10 },
+            { label: '+1h', hours: 1, minutes: 0 },
+            { label: '+8h', hours: 8, minutes: 0 },
+          ]).map((p, i) => (
+            <button key={i} className="btn btn-sm btn-secondary" onClick={() => handleAdvance(p.hours, p.minutes)}>{p.label}</button>
+          ))}
           <button className="btn btn-sm btn-ghost" onClick={() => setShowAdvance(!showAdvance)}>Custom</button>
           <span style={{ width: 1, height: 16, background: 'var(--border)', margin: '0 2px' }} />
           <button className="btn btn-sm btn-secondary" onClick={async () => {

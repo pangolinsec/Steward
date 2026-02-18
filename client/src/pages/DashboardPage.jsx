@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as api from '../api';
 import DiceRoller from '../components/DiceRoller';
@@ -178,12 +178,11 @@ export default function DashboardPage({ campaignId, campaign }) {
                 {environment.environment_notes}
               </div>
             )}
-            <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
-              <button className="btn btn-sm btn-secondary" onClick={() => handleAdvance(0, 10)}>+10m</button>
-              <button className="btn btn-sm btn-secondary" onClick={() => handleAdvance(1, 0)}>+1h</button>
-            </div>
           </div>
         )}
+
+        {/* Quick Advance */}
+        <QuickAdvanceCard campaignId={campaignId} campaign={campaign} onAdvance={handleAdvance} processEvents={processEvents} onUpdate={load} />
 
         {/* Combat Status */}
         <div className="dashboard-card">
@@ -286,6 +285,127 @@ export default function DashboardPage({ campaignId, campaign }) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+const DEFAULT_DASHBOARD_PRESETS = [
+  { label: '+15m', hours: 0, minutes: 15 },
+  { label: '+1h', hours: 1, minutes: 0 },
+  { label: '+4h', hours: 4, minutes: 0 },
+];
+
+function formatPresetTime(hours, minutes) {
+  const parts = [];
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
+  return parts.join(' ') || '0m';
+}
+
+function QuickAdvanceCard({ campaignId, campaign, onAdvance, processEvents, onUpdate }) {
+  const [editing, setEditing] = useState(false);
+  const [presets, setPresets] = useState(campaign?.dashboard_time_presets || DEFAULT_DASHBOARD_PRESETS);
+  const dragIdx = useRef(null);
+  const dragOverIdx = useRef(null);
+
+  useEffect(() => {
+    if (campaign?.dashboard_time_presets) setPresets(campaign.dashboard_time_presets);
+  }, [campaign?.dashboard_time_presets]);
+
+  const savePresets = async (newPresets) => {
+    setPresets(newPresets);
+    await api.updateCampaign(campaignId, { dashboard_time_presets: newPresets });
+  };
+
+  const handleDone = () => {
+    savePresets(presets);
+    setEditing(false);
+  };
+
+  const handleDragEnd = () => {
+    if (dragIdx.current === null || dragOverIdx.current === null || dragIdx.current === dragOverIdx.current) {
+      dragIdx.current = null;
+      dragOverIdx.current = null;
+      return;
+    }
+    const reordered = [...presets];
+    const [moved] = reordered.splice(dragIdx.current, 1);
+    reordered.splice(dragOverIdx.current, 0, moved);
+    setPresets(reordered);
+    dragIdx.current = null;
+    dragOverIdx.current = null;
+  };
+
+  return (
+    <div className="dashboard-card">
+      <div className="dashboard-card-header">
+        <span>Quick Advance</span>
+        {!editing ? (
+          <button className="btn btn-ghost btn-sm" style={{ fontSize: 10, textTransform: 'none' }} onClick={() => setEditing(true)}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ verticalAlign: 'middle' }}>
+              <path d="M12 15.5A3.5 3.5 0 1 0 8.5 12 3.5 3.5 0 0 0 12 15.5Z"/><path d="M19.43 12.98a7.79 7.79 0 0 0 0-1.96l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.61-.22l-2.49 1a7.3 7.3 0 0 0-1.69-.98l-.38-2.65A.49.49 0 0 0 14 2h-4a.49.49 0 0 0-.49.42l-.38 2.65a7.3 7.3 0 0 0-1.69.98l-2.49-1a.5.5 0 0 0-.61.22l-2 3.46a.5.5 0 0 0 .12.64l2.11 1.65a7.79 7.79 0 0 0 0 1.96l-2.11 1.65a.5.5 0 0 0-.12.64l2 3.46a.5.5 0 0 0 .61.22l2.49-1a7.3 7.3 0 0 0 1.69.98l.38 2.65A.49.49 0 0 0 10 22h4a.49.49 0 0 0 .49-.42l.38-2.65a7.3 7.3 0 0 0 1.69-.98l2.49 1a.5.5 0 0 0 .61-.22l2-3.46a.5.5 0 0 0-.12-.64Z"/>
+            </svg>
+          </button>
+        ) : (
+          <button className="btn btn-primary btn-sm" style={{ fontSize: 10 }} onClick={handleDone}>Done</button>
+        )}
+      </div>
+      {editing ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {presets.map((p, i) => (
+            <div key={i}
+              draggable
+              onDragStart={() => { dragIdx.current = i; }}
+              onDragOver={e => { e.preventDefault(); dragOverIdx.current = i; }}
+              onDragEnd={handleDragEnd}
+              style={{ display: 'flex', gap: 4, alignItems: 'center', padding: '3px 0', borderRadius: 'var(--radius-sm)', cursor: 'grab' }}
+            >
+              <span style={{ color: 'var(--text-muted)', fontSize: 11, cursor: 'grab', padding: '0 2px', userSelect: 'none' }} title="Drag to reorder">&#x2630;</span>
+              <input type="text" value={p.label} onChange={e => {
+                const updated = [...presets]; updated[i] = { ...p, label: e.target.value }; setPresets(updated);
+              }} style={{ flex: 1, fontSize: 12 }} placeholder="Label" />
+              <input type="number" min="0" value={p.hours} onChange={e => {
+                const updated = [...presets]; updated[i] = { ...p, hours: Number(e.target.value) }; setPresets(updated);
+              }} style={{ width: 48, fontSize: 12 }} title="Hours" />
+              <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>h</span>
+              <input type="number" min="0" max="59" value={p.minutes} onChange={e => {
+                const updated = [...presets]; updated[i] = { ...p, minutes: Number(e.target.value) }; setPresets(updated);
+              }} style={{ width: 48, fontSize: 12 }} title="Minutes" />
+              <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>m</span>
+              <button className="btn btn-danger btn-sm" style={{ padding: '2px 6px', fontSize: 10 }}
+                onClick={() => setPresets(presets.filter((_, idx) => idx !== i))}>&#x2715;</button>
+            </div>
+          ))}
+          <button className="btn btn-secondary btn-sm" style={{ alignSelf: 'flex-start', marginTop: 4 }}
+            onClick={() => setPresets([...presets, { label: '', hours: 0, minutes: 30 }])}>+ Add Preset</button>
+        </div>
+      ) : (
+        <>
+          {presets.length === 0 ? (
+            <p style={{ color: 'var(--text-muted)', fontSize: 12 }}>No presets configured. Click the gear to add some.</p>
+          ) : (
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {presets.map((p, i) => (
+                <button key={i} className="btn btn-sm btn-secondary" onClick={() => onAdvance(p.hours, p.minutes)}
+                  title={formatPresetTime(p.hours, p.minutes)}>
+                  {p.label}
+                  <span style={{ marginLeft: 4, fontSize: 10, color: 'var(--text-muted)' }}>{formatPresetTime(p.hours, p.minutes)}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: 6, marginTop: 8, borderTop: '1px solid var(--border)', paddingTop: 8 }}>
+            <button className="btn btn-sm btn-secondary" onClick={async () => {
+              const result = await api.rest(campaignId, 'short');
+              processEvents(result.events); onUpdate();
+            }}>Short Rest</button>
+            <button className="btn btn-sm btn-secondary" onClick={async () => {
+              const result = await api.rest(campaignId, 'long');
+              processEvents(result.events); onUpdate();
+            }}>Long Rest</button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
