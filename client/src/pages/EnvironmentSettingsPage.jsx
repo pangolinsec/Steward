@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useContext } from 'react';
+import { UNSAFE_NavigationContext as NavigationContext } from 'react-router-dom';
 import * as api from '../api';
 
 export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate }) {
@@ -32,6 +33,39 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
     typeof entry === 'string' ? { key: entry, values: [] } : entry
   );
 
+  // Dirty tracking — snapshot of saved state
+  const savedSnapshot = useRef(null);
+  const [pendingNavigation, setPendingNavigation] = useState(null);
+
+  const getCurrentSettings = useCallback(() => JSON.stringify({
+    attrs, thresholds, calendarConfig, weatherOptions,
+    weatherVolatility, transitionTable, encounterSettings,
+    rulesSettings, propertyKeyRegistry,
+  }), [attrs, thresholds, calendarConfig, weatherOptions,
+    weatherVolatility, transitionTable, encounterSettings,
+    rulesSettings, propertyKeyRegistry]);
+
+  const isDirty = savedSnapshot.current !== null && savedSnapshot.current !== getCurrentSettings();
+
+  // Navigation guard — beforeunload for browser navigation
+  useEffect(() => {
+    if (!isDirty) return;
+    const handler = (e) => { e.preventDefault(); e.returnValue = ''; };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isDirty]);
+
+  // Navigation guard — intercept in-app navigation
+  const { navigator } = useContext(NavigationContext);
+  useEffect(() => {
+    if (!isDirty) return;
+    const originalPush = navigator.push;
+    const originalReplace = navigator.replace;
+    navigator.push = (...args) => setPendingNavigation({ fn: () => originalPush.apply(navigator, args) });
+    navigator.replace = (...args) => setPendingNavigation({ fn: () => originalReplace.apply(navigator, args) });
+    return () => { navigator.push = originalPush; navigator.replace = originalReplace; };
+  }, [isDirty, navigator]);
+
   useEffect(() => {
     if (!campaignId || !campaign) return;
     setAttrs(campaign.attribute_definitions || []);
@@ -44,6 +78,20 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
     setRulesSettings(campaign.rules_settings || { engine_enabled: true, cascade_depth_limit: 3 });
     setPropertyKeyRegistry(campaign.property_key_registry || []);
     api.getEnvironment(campaignId).then(setEnv).catch(() => {});
+    // Set saved snapshot after state settles
+    requestAnimationFrame(() => {
+      savedSnapshot.current = JSON.stringify({
+        attrs: campaign.attribute_definitions || [],
+        thresholds: campaign.time_of_day_thresholds || [],
+        calendarConfig: campaign.calendar_config || { months: [], weekdays: [] },
+        weatherOptions: campaign.weather_options || [],
+        weatherVolatility: campaign.weather_volatility ?? 0.3,
+        transitionTable: campaign.weather_transition_table || null,
+        encounterSettings: campaign.encounter_settings || { enabled: false, base_rate: 0.1, min_interval_hours: 1 },
+        rulesSettings: campaign.rules_settings || { engine_enabled: true, cascade_depth_limit: 3 },
+        propertyKeyRegistry: campaign.property_key_registry || [],
+      });
+    });
   }, [campaignId, campaign]);
 
   const saveCampaignSettings = async () => {
@@ -60,6 +108,7 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
         rules_settings: rulesSettings,
         property_key_registry: propertyKeyRegistry,
       });
+      savedSnapshot.current = getCurrentSettings();
       onUpdate();
     } finally {
       setSaving(false);
@@ -105,9 +154,12 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
     <div className="page">
       <div className="page-header">
         <h2>Campaign Settings</h2>
-        <button className="btn btn-primary" onClick={saveCampaignSettings} disabled={saving}>
-          {saving ? 'Saving...' : 'Save Settings'}
-        </button>
+        <div className="inline-flex gap-sm" style={{ alignItems: 'center' }}>
+          {isDirty && <span style={{ fontSize: 12, color: 'var(--yellow)' }}>Unsaved changes</span>}
+          <button className="btn btn-primary" onClick={saveCampaignSettings} disabled={saving}>
+            {saving ? 'Saving...' : 'Save Settings'}
+          </button>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
@@ -429,6 +481,34 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
           }}>+ Add Month</button>
         </div>
       </div>
+      {pendingNavigation && (
+        <div className="modal-overlay" onClick={() => setPendingNavigation(null)}>
+          <div className="modal" style={{ maxWidth: 420 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Unsaved Changes</h3>
+              <button className="btn btn-ghost btn-sm" onClick={() => setPendingNavigation(null)}>&#x2715;</button>
+            </div>
+            <div className="modal-body">
+              <p style={{ color: 'var(--text-secondary)' }}>You have unsaved changes to campaign settings. What would you like to do?</p>
+            </div>
+            <div className="modal-footer" style={{ justifyContent: 'flex-end', gap: 8 }}>
+              <button className="btn btn-secondary" onClick={() => setPendingNavigation(null)}>Stay on Page</button>
+              <button className="btn btn-danger" onClick={() => {
+                savedSnapshot.current = null;
+                const nav = pendingNavigation.fn;
+                setPendingNavigation(null);
+                nav();
+              }}>Discard Changes</button>
+              <button className="btn btn-primary" onClick={async () => {
+                await saveCampaignSettings();
+                const nav = pendingNavigation.fn;
+                setPendingNavigation(null);
+                nav();
+              }}>Save & Leave</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
