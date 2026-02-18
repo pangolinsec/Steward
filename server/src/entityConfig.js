@@ -47,6 +47,7 @@ const ENTITY_CONFIG = {
       { name: 'description',     type: 'text', default: '' },
       { name: 'portrait_url',    type: 'text', default: '' },
       { name: 'base_attributes', type: 'json', default: {} },
+      { name: 'max_attributes',  type: 'json', default: {} },
       { name: 'dm_notes',        type: 'text', default: '' },
     ],
     modifierColumns: [],

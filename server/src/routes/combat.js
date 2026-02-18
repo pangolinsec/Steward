@@ -16,6 +16,7 @@ function enrichCombatState(state, campaignId) {
       portrait_url: char.portrait_url || '',
       dm_notes: char.dm_notes || '',
       base_attributes: stats?.base || {},
+      max_attributes: stats?.max_attributes || {},
       effective_attributes: stats?.effective || {},
       applied_effects: stats?.effects_breakdown || [],
     };

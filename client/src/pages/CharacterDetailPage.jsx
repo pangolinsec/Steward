@@ -25,7 +25,7 @@ export default function CharacterDetailPage({ campaignId, campaign }) {
 
   if (!data) return <div className="page"><p style={{ color: 'var(--text-muted)' }}>Loading...</p></div>;
 
-  const { character, base, effects_breakdown, items_breakdown, effective } = data;
+  const { character, base, max_attributes, effects_breakdown, items_breakdown, effective } = data;
   const attrs = campaign?.attribute_definitions || [];
 
   const handleWikilinkClick = async (e) => {
@@ -143,12 +143,13 @@ export default function CharacterDetailPage({ campaignId, campaign }) {
               {attrs.filter(a => a.type !== 'tag').map(a => {
                 const b = base[a.key] ?? 0;
                 const e = effective[a.key] ?? 0;
+                const maxVal = a.has_max ? (max_attributes?.[a.key] ?? null) : null;
                 const diff = e - b;
                 const breakdown = getAttrBreakdown(a.key);
                 return (
                   <tr key={a.key}>
                     <td className="attr-name">{a.label}</td>
-                    <td>{b}</td>
+                    <td>{b}{maxVal != null ? ` / ${maxVal}` : ''}</td>
                     <td>
                       {breakdown.length === 0 ? (
                         <span className="mod-neutral">--</span>
@@ -374,6 +375,7 @@ function ItemPicker({ campaignId, charId, onClose, onAssigned }) {
 
 function EditCharacterModal({ campaignId, character, attrs, onClose, onSaved }) {
   const base = character.base_attributes || {};
+  const max = character.max_attributes || {};
   const [name, setName] = useState(character.name);
   const [type, setType] = useState(character.type);
   const [description, setDescription] = useState(character.description || '');
@@ -385,11 +387,16 @@ function EditCharacterModal({ campaignId, character, attrs, onClose, onSaved }) 
     attrs.forEach(a => { result[a.key] = base[a.key] ?? (a.type === 'tag' ? '' : 10); });
     return result;
   });
+  const [maxAttrs, setMaxAttrs] = useState(() => {
+    const result = {};
+    attrs.filter(a => a.has_max).forEach(a => { result[a.key] = max[a.key] ?? base[a.key] ?? 10; });
+    return result;
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     await api.updateCharacter(campaignId, character.id, {
-      name, type, description, portrait_url: portraitUrl, base_attributes: baseAttrs, dm_notes: dmNotes,
+      name, type, description, portrait_url: portraitUrl, base_attributes: baseAttrs, max_attributes: maxAttrs, dm_notes: dmNotes,
     });
     onSaved();
   };
@@ -442,6 +449,16 @@ function EditCharacterModal({ campaignId, character, attrs, onClose, onSaved }) 
                         <option value="">—</option>
                         {(a.options || []).map(opt => <option key={opt} value={opt}>{opt}</option>)}
                       </select>
+                    ) : a.has_max ? (
+                      <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                        <input type="number" value={baseAttrs[a.key] ?? 10}
+                          onChange={e => setBaseAttrs({ ...baseAttrs, [a.key]: Number(e.target.value) })}
+                          style={{ flex: 1 }} title="Current" />
+                        <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>/</span>
+                        <input type="number" value={maxAttrs[a.key] ?? 10}
+                          onChange={e => setMaxAttrs({ ...maxAttrs, [a.key]: Number(e.target.value) })}
+                          style={{ flex: 1 }} title="Max" />
+                      </div>
                     ) : (
                       <input type="number" value={baseAttrs[a.key] ?? 10} onChange={e => setBaseAttrs({ ...baseAttrs, [a.key]: Number(e.target.value) })} />
                     )}

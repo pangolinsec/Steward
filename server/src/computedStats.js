@@ -5,6 +5,7 @@ function getComputedStats(characterId) {
   if (!char) return null;
 
   const base = JSON.parse(char.base_attributes);
+  const max_attributes = JSON.parse(char.max_attributes || '{}');
 
   const appliedEffects = db.prepare(`
     SELECT ae.*, sed.name, sed.modifiers, sed.tags, sed.duration_type, sed.duration_value, sed.description
@@ -65,8 +66,9 @@ function getComputedStats(characterId) {
   }
 
   return {
-    character: { ...char, base_attributes: base },
+    character: { ...char, base_attributes: base, max_attributes },
     base,
+    max_attributes,
     effects_breakdown: effectsBreakdown,
     items_breakdown: itemsBreakdown,
     effective,

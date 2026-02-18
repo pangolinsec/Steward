@@ -35,6 +35,7 @@ router.get('/', (req, res) => {
   res.json(characters.map(c => ({
     ...c,
     base_attributes: JSON.parse(c.base_attributes),
+    max_attributes: JSON.parse(c.max_attributes || '{}'),
   })));
 });
 
@@ -43,7 +44,7 @@ router.get('/:charId', (req, res) => {
   const char = db.prepare('SELECT * FROM characters WHERE id = ? AND campaign_id = ?')
     .get(req.params.charId, req.params.id);
   if (!char) return res.status(404).json({ error: 'Character not found' });
-  res.json({ ...char, base_attributes: JSON.parse(char.base_attributes) });
+  res.json({ ...char, base_attributes: JSON.parse(char.base_attributes), max_attributes: JSON.parse(char.max_attributes || '{}') });
 });
 
 // GET computed stats for a character
@@ -59,21 +60,22 @@ router.get('/:charId/computed', (req, res) => {
 
 // POST create character
 router.post('/', (req, res) => {
-  const { name, type, description, portrait_url, base_attributes, dm_notes } = req.body;
+  const { name, type, description, portrait_url, base_attributes, max_attributes, dm_notes } = req.body;
   if (!name || !type) return res.status(400).json({ error: 'Name and type are required' });
 
   const result = db.prepare(`
-    INSERT INTO characters (campaign_id, name, type, description, portrait_url, base_attributes, dm_notes)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO characters (campaign_id, name, type, description, portrait_url, base_attributes, max_attributes, dm_notes)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     req.params.id, name, type,
     description || '', portrait_url || '',
     JSON.stringify(base_attributes || {}),
+    JSON.stringify(max_attributes || {}),
     dm_notes || '',
   );
 
   const char = db.prepare('SELECT * FROM characters WHERE id = ?').get(result.lastInsertRowid);
-  res.status(201).json({ ...char, base_attributes: JSON.parse(char.base_attributes) });
+  res.status(201).json({ ...char, base_attributes: JSON.parse(char.base_attributes), max_attributes: JSON.parse(char.max_attributes || '{}') });
 });
 
 // PUT update character
@@ -82,7 +84,7 @@ router.put('/:charId', (req, res) => {
     .get(req.params.charId, req.params.id);
   if (!char) return res.status(404).json({ error: 'Character not found' });
 
-  const { name, type, description, portrait_url, base_attributes, dm_notes } = req.body;
+  const { name, type, description, portrait_url, base_attributes, max_attributes, dm_notes } = req.body;
 
   db.prepare(`
     UPDATE characters SET
@@ -91,6 +93,7 @@ router.put('/:charId', (req, res) => {
       description = COALESCE(?, description),
       portrait_url = COALESCE(?, portrait_url),
       base_attributes = COALESCE(?, base_attributes),
+      max_attributes = COALESCE(?, max_attributes),
       dm_notes = COALESCE(?, dm_notes)
     WHERE id = ? AND campaign_id = ?
   `).run(
@@ -98,12 +101,13 @@ router.put('/:charId', (req, res) => {
     description !== undefined ? description : null,
     portrait_url !== undefined ? portrait_url : null,
     base_attributes ? JSON.stringify(base_attributes) : null,
+    max_attributes ? JSON.stringify(max_attributes) : null,
     dm_notes !== undefined ? dm_notes : null,
     req.params.charId, req.params.id,
   );
 
   const updated = db.prepare('SELECT * FROM characters WHERE id = ?').get(req.params.charId);
-  res.json({ ...updated, base_attributes: JSON.parse(updated.base_attributes) });
+  res.json({ ...updated, base_attributes: JSON.parse(updated.base_attributes), max_attributes: JSON.parse(updated.max_attributes || '{}') });
 });
 
 // DELETE character

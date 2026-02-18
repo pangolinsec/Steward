@@ -129,7 +129,19 @@ export function CombatTracker({ campaignId, campaign, combatState, onUpdate, onE
   const [expandedNotes, setExpandedNotes] = useState({});
 
   const numericAttrs = campaign?.attribute_definitions?.filter(a => a.type !== 'tag') || [];
-  const attrs = numericAttrs.some(a => a.pinned) ? numericAttrs.filter(a => a.pinned) : numericAttrs;
+  const pinnedOrAll = numericAttrs.some(a => a.pinned) ? numericAttrs.filter(a => a.pinned) : numericAttrs;
+  const catOrder = { resource: 0, defense: 1, stat: 2 };
+  const attrs = [...pinnedOrAll].sort((a, b) => (catOrder[a.category] ?? 2) - (catOrder[b.category] ?? 2));
+
+  const getResourceStyle = (cur, maxVal) => {
+    if (maxVal == null || maxVal <= 0) return {};
+    const pct = (cur / maxVal) * 100;
+    if (pct >= 100) return { color: 'var(--green)', fontWeight: 700 };
+    if (pct >= 66) return { color: 'var(--green)' };
+    if (pct >= 34) return { color: 'var(--yellow)' };
+    if (pct >= 10) return { color: 'var(--red)' };
+    return { color: 'var(--red)', fontWeight: 700 };
+  };
   const currentCombatant = combatState.combatants[combatState.turn_index];
 
   const handleNextTurn = async () => {
@@ -248,11 +260,14 @@ export function CombatTracker({ campaignId, campaign, combatState, onUpdate, onE
                 {attrs.map(a => {
                   const val = c.effective_attributes?.[a.key];
                   const base = c.base_attributes?.[a.key];
+                  const cat = a.category || 'stat';
+                  const maxVal = a.has_max ? c.max_attributes?.[a.key] : null;
+                  const resStyle = cat === 'resource' && maxVal != null ? getResourceStyle(val ?? 0, maxVal) : {};
                   const flashKey = `${c.character_id}-${a.key}`;
                   const flashType = flashCells[flashKey];
                   const isEditingThis = deltaAttr?.charId === c.character_id && deltaAttr?.attrKey === a.key;
                   return (
-                    <div key={a.key} className={`combatant-attr${flashType ? ` attr-flash-${flashType}` : ''}`}
+                    <div key={a.key} className={`combatant-attr combatant-attr-${cat}${flashType ? ` attr-flash-${flashType}` : ''}`}
                       style={{ position: 'relative' }}
                       onClick={() => {
                         if (!isEditingThis) {
@@ -261,7 +276,9 @@ export function CombatTracker({ campaignId, campaign, combatState, onUpdate, onE
                         }
                       }}>
                       <span className="combatant-attr-label">{a.label.substring(0, 3).toUpperCase()}</span>
-                      <span className="combatant-attr-value">{val ?? '\u2014'}</span>
+                      <span className="combatant-attr-value" style={resStyle}>
+                        {val ?? '\u2014'}{a.has_max && maxVal != null ? `/${maxVal}` : ''}
+                      </span>
                       {isEditingThis && (
                         <div className="delta-popover" onClick={e => e.stopPropagation()}>
                           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>

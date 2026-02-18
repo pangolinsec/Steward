@@ -1312,6 +1312,42 @@ textarea {
   font-weight: 600;
   color: var(--text-primary);
 }
+.combatant-attr-resource {
+  border-color: var(--green-dim);
+  background: color-mix(in srgb, var(--green-dim) 20%, var(--bg-input));
+}
+.combatant-attr-defense {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg-input));
+}
+.combatant-attr-defense .combatant-attr-value {
+  color: var(--accent);
+}
+
+/* Attribute Chips (compact views: character cards, dashboard) */
+.attr-chip {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+}
+.attr-chip-sm { font-size: 10px; }
+.attr-chip-label {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+.attr-chip-resource {
+  font-weight: 600;
+}
+.attr-chip-resource .attr-chip-label { color: var(--text-secondary); }
+.attr-chip-defense {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 4px;
+  padding: 1px 5px;
+  color: var(--accent);
+}
+.attr-chip-defense .attr-chip-label { color: var(--accent); opacity: 0.7; }
+
 .combatant-effects {
   display: flex;
   gap: 4px;

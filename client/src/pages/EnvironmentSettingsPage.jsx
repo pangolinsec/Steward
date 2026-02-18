@@ -228,18 +228,33 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
 
           {/* Numeric Attributes */}
           <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2, display: 'block' }}>Numeric Attributes</label>
-          <p style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>&#x2605; Pin attributes to show them in compact views (character cards, combat tracker, dashboard).</p>
+          <p style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>&#x2605; Pin for compact views. Category sets visual style. Max enables per-character max values.</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
             {attrs.filter(a => a.type !== 'tag').map((a, i) => {
               const realIdx = attrs.indexOf(a);
               return (
-                <div key={realIdx} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <div key={realIdx} style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                   <input type="text" value={a.key} onChange={e => {
                     const updated = [...attrs]; updated[realIdx] = { ...a, key: e.target.value }; setAttrs(updated);
-                  }} style={{ width: 120, fontFamily: 'var(--font-mono)', fontSize: 12 }} />
+                  }} style={{ width: 100, fontFamily: 'var(--font-mono)', fontSize: 12 }} />
                   <input type="text" value={a.label} onChange={e => {
                     const updated = [...attrs]; updated[realIdx] = { ...a, label: e.target.value }; setAttrs(updated);
-                  }} style={{ flex: 1 }} />
+                  }} style={{ flex: 1, minWidth: 80 }} />
+                  <select value={a.category || 'stat'} onChange={e => {
+                    const updated = [...attrs];
+                    updated[realIdx] = { ...a, category: e.target.value };
+                    setAttrs(updated);
+                  }} style={{ width: 90, fontSize: 12 }}>
+                    <option value="stat">Stat</option>
+                    <option value="resource">Resource</option>
+                    <option value="defense">Defense</option>
+                  </select>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-muted)', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    <input type="checkbox" checked={!!a.has_max} onChange={e => {
+                      const updated = [...attrs]; updated[realIdx] = { ...a, has_max: e.target.checked }; setAttrs(updated);
+                    }} style={{ width: 14, height: 14 }} />
+                    Max
+                  </label>
                   <button className={`btn btn-sm attr-pin-btn${a.pinned ? ' pinned' : ''}`} title={a.pinned ? 'Unpin from compact views' : 'Pin to compact views'} onClick={() => {
                     const updated = [...attrs]; updated[realIdx] = { ...a, pinned: !a.pinned }; setAttrs(updated);
                   }}>&#x2605;</button>

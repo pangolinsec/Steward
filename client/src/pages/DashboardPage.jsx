@@ -36,7 +36,19 @@ export default function DashboardPage({ campaignId, campaign }) {
   useEffect(() => { load(); }, [load]);
 
   const numericAttrs = campaign?.attribute_definitions?.filter(a => a.type !== 'tag') || [];
-  const compactAttrs = numericAttrs.some(a => a.pinned) ? numericAttrs.filter(a => a.pinned) : numericAttrs;
+  const pinnedOrAll = numericAttrs.some(a => a.pinned) ? numericAttrs.filter(a => a.pinned) : numericAttrs;
+  const catOrder = { resource: 0, defense: 1, stat: 2 };
+  const compactAttrs = [...pinnedOrAll].sort((a, b) => (catOrder[a.category] ?? 2) - (catOrder[b.category] ?? 2));
+
+  const getResourceStyle = (cur, maxVal) => {
+    if (maxVal == null || maxVal <= 0) return {};
+    const pct = (cur / maxVal) * 100;
+    if (pct >= 100) return { color: 'var(--green)', fontWeight: 700 };
+    if (pct >= 66) return { color: 'var(--green)' };
+    if (pct >= 34) return { color: 'var(--yellow)' };
+    if (pct >= 10) return { color: 'var(--red)' };
+    return { color: 'var(--red)', fontWeight: 700 };
+  };
   const pcs = characters.filter(c => c.type === 'PC');
 
   const weatherIcons = {
@@ -107,12 +119,19 @@ export default function DashboardPage({ campaignId, campaign }) {
                   </div>
                 )}
                 <span style={{ fontWeight: 500, fontSize: 13, flex: 1 }}>{c.name}</span>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {compactAttrs.map(a => (
-                    <span key={a.key} style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>
-                      {a.label.substring(0, 3).toUpperCase()} {c.base_attributes[a.key] ?? '\u2014'}
-                    </span>
-                  ))}
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {compactAttrs.map(a => {
+                    const val = c.base_attributes?.[a.key];
+                    const cat = a.category || 'stat';
+                    const maxVal = a.has_max ? c.max_attributes?.[a.key] : null;
+                    const resStyle = cat === 'resource' && maxVal != null ? getResourceStyle(val ?? 0, maxVal) : {};
+                    return (
+                      <span key={a.key} className={`attr-chip attr-chip-${cat} attr-chip-sm`} style={resStyle}>
+                        <span className="attr-chip-label">{a.label.substring(0, 3).toUpperCase()}</span>
+                        {' '}{val ?? '\u2014'}{a.has_max && maxVal != null ? `/${maxVal}` : ''}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             ))

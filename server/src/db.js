@@ -276,6 +276,7 @@ const migrations = [
   `ALTER TABLE campaigns ADD COLUMN dice_settings TEXT DEFAULT '{"log_rolls":false}'`,
   `ALTER TABLE environment_state ADD COLUMN combat_state TEXT DEFAULT NULL`,
   `ALTER TABLE characters ADD COLUMN dm_notes TEXT DEFAULT ''`,
+  `ALTER TABLE characters ADD COLUMN max_attributes TEXT DEFAULT '{}'`,
 ];
 
 for (const sql of migrations) {
