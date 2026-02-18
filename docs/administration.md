@@ -117,25 +117,27 @@ All data is stored in a single SQLite file: `almanac.db` in the configured data 
 
 ### Schema
 
-The database has 13 tables:
+The database has 17 tables:
 
 | Table | Purpose |
 |-------|---------|
 | `campaigns` | Campaign metadata, attribute definitions, calendar, weather, encounter settings, rules settings, presets |
-| `characters` | PC and NPC definitions with base attributes |
+| `characters` | PC and NPC definitions with base attributes. `spawned_from_encounter_id` tracks auto-spawned NPCs. |
 | `status_effect_definitions` | Effect templates with modifiers and duration |
 | `item_definitions` | Item templates with modifiers and properties |
-| `encounter_definitions` | Encounter templates with NPCs, loot, conditions |
+| `encounter_definitions` | Encounter templates with NPCs, loot, conditions. `starts_combat` enables auto-combat. |
 | `applied_effects` | Active effects on characters (junction table) |
 | `character_items` | Items in character inventories (junction table) |
-| `environment_state` | Current game world state (time, weather, location) |
+| `environment_state` | Current game world state (time, weather, location, combat state) |
 | `locations` | Map locations with properties and weather overrides |
 | `location_edges` | Connections between locations with travel data |
-| `session_log` | Timestamped log of all game actions |
+| `session_log` | Timestamped log of all game actions (includes in-game `game_time`) |
 | `rule_definitions` | Automation rules with triggers, conditions, actions |
 | `rule_state` | Persistent state for rules (e.g., last rest time) |
 | `rule_action_log` | History of rule-applied changes (for undo) |
 | `notifications` | Rule-generated notifications |
+| `journal_notes` | DM journal entries with tags, starring, and wikilinks |
+| `random_table_definitions` | Random table metadata and type (weighted/sequential) |
 
 ### Migrations
 
@@ -238,7 +240,7 @@ All endpoints are prefixed with `/api`. Campaign-scoped endpoints use `/api/camp
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/campaigns/:id/characters` | List characters (query: `type`, `search`) |
+| GET | `/api/campaigns/:id/characters` | List characters (query: `type`, `search`, `include_spawned`) |
 | GET | `/api/campaigns/:id/characters/:charId` | Get character |
 | GET | `/api/campaigns/:id/characters/:charId/computed` | Get computed stats with modifier breakdown |
 | POST | `/api/campaigns/:id/characters` | Create character (`name`, `type` required) |
@@ -293,8 +295,8 @@ Item changes fire `on_item_change` rules.
 | POST | `/api/campaigns/:id/encounters` | Create encounter (`name` required) |
 | PUT | `/api/campaigns/:id/encounters/:encId` | Update encounter |
 | DELETE | `/api/campaigns/:id/encounters/:encId` | Delete encounter |
-| POST | `/api/campaigns/:id/encounters/:encId/start` | Start encounter (fires `on_encounter` rules) |
-| POST | `/api/campaigns/:id/encounters/:encId/end` | End encounter (fires `on_encounter` rules) |
+| POST | `/api/campaigns/:id/encounters/:encId/start` | Start encounter (fires rules; auto-starts combat if `starts_combat` is set) |
+| POST | `/api/campaigns/:id/encounters/:encId/end` | End encounter (fires rules, cleans up spawned NPCs, ends combat) |
 
 ### Environment
 
@@ -369,9 +371,47 @@ Short rest = 1 hour, Long rest = 8 hours. Fires `on_rest` rules, advances time, 
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/campaigns/:id/session-log` | Get log entries (query: `limit`, `offset`, `entry_type`) |
+| GET | `/api/campaigns/:id/session-log` | Get log entries (query: `limit`, `offset`, `entry_type`). Includes `game_time` with in-game timestamps. |
 | POST | `/api/campaigns/:id/session-log` | Add manual entry (`message` required) |
 | DELETE | `/api/campaigns/:id/session-log` | Clear all entries |
+
+### Combat
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/campaigns/:id/combat` | Get combat state (round, turn index, combatants with stats/effects) |
+| POST | `/api/campaigns/:id/combat` | Start combat (`combatants` array of `{character_id, initiative}` required) |
+| DELETE | `/api/campaigns/:id/combat` | End combat and clear state |
+| POST | `/api/campaigns/:id/combat/next-turn` | Advance to next turn (decrements round-based effects, fires rules on new round) |
+| PATCH | `/api/campaigns/:id/combat` | Update combat settings (combatants, `advance_time`, `time_per_round_seconds`) |
+
+Combat state is stored in the `environment_state` table. When `advance_time` is enabled (default), the game clock advances by `time_per_round_seconds` (default 6) at the start of each new round.
+
+### Journal
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/campaigns/:id/journal` | List notes (query: `search`, `tag`, `starred`, `limit`, `offset`) |
+| GET | `/api/campaigns/:id/journal/search-entities` | Search entities for wikilink autocomplete (query: `q`) |
+| GET | `/api/campaigns/:id/journal/:noteId` | Get note |
+| POST | `/api/campaigns/:id/journal` | Create note (`title`, `content`, `tags`, `starred`) |
+| PUT | `/api/campaigns/:id/journal/:noteId` | Update note (partial update supported) |
+| DELETE | `/api/campaigns/:id/journal/:noteId` | Delete note |
+
+Journal notes support wikilinks (`[[Character Name]]`) that link to campaign entities.
+
+### Random Tables
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/campaigns/:id/random-tables` | List tables (query: `search`) |
+| GET | `/api/campaigns/:id/random-tables/:tableId` | Get table with entries |
+| POST | `/api/campaigns/:id/random-tables` | Create table (`name` required, `entries`, `table_type`) |
+| PUT | `/api/campaigns/:id/random-tables/:tableId` | Update table |
+| DELETE | `/api/campaigns/:id/random-tables/:tableId` | Delete table |
+| POST | `/api/campaigns/:id/random-tables/:tableId/roll` | Roll on table (result logged to session log) |
+
+Tables can be `weighted` (entries have weights) or `sequential` (equal probability).
 
 ### Export / Import
 

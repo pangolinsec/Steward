@@ -20,7 +20,7 @@ Define PCs and NPCs with custom numeric and tag attributes. Effective stats are 
 Create homebrew status effects with attribute modifiers, duration tracking (indefinite, timed, or round-based), and tags. Define items with passive modifiers, custom properties, and stackable quantities. Apply and remove them from characters with a few clicks.
 
 **Encounters**
-Build encounter definitions with NPC rosters, loot tables (with drop chances), environment overrides, and conditions that control when random encounters can trigger. Start encounters to apply their environment changes automatically.
+Build encounter definitions with NPC rosters (existing characters or ad-hoc by name, with counts), loot tables (with drop chances), environment overrides, and conditions that control when random encounters can trigger. Enable **auto-combat** to automatically spawn NPCs, roll initiative, and start combat when an encounter begins.
 
 **Locations & Travel**
 Build an interactive map with locations and connecting paths. Set terrain properties, weather overrides, and encounter modifiers per location and edge. Plan multi-leg travel routes with Ctrl+click pathfinding, then execute travel to advance time, roll weather, and trigger random encounters along the way.

@@ -124,7 +124,10 @@ Generate content that fits the setting. Invent creative names, descriptions, and
       "name": "Encounter Name",
       "description": "Short description",
       "notes": "Detailed DM notes for running this encounter",
-      "npcs": [],
+      "npcs": [
+        { "character_id": 1, "role": "leader", "count": 1 },
+        { "name": "Bandit", "role": "hostile", "count": 3 }
+      ],
       "environment_overrides": { "weather": "Fog" },
       "loot_table": [
         { "item_name": "Item Name", "quantity": 1, "drop_chance": 0.5 }
@@ -134,7 +137,8 @@ Generate content that fits the setting. Invent creative names, descriptions, and
         "time_of_day": ["Night", "Dusk"],
         "weather": [],
         "weight": 1.0
-      }
+      },
+      "starts_combat": false
     }
   ],
   "rules": [
@@ -364,7 +368,9 @@ Output a JSON object matching this schema:
       "name": "Encounter Name",
       "description": "Brief encounter summary",
       "notes": "Detailed DM notes: tactics, terrain, enemy behavior, narrative hooks",
-      "npcs": [],
+      "npcs": [
+        { "name": "Goblin", "role": "hostile", "count": 3 }
+      ],
       "environment_overrides": {},
       "loot_table": [
         { "item_name": "Healing Potion", "quantity": 2, "drop_chance": 0.5 }
@@ -374,7 +380,8 @@ Output a JSON object matching this schema:
         "time_of_day": ["Night", "Dusk"],
         "weather": [],
         "weight": 1.0
-      }
+      },
+      "starts_combat": true
     }
   ]
 }
@@ -388,7 +395,8 @@ Rules:
 - `conditions.time_of_day`: when this encounter can randomly trigger. Use labels from the list above. Empty array `[]` means any time.
 - `conditions.weather`: which weather allows this encounter. Empty `[]` means any weather.
 - `conditions.weight`: relative probability vs other encounters (1.0 = normal, 2.0 = twice as likely, 0.5 = half as likely).
-- Leave `npcs` as `[]` (NPC assignment happens inside the app after characters exist).
+- `npcs`: reference existing characters with `character_id` (1-indexed position in `characters` array) or create ad-hoc NPCs with `name`. Set `count` for multiples (e.g., 3 bandits). `role` is one of `leader`, `member`, `hostile`, `neutral`. Leave as `[]` if NPC assignment will happen in-app.
+- `starts_combat`: set to `true` for combat encounters. When started, NPCs are auto-spawned, d20 initiative is rolled, and combat begins. Set to `false` for social, exploration, or non-combat encounters.
 - Include a variety: combat encounters, social encounters, environmental hazards, mystery/exploration.
 - Output ONLY the JSON object.
 ````

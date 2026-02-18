@@ -140,11 +140,13 @@ Each encounter definition has:
 
 - **Name** and **Description**
 - **Notes** — extended text for DM reference during play
-- **NPCs** — a roster of characters with assigned roles (leader, member, hostile, neutral)
+- **NPCs** — a roster of characters with assigned roles (leader, member, hostile, neutral). NPCs can reference existing characters or be defined ad-hoc by name. Each entry has a **count** for spawning multiples (e.g., 3 goblins).
+- **Starts Combat** — when enabled, starting the encounter automatically spawns NPCs, rolls d20 initiative for all PCs and NPCs, and creates combat state. Ending the encounter cleans up spawned NPCs and ends combat.
 - **Loot Table** — items with quantities and drop chances (0-100%)
 - **Environment Overrides** — key-value pairs applied when the encounter starts (e.g., weather → "Fog", time_suggestion → "Dusk")
 - **Random Encounter Conditions** — controls when this encounter can be randomly selected:
   - **Location IDs** — which locations this encounter can occur at
+  - **Edge IDs** — which paths (edges) this encounter can trigger on during travel
   - **Time of Day** — which time periods (Morning, Night, etc.)
   - **Weather** — which weather conditions
   - **Weight** — relative probability compared to other eligible encounters
@@ -156,8 +158,9 @@ Click **Start** on an encounter card. This:
 1. Applies environment overrides (e.g., changes weather)
 2. Fires `on_encounter` rules with phase "start"
 3. Logs the encounter start to the session log
+4. If **Starts Combat** is enabled: spawns NPCs (cloning templates when count > 1, creating ad-hoc NPCs by name), rolls d20 initiative for all PCs and encounter NPCs, and navigates to the combat view
 
-Click **End** to conclude the encounter, firing rules with phase "end".
+Click **End** to conclude the encounter. This fires rules with phase "end", cleans up any encounter-spawned NPCs, and ends active combat if running. Spawned NPCs are automatically filtered from the default character list to prevent clutter.
 
 ### Random Encounter Triggers
 

@@ -7,7 +7,7 @@ A self-hosted web application for tabletop RPG Dungeon Masters to manage homebre
 - **Characters** — PCs and NPCs with custom numeric and tag attributes, computed effective stats, modifier breakdowns
 - **Status Effects** — Homebrew effects with attribute modifiers, tags, and duration tracking (indefinite, timed, rounds)
 - **Items** — Equipment and consumables with passive modifiers, custom properties, and stackable quantities
-- **Encounters** — Planned encounters with NPC rosters, loot tables, drop chances, and random encounter conditions
+- **Encounters** — Planned encounters with NPC rosters (existing or ad-hoc, with counts), loot tables, drop chances, random encounter conditions, and optional auto-combat that spawns NPCs and rolls initiative
 - **Locations & Travel** — Interactive map canvas, pathfinding, multi-leg route planning, travel with time advancement and encounter rolls
 - **Rules Engine** — Declarative automation with 8 trigger types, 20 condition types, and 12 action types. Auto-apply or suggest changes. Full undo support.
 - **Environment Tracker** — In-game time, custom calendar, weather with volatility and transition tables, seasons

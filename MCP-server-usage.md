@@ -146,7 +146,7 @@ These tools are always visible — they power a live game session plus toolbox m
 
 | Tool | Description |
 |---|---|
-| `almanac_list_characters` | List all characters, filterable by type (PC/NPC) and search |
+| `almanac_list_characters` | List all characters, filterable by type (PC/NPC), search, and `include_spawned` for encounter-spawned NPCs |
 | `almanac_get_character` | Full character sheet: base/effective attributes, applied effects, inventory |
 | `almanac_apply_effect` | Apply a status effect to a character |
 | `almanac_remove_effect` | Remove an applied effect |
@@ -158,8 +158,8 @@ These tools are always visible — they power a live game session plus toolbox m
 
 | Tool | Description |
 |---|---|
-| `almanac_start_encounter` | Start a specific encounter (applies overrides, fires rules) |
-| `almanac_end_encounter` | End an active encounter |
+| `almanac_start_encounter` | Start a specific encounter (applies overrides, fires rules). Auto-starts combat if `starts_combat` is enabled — spawns NPCs, rolls initiative, returns combat state. |
+| `almanac_end_encounter` | End an active encounter. Cleans up spawned NPCs and ends combat if active. |
 
 #### Notifications (Rules Engine)
 
@@ -234,7 +234,7 @@ Loaded via `almanac_open_toolbox({ toolset: "world_building" })`. Create and man
 | `almanac_create_edge` | Create a path between two locations |
 | `almanac_update_edge` | Update a path |
 | `almanac_delete_edge` | Delete a path |
-| `almanac_create_encounter` | Create a new encounter with trigger conditions |
+| `almanac_create_encounter` | Create encounter with trigger conditions, ad-hoc or referenced NPCs, counts, and optional `starts_combat` |
 | `almanac_update_encounter` | Update an encounter |
 | `almanac_delete_encounter` | Delete an encounter |
 | `almanac_create_journal_note` | Create a DM journal note (supports wikilinks) |
