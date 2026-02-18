@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as api from '../api';
 import ImportPreviewModal from '../components/ImportPreviewModal';
+import { useToast } from '../components/ToastContext';
 
 export default function EncountersPage({ campaignId, campaign }) {
   const [encounters, setEncounters] = useState([]);
@@ -12,6 +13,7 @@ export default function EncountersPage({ campaignId, campaign }) {
   const [showImport, setShowImport] = useState(false);
   const [combatPrompt, setCombatPrompt] = useState(null);
   const navigate = useNavigate();
+  const { addToast } = useToast();
 
   const load = async () => {
     if (!campaignId) return;
@@ -36,6 +38,11 @@ export default function EncountersPage({ campaignId, campaign }) {
     }
     try {
       const result = await api.startEncounter(campaignId, enc.id);
+      if (result.combat_started) {
+        addToast('Combat started!', 'success');
+        navigate('/characters');
+        return;
+      }
       if (result.characters && result.characters.length > 0) {
         setCombatPrompt({ encounterName: enc.name, npcIds: result.characters.map(c => c.id) });
       }
@@ -85,6 +92,9 @@ export default function EncountersPage({ campaignId, campaign }) {
                   <div className="inline-flex gap-sm mt-sm" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                     <span>{enc.npcs?.length || 0} NPCs</span>
                     <span>{enc.loot_table?.length || 0} loot entries</span>
+                    {enc.starts_combat && (
+                      <span className="tag" style={{ fontSize: 10, background: 'var(--red-dim)', color: 'var(--red)', borderColor: '#991b1b' }}>Starts Combat</span>
+                    )}
                     {enc.conditions && (enc.conditions.location_ids?.length > 0 || enc.conditions.edge_ids?.length > 0 || enc.conditions.time_of_day?.length > 0 || enc.conditions.weather?.length > 0) && (
                       <span className="tag" style={{ fontSize: 10 }}>Has conditions</span>
                     )}
@@ -177,6 +187,7 @@ function EncounterForm({ campaignId, campaign, encounter, onClose, onSave }) {
   const [name, setName] = useState(encounter?.name || '');
   const [description, setDescription] = useState(encounter?.description || '');
   const [notes, setNotes] = useState(encounter?.notes || '');
+  const [startsCombat, setStartsCombat] = useState(encounter?.starts_combat || false);
 
   // Structured data instead of JSON strings
   const [npcs, setNpcs] = useState(encounter?.npcs || []);
@@ -219,7 +230,8 @@ function EncounterForm({ campaignId, campaign, encounter, onClose, onSave }) {
   const NPC_ROLES = ['leader', 'member', 'hostile', 'neutral'];
 
   // NPC helpers
-  const addNpc = () => setNpcs([...npcs, { character_id: '', role: 'member' }]);
+  const addExistingNpc = () => setNpcs([...npcs, { character_id: '', role: 'member', count: 1 }]);
+  const addCustomNpc = () => setNpcs([...npcs, { name: '', role: 'member', count: 1 }]);
   const updateNpc = (i, field, val) => {
     const updated = [...npcs];
     updated[i] = { ...updated[i], [field]: val };
@@ -250,9 +262,10 @@ function EncounterForm({ campaignId, campaign, encounter, onClose, onSave }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const cleanNpcs = npcs.filter(n => n.character_id).map(n => ({
-      character_id: Number(n.character_id),
+    const cleanNpcs = npcs.filter(n => n.character_id || n.name?.trim()).map(n => ({
+      ...(n.character_id ? { character_id: Number(n.character_id) } : { name: n.name.trim() }),
       role: n.role || 'member',
+      count: Math.max(1, n.count || 1),
     }));
     const environment_overrides = {};
     for (const eo of envOverrides) {
@@ -265,7 +278,7 @@ function EncounterForm({ campaignId, campaign, encounter, onClose, onSave }) {
       weather: condWeather,
       weight: condWeight,
     };
-    const data = { name, description, notes, npcs: cleanNpcs, environment_overrides, loot_table: loot, conditions };
+    const data = { name, description, notes, npcs: cleanNpcs, environment_overrides, loot_table: loot, conditions, starts_combat: startsCombat };
     if (encounter) {
       await api.updateEncounter(campaignId, encounter.id, data);
     } else {
@@ -296,6 +309,15 @@ function EncounterForm({ campaignId, campaign, encounter, onClose, onSave }) {
               <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} />
             </div>
 
+            {/* Starts Combat Toggle */}
+            <div className="form-group">
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                <input type="checkbox" checked={startsCombat} onChange={e => setStartsCombat(e.target.checked)} />
+                Starts Combat
+              </label>
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '2px 0 0' }}>Auto-start combat when this encounter triggers</p>
+            </div>
+
             {/* NPCs Builder */}
             <div className="form-group">
               <label>NPCs</label>
@@ -303,28 +325,52 @@ function EncounterForm({ campaignId, campaign, encounter, onClose, onSave }) {
                 {npcs.length === 0 && (
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', padding: 4 }}>No NPCs added</div>
                 )}
-                {npcs.map((npc, i) => (
-                  <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 6 }}>
-                    <select
-                      value={npc.character_id}
-                      onChange={e => updateNpc(i, 'character_id', e.target.value)}
-                      style={{ flex: 2, fontSize: 12 }}
-                    >
-                      <option value="">Select character...</option>
-                      {characters.map(c => <option key={c.id} value={c.id}>{c.name} ({c.type})</option>)}
-                    </select>
-                    <select
-                      value={npc.role || 'member'}
-                      onChange={e => updateNpc(i, 'role', e.target.value)}
-                      style={{ flex: 1, fontSize: 12 }}
-                    >
-                      {NPC_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-                    </select>
-                    <button type="button" className="btn btn-danger btn-sm" style={{ padding: '2px 6px', fontSize: 10 }}
-                      onClick={() => removeNpc(i)}>&#x2715;</button>
-                  </div>
-                ))}
-                <button type="button" className="btn btn-secondary btn-sm" onClick={addNpc}>+ Add NPC</button>
+                {npcs.map((npc, i) => {
+                  const isCustom = 'name' in npc && !('character_id' in npc);
+                  return (
+                    <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 6 }}>
+                      {isCustom ? (
+                        <input
+                          type="text"
+                          value={npc.name || ''}
+                          onChange={e => updateNpc(i, 'name', e.target.value)}
+                          placeholder="Custom NPC name..."
+                          style={{ flex: 2, fontSize: 12 }}
+                        />
+                      ) : (
+                        <select
+                          value={npc.character_id || ''}
+                          onChange={e => updateNpc(i, 'character_id', e.target.value)}
+                          style={{ flex: 2, fontSize: 12 }}
+                        >
+                          <option value="">Select character...</option>
+                          {characters.map(c => <option key={c.id} value={c.id}>{c.name} ({c.type})</option>)}
+                        </select>
+                      )}
+                      <select
+                        value={npc.role || 'member'}
+                        onChange={e => updateNpc(i, 'role', e.target.value)}
+                        style={{ flex: 1, fontSize: 12 }}
+                      >
+                        {NPC_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                      </select>
+                      <input
+                        type="number"
+                        min="1"
+                        value={npc.count || 1}
+                        onChange={e => updateNpc(i, 'count', Number(e.target.value))}
+                        style={{ width: 50, fontSize: 12 }}
+                        title="Count"
+                      />
+                      <button type="button" className="btn btn-danger btn-sm" style={{ padding: '2px 6px', fontSize: 10 }}
+                        onClick={() => removeNpc(i)}>&#x2715;</button>
+                    </div>
+                  );
+                })}
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={addExistingNpc}>+ Existing NPC</button>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={addCustomNpc}>+ Custom NPC</button>
+                </div>
               </div>
             </div>
 

@@ -16,11 +16,14 @@ function fireRules(campaignId, triggerType, triggerContext) {
 // GET all characters for a campaign
 router.get('/', (req, res) => {
   const { id } = req.params;
-  const { type, search } = req.query;
+  const { type, search, include_spawned } = req.query;
 
   let query = 'SELECT * FROM characters WHERE campaign_id = ?';
   const params = [id];
 
+  if (!include_spawned) {
+    query += ' AND spawned_from_encounter_id IS NULL';
+  }
   if (type && (type === 'PC' || type === 'NPC')) {
     query += ' AND type = ?';
     params.push(type);

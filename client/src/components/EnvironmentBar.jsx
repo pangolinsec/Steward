@@ -63,11 +63,22 @@ export default function EnvironmentBar({ environment, campaignId, onUpdate, camp
     if (Object.keys(patch).length > 0) {
       await api.updateEnvironment(campaignId, patch);
     }
-    addToast(`Encounter "${enc.name}" started!`, 'warning');
     setEncounterEvent(null);
+
+    try {
+      const result = await api.startEncounter(campaignId, enc.id);
+      if (result.combat_started) {
+        addToast('Combat started!', 'success');
+        onUpdate();
+        navigate('/characters');
+        return;
+      }
+    } catch { /* fallback */ }
+
+    addToast(`Encounter "${enc.name}" started!`, 'warning');
     onUpdate();
     if (startCombat && enc.npcs?.length > 0) {
-      const npcIds = enc.npcs.map(n => n.character_id);
+      const npcIds = enc.npcs.map(n => n.character_id).filter(Boolean);
       navigate('/characters', { state: { startCombat: true, encounterNpcs: npcIds, encounterName: enc.name } });
     }
   };
@@ -215,8 +226,8 @@ function EncounterTriggerModal({ event, onStart, onStartCombat, onDismiss }) {
         </div>
         <div className="modal-footer">
           <button className="btn btn-secondary" onClick={onDismiss}>Dismiss</button>
-          <button className="btn btn-primary" onClick={onStart}>Start Encounter</button>
-          {enc.npcs?.length > 0 && (
+          <button className="btn btn-primary" onClick={onStart}>Start Encounter{enc.starts_combat ? ' + Combat' : ''}</button>
+          {!enc.starts_combat && enc.npcs?.length > 0 && (
             <button className="btn btn-danger" onClick={onStartCombat}>Start Combat</button>
           )}
         </div>

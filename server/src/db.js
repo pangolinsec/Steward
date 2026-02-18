@@ -278,6 +278,8 @@ const migrations = [
   `ALTER TABLE characters ADD COLUMN dm_notes TEXT DEFAULT ''`,
   `ALTER TABLE characters ADD COLUMN max_attributes TEXT DEFAULT '{}'`,
   `ALTER TABLE session_log ADD COLUMN game_time TEXT DEFAULT NULL`,
+  `ALTER TABLE encounter_definitions ADD COLUMN starts_combat INTEGER DEFAULT 0`,
+  `ALTER TABLE characters ADD COLUMN spawned_from_encounter_id INTEGER DEFAULT NULL`,
 ];
 
 for (const sql of migrations) {
