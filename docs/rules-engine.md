@@ -384,29 +384,71 @@ Templates reference specific effect and item names (like "Exhausted", "Torch", "
 
 ## Tag Presets
 
-Tag presets bundle a tag attribute definition with related rules into a reusable package. This is useful for common patterns like "faction" or "species" where you want the attribute and its associated automation rules together.
+Tag presets bundle a tag attribute definition with related rules into a reusable package. This is useful for common patterns like race, class, or faction where you want the attribute and its associated automation rules together.
 
-### Using Built-in Presets
+### The Preset Browser
 
-On the **Settings** page, the Attribute Definitions section has a **Presets** button. Browse available presets and click **Import** to add one. This creates:
+On the **Settings** page, the Attribute Definitions section has a **Presets** button. This opens the Tag Attribute Presets browser, which shows all available presets organized by category with filter buttons.
 
-1. A new tag attribute (or merges options into an existing one)
-2. All bundled rules, ready to enable
+Each preset card displays:
+- Preset name and category badge
+- Description
+- Attribute key and available options
+- Number of bundled rules
+- **Import** button to add the preset to your campaign
+
+### Built-in Presets
+
+Almanac ships with built-in presets in two categories:
+
+**Fantasy**
+
+| Preset | Attribute | Options | Bundled Rules |
+|--------|-----------|---------|---------------|
+| Race (Fantasy) | `race` | Human, Elf, Dwarf, Halfling, Orc, Gnome | 4 — Dwarven Poison Resistance, Elven Fog Advantage, Halfling Luck, Orc Frenzy |
+| Class (Fantasy) | `class` | Fighter, Wizard, Rogue, Cleric, Ranger | 3 — Wizard Storm Vulnerability, Ranger Wilderness Bonus, Cleric Undead Turning |
+| Creature Type | `creature_type` | Humanoid, Undead, Beast, Elemental, Fey | 2 — Undead Exhaustion Immunity, Elemental Weather Affinity |
+
+**General**
+
+| Preset | Attribute | Options | Bundled Rules |
+|--------|-----------|---------|---------------|
+| Alignment | `alignment` | 9 classic alignments (Lawful Good through Chaotic Evil) | None |
+
+### Importing a Preset
+
+Click **Import** on any preset card. This:
+
+1. **Creates the tag attribute** — adds the attribute definition to your campaign (e.g., a "race" attribute with options Human, Elf, Dwarf, etc.)
+2. **Merges options** — if the attribute already exists, new options are added without removing existing ones (idempotent)
+3. **Creates bundled rules** — adds all companion rules to the campaign, ready to use
+
+A toast notification reports what was created (attribute added, options merged, N rules created).
+
+After importing, you can assign the new tag attribute to characters and the bundled rules will fire based on their trait values. All imported rules are fully editable.
 
 ### Creating Custom Presets
 
-Click **+ New Preset** in the preset browser to open the preset builder:
+Click **+ Create Preset** in the preset browser to open the preset builder:
 
-1. **Name** — a descriptive name for the preset
-2. **Description** — what the preset does
-3. **Tag Attribute** — select an existing tag attribute or define a new one (key, label, options)
-4. **Rules** — select which rules that reference this attribute to include in the bundle
+1. **Name** — a descriptive name for the preset (e.g., "Faction Loyalty")
+2. **Description** — what the preset provides
+3. **Tag Attribute** — either:
+   - Select an existing tag attribute from the dropdown, or
+   - Choose "+ Define new..." to create a new attribute with key, label, and comma-separated options
+4. **Include Rules** — when an existing attribute is selected, the builder automatically discovers all rules that reference it. Check the rules you want to bundle with the preset.
 
-Custom presets are saved to the campaign and can be exported for use in other campaigns.
+Click **Save Preset** to add it to your campaign's custom preset library. Custom presets appear in the browser with a "Custom" badge.
 
 ### Exporting and Sharing
 
-Custom presets can be exported as JSON files and imported into other campaigns. The export includes the attribute definition and all bundled rule definitions.
+Custom presets can be shared between campaigns:
+
+- **Export** — click the Export button on any custom preset card to download it as a JSON file (`preset-<key>.json`)
+- **Import from File** — click "Import from File" in the preset browser, select a JSON file, preview the preset details, then click "Add to Library" to save it to your campaign's preset library
+- **Delete** — remove a custom preset from the library (already-imported rules and attributes are not affected)
+
+The export format includes the attribute definition and all bundled rule definitions, stripped of database-specific fields for portability.
 
 ---
 

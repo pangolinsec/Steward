@@ -424,7 +424,9 @@ Define the property keys available for locations and edges. Each key has a name 
 
 ### Tag Presets
 
-Create reusable bundles of a tag attribute definition plus associated rules. See [Tag Presets](rules-engine.md#tag-presets) in the Rules Engine Guide.
+Bundle a tag attribute definition with associated rules into a reusable preset. Almanac includes built-in presets for common fantasy archetypes (Race, Class, Creature Type, Alignment), and you can create custom presets from your campaign's existing attributes and rules. Custom presets can be exported as JSON files and shared between campaigns.
+
+Click **Presets** in the Attribute Definitions section to open the preset browser. See the [Tag Presets](rules-engine.md#tag-presets) section of the Rules Engine Guide for full details.
 
 ---
 
