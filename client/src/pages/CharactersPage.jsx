@@ -25,11 +25,23 @@ export default function CharactersPage({ campaignId, campaign }) {
 
   const attrs = campaign?.attribute_definitions || [];
 
+  const handleExport = async () => {
+    const data = await api.getCharacters(campaignId);
+    const blob = new Blob([JSON.stringify({ characters: data }, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'almanac-characters.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="page">
       <div className="page-header">
         <h2>Characters</h2>
         <div className="inline-flex gap-sm">
+          <button className="btn btn-secondary btn-sm" onClick={handleExport}>Export</button>
           <button className="btn btn-secondary btn-sm" onClick={() => setShowImport(true)}>Import</button>
           <button className="btn btn-primary" onClick={() => { setEditChar(null); setShowForm(true); }}>+ New Character</button>
         </div>

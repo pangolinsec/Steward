@@ -26,11 +26,23 @@ export default function StatusEffectsPage({ campaignId, campaign }) {
 
   const attrs = campaign?.attribute_definitions || [];
 
+  const handleExport = async () => {
+    const data = await api.getStatusEffects(campaignId);
+    const blob = new Blob([JSON.stringify({ status_effects: data }, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'almanac-status-effects.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="page">
       <div className="page-header">
         <h2>Status Effects Library</h2>
         <div className="inline-flex gap-sm">
+          <button className="btn btn-secondary btn-sm" onClick={handleExport}>Export</button>
           <button className="btn btn-secondary btn-sm" onClick={() => setShowImport(true)}>Import</button>
           <button className="btn btn-primary" onClick={() => { setEditEffect(null); setShowForm(true); }}>+ New Effect</button>
         </div>

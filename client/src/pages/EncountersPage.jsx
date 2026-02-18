@@ -34,11 +34,23 @@ export default function EncountersPage({ campaignId, campaign }) {
     alert(`Encounter "${enc.name}" started. Environment overrides applied.`);
   };
 
+  const handleExport = async () => {
+    const data = await api.getEncounters(campaignId);
+    const blob = new Blob([JSON.stringify({ encounters: data }, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'almanac-encounters.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="page">
       <div className="page-header">
         <h2>Encounters Library</h2>
         <div className="inline-flex gap-sm">
+          <button className="btn btn-secondary btn-sm" onClick={handleExport}>Export</button>
           <button className="btn btn-secondary btn-sm" onClick={() => setShowImport(true)}>Import</button>
           <button className="btn btn-primary" onClick={() => { setEditEnc(null); setShowForm(true); }}>+ New Encounter</button>
         </div>

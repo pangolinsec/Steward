@@ -77,12 +77,24 @@ export default function RulesPage({ campaignId, campaign }) {
     return actions.map(a => a.type).join(', ');
   };
 
+  const handleExport = async () => {
+    const data = await api.getRules(campaignId);
+    const blob = new Blob([JSON.stringify({ rules: data }, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'almanac-rules.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="page">
       <div className="page-header">
         <h2>Rules Engine</h2>
         <div className="inline-flex gap-sm">
           <button className="btn btn-secondary btn-sm" onClick={() => setShowTemplates(true)}>Templates</button>
+          <button className="btn btn-secondary btn-sm" onClick={handleExport}>Export</button>
           <button className="btn btn-secondary btn-sm" onClick={() => setShowImport(true)}>Import</button>
           <button className="btn btn-primary" onClick={() => { setEditRule(null); setShowForm(true); }}>+ New Rule</button>
         </div>
