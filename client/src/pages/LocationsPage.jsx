@@ -211,6 +211,7 @@ export default function LocationsPage({ campaignId, campaign, environment, onUpd
               campaignId={campaignId}
               edge={selected.data}
               locations={locations}
+              campaign={campaign}
               onSave={() => { load(); }}
               onDelete={() => handleDeleteEdge(selected.id)}
               onClose={() => setSelected(null)}
@@ -358,21 +359,34 @@ function LocationDetailPanel({ campaignId, location, locations, campaign, enviro
   );
 }
 
-function EdgeDetailPanel({ campaignId, edge, locations, onSave, onDelete, onClose }) {
+function EdgeDetailPanel({ campaignId, edge, locations, campaign, onSave, onDelete, onClose }) {
   const [label, setLabel] = useState(edge.label || '');
+  const [description, setDescription] = useState(edge.description || '');
   const [travelHours, setTravelHours] = useState(edge.travel_hours);
   const [bidirectional, setBidirectional] = useState(!!edge.bidirectional);
   const [encounterMod, setEncounterMod] = useState(edge.encounter_modifier);
+  const [weatherOverride, setWeatherOverride] = useState(edge.weather_override);
+  const [propsStr, setPropsStr] = useState(
+    Object.entries(edge.properties || {}).map(([k, v]) => `${k}: ${v}`).join('\n')
+  );
   const [saving, setSaving] = useState(false);
 
+  const weatherOptions = campaign?.weather_options || [];
   const fromLoc = locations.find(l => l.id === edge.from_location_id);
   const toLoc = locations.find(l => l.id === edge.to_location_id);
 
   const handleSave = async () => {
     setSaving(true);
+    const properties = {};
+    propsStr.split('\n').forEach(line => {
+      const [k, ...rest] = line.split(':');
+      if (k?.trim() && rest.length) properties[k.trim()] = rest.join(':').trim();
+    });
     await api.updateEdge(campaignId, edge.id, {
-      label, travel_hours: travelHours,
+      label, description, travel_hours: travelHours,
       bidirectional, encounter_modifier: encounterMod,
+      weather_override: weatherOverride,
+      properties,
     });
     setSaving(false);
     onSave();
@@ -392,6 +406,10 @@ function EdgeDetailPanel({ campaignId, edge, locations, onSave, onDelete, onClos
         <input type="text" value={label} onChange={e => setLabel(e.target.value)} placeholder="Forest Road" />
       </div>
       <div className="form-group">
+        <label>Description</label>
+        <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} placeholder="A well-worn dirt road..." />
+      </div>
+      <div className="form-group">
         <label>Travel Time (hours)</label>
         <input type="number" step="0.5" min="0.5" value={travelHours} onChange={e => setTravelHours(Number(e.target.value))} />
       </div>
@@ -406,6 +424,52 @@ function EdgeDetailPanel({ campaignId, edge, locations, onSave, onDelete, onClos
         <input type="number" step="0.1" min="0" value={encounterMod} onChange={e => setEncounterMod(Number(e.target.value))} />
         <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>1.0 = normal</span>
       </div>
+      <div className="form-group">
+        <label>Properties (one per line, key: value)</label>
+        <textarea value={propsStr} onChange={e => setPropsStr(e.target.value)} rows={2} placeholder="terrain: mountain&#10;road_quality: poor" />
+      </div>
+
+      {/* Weather Override */}
+      <div style={{ marginBottom: 12 }}>
+        <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4, display: 'block' }}>Weather Override</label>
+        <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block', marginBottom: 6 }}>Applies during travel along this path</span>
+        <select
+          value={weatherOverride?.mode || ''}
+          onChange={e => {
+            const mode = e.target.value;
+            if (!mode) setWeatherOverride(null);
+            else if (mode === 'fixed') setWeatherOverride({ mode: 'fixed', value: weatherOptions[0] || 'Clear' });
+            else setWeatherOverride({ mode: 'weighted', value: {} });
+          }}
+          style={{ marginBottom: 8 }}
+        >
+          <option value="">None</option>
+          <option value="fixed">Fixed</option>
+          <option value="weighted">Weighted</option>
+        </select>
+        {weatherOverride?.mode === 'fixed' && (
+          <select value={weatherOverride.value} onChange={e => setWeatherOverride({ ...weatherOverride, value: e.target.value })}>
+            {weatherOptions.map(w => <option key={w} value={w}>{w}</option>)}
+          </select>
+        )}
+        {weatherOverride?.mode === 'weighted' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {weatherOptions.map(w => (
+              <div key={w} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 12, width: 80, color: 'var(--text-secondary)' }}>{w}</span>
+                <input type="number" step="0.1" min="0" max="1" style={{ width: 70 }}
+                  value={weatherOverride.value?.[w] || 0}
+                  onChange={e => setWeatherOverride({
+                    ...weatherOverride,
+                    value: { ...weatherOverride.value, [w]: Number(e.target.value) },
+                  })}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className="inline-flex gap-sm">
         <button className="btn btn-primary btn-sm" onClick={handleSave} disabled={saving}>
           {saving ? 'Saving...' : 'Save'}

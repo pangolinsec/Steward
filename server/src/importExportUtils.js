@@ -131,13 +131,14 @@ function remapLocationEdges(db, campaignId, edges, locationIdMap) {
     const newToId = locationIdMap[edge.to_location_id];
     if (!newFromId || !newToId) continue;
     db.prepare(`
-      INSERT INTO location_edges (campaign_id, from_location_id, to_location_id, label, travel_hours, bidirectional, encounter_modifier, properties)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO location_edges (campaign_id, from_location_id, to_location_id, label, description, travel_hours, bidirectional, encounter_modifier, properties, weather_override)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       campaignId, Number(newFromId), Number(newToId),
-      edge.label || '', edge.travel_hours || 1.0,
+      edge.label || '', edge.description || '', edge.travel_hours || 1.0,
       edge.bidirectional ?? 1, edge.encounter_modifier || 1.0,
       typeof edge.properties === 'string' ? edge.properties : JSON.stringify(edge.properties || '{}'),
+      edge.weather_override ? (typeof edge.weather_override === 'string' ? edge.weather_override : JSON.stringify(edge.weather_override)) : null,
     );
   }
 }

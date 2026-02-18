@@ -52,14 +52,18 @@ function seed() {
 
     // Create edges
     db.prepare(`
-      INSERT INTO location_edges (campaign_id, from_location_id, to_location_id, label, travel_hours, bidirectional, encounter_modifier)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(campaignId, silverdale.lastInsertRowid, thornwood.lastInsertRowid, 'Forest Road', 4, 1, 1.2);
+      INSERT INTO location_edges (campaign_id, from_location_id, to_location_id, label, description, travel_hours, bidirectional, encounter_modifier)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(campaignId, silverdale.lastInsertRowid, thornwood.lastInsertRowid, 'Forest Road',
+      'A well-worn dirt road winding through the Thornwood. Bandits have been spotted here recently.', 4, 1, 1.2);
 
     db.prepare(`
-      INSERT INTO location_edges (campaign_id, from_location_id, to_location_id, label, travel_hours, bidirectional, encounter_modifier)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(campaignId, thornwood.lastInsertRowid, ironHold.lastInsertRowid, 'Mountain Pass', 6, 1, 1.5);
+      INSERT INTO location_edges (campaign_id, from_location_id, to_location_id, label, description, travel_hours, bidirectional, encounter_modifier, weather_override)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(campaignId, thornwood.lastInsertRowid, ironHold.lastInsertRowid, 'Mountain Pass',
+      'A narrow, treacherous path carved into the mountainside. Snow and ice make footing dangerous.',
+      6, 1, 1.5,
+      JSON.stringify({ mode: 'weighted', value: { 'Snow': 0.4, 'Fog': 0.2, 'Windy': 0.2, 'Clear': 0.1, 'Storm': 0.1 } }));
 
     // Create environment state with starting location
     db.prepare(`

@@ -15,6 +15,7 @@ function parseEdge(edge) {
   return {
     ...edge,
     properties: JSON.parse(edge.properties || '{}'),
+    weather_override: edge.weather_override ? JSON.parse(edge.weather_override) : null,
   };
 }
 
@@ -113,16 +114,17 @@ router.get('/edges/list', (req, res) => {
 
 // POST create edge
 router.post('/edges', (req, res) => {
-  const { from_location_id, to_location_id, label, travel_hours, bidirectional, encounter_modifier, properties } = req.body;
+  const { from_location_id, to_location_id, label, description, travel_hours, bidirectional, encounter_modifier, properties, weather_override } = req.body;
   if (!from_location_id || !to_location_id) return res.status(400).json({ error: 'from_location_id and to_location_id are required' });
 
   const result = db.prepare(`
-    INSERT INTO location_edges (campaign_id, from_location_id, to_location_id, label, travel_hours, bidirectional, encounter_modifier, properties)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO location_edges (campaign_id, from_location_id, to_location_id, label, description, travel_hours, bidirectional, encounter_modifier, properties, weather_override)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     req.params.id, from_location_id, to_location_id,
-    label || '', travel_hours ?? 1.0, bidirectional ?? 1,
+    label || '', description || '', travel_hours ?? 1.0, bidirectional ?? 1,
     encounter_modifier ?? 1.0, JSON.stringify(properties || {}),
+    weather_override ? JSON.stringify(weather_override) : null,
   );
 
   const edge = db.prepare('SELECT * FROM location_edges WHERE id = ?').get(result.lastInsertRowid);
@@ -135,22 +137,26 @@ router.put('/edges/:edgeId', (req, res) => {
     .get(req.params.edgeId, req.params.id);
   if (!edge) return res.status(404).json({ error: 'Edge not found' });
 
-  const { label, travel_hours, bidirectional, encounter_modifier, properties } = req.body;
+  const { label, description, travel_hours, bidirectional, encounter_modifier, properties, weather_override } = req.body;
 
   db.prepare(`
     UPDATE location_edges SET
       label = COALESCE(?, label),
+      description = COALESCE(?, description),
       travel_hours = COALESCE(?, travel_hours),
       bidirectional = COALESCE(?, bidirectional),
       encounter_modifier = COALESCE(?, encounter_modifier),
-      properties = COALESCE(?, properties)
+      properties = COALESCE(?, properties),
+      weather_override = ?
     WHERE id = ? AND campaign_id = ?
   `).run(
     label !== undefined ? label : null,
+    description !== undefined ? description : null,
     travel_hours !== undefined ? travel_hours : null,
     bidirectional !== undefined ? (bidirectional ? 1 : 0) : null,
     encounter_modifier !== undefined ? encounter_modifier : null,
     properties ? JSON.stringify(properties) : null,
+    weather_override !== undefined ? (weather_override ? JSON.stringify(weather_override) : null) : edge.weather_override,
     req.params.edgeId, req.params.id,
   );
 

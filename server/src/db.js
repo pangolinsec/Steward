@@ -177,6 +177,8 @@ const migrations = [
   `ALTER TABLE campaigns ADD COLUMN weather_volatility REAL DEFAULT 0.3`,
   `ALTER TABLE campaigns ADD COLUMN weather_transition_table TEXT DEFAULT NULL`,
   `ALTER TABLE encounter_definitions ADD COLUMN conditions TEXT DEFAULT '{}'`,
+  `ALTER TABLE location_edges ADD COLUMN description TEXT DEFAULT ''`,
+  `ALTER TABLE location_edges ADD COLUMN weather_override TEXT DEFAULT NULL`,
 ];
 
 for (const sql of migrations) {

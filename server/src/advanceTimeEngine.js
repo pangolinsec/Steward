@@ -273,13 +273,19 @@ function advanceTime(campaignId, { hours = 0, minutes = 0 }) {
   let currentWeather = env.weather;
   const totalHours = hours + minutes / 60;
   const rollCount = Math.max(1, Math.floor(totalHours));
-  let location = null;
-  if (env.current_location_id) {
-    location = db.prepare('SELECT * FROM locations WHERE id = ?').get(env.current_location_id);
+  // Use edge weather override during travel, otherwise location override
+  let weatherSource = null;
+  if (env.current_edge_id) {
+    const edge = db.prepare('SELECT * FROM location_edges WHERE id = ?').get(env.current_edge_id);
+    if (edge?.weather_override) {
+      weatherSource = { weather_override: JSON.parse(edge.weather_override) };
+    }
+  } else if (env.current_location_id) {
+    weatherSource = db.prepare('SELECT * FROM locations WHERE id = ?').get(env.current_location_id);
   }
 
   for (let i = 0; i < rollCount; i++) {
-    const result = rollWeatherTransition(currentWeather, config, location);
+    const result = rollWeatherTransition(currentWeather, config, weatherSource);
     if (result.changed) {
       events.push({ type: 'weather_change', from: result.from, to: result.to });
       currentWeather = result.to;
