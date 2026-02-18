@@ -454,7 +454,7 @@ Both preset sets are stored per-campaign.
 
 ## Session Prep
 
-Session prep sheets help you plan sessions using the [Return of the Lazy Dungeon Master](https://slyflourish.com/returnofthelazydm/) methodology. Each prep has a structured format:
+Session prep sheets help you plan sessions using the [Lazy DM prep method](https://slyflourish.com/eight_steps_2023.html). Each prep has a structured format:
 
 - **Strong Start** — the opening scene to kick off the session with momentum (supports [[wikilinks]])
 - **Scenes** — potential scenes that might occur, each optionally linked to one or more map locations. Check them off as they play out.
