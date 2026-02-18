@@ -15,6 +15,7 @@ import { registerImportExportTools } from "./tools/import-export.js";
 import { registerCombatTools } from "./tools/combat.js";
 import { registerJournalTools } from "./tools/journal.js";
 import { registerRandomTableTools } from "./tools/random-tables.js";
+import { registerSessionPrepTools } from "./tools/session-prep.js";
 import {
   TOOLSETS,
   enableToolset,
@@ -43,6 +44,7 @@ registerImportExportTools(server);
 registerCombatTools(server);
 registerJournalTools(server);
 registerRandomTableTools(server);
+registerSessionPrepTools(server);
 
 if (TOOLBOX_ENABLED) {
   // Disable non-core toolsets — agents load them on demand via almanac_open_toolbox

@@ -152,6 +152,25 @@ const ENTITY_CONFIG = {
     idMapKey: 'randomTableIdMap',
     relations: [],
   },
+  session_preps: {
+    table: 'session_preps',
+    exportKey: 'session_preps',
+    displayName: 'Session Preps',
+    nameField: 'title',
+    columns: [
+      { name: 'title',        type: 'text', default: '' },
+      { name: 'status',       type: 'text', default: 'prep' },
+      { name: 'strong_start', type: 'text', default: '' },
+      { name: 'scenes',       type: 'json', default: [] },
+      { name: 'secrets',      type: 'json', default: [] },
+      { name: 'notes',        type: 'text', default: '' },
+      { name: 'created_at',   type: 'text', default: null },
+      { name: 'updated_at',   type: 'text', default: null },
+    ],
+    modifierColumns: [],
+    idMapKey: 'sessionPrepIdMap',
+    relations: [],
+  },
   rules: {
     table: 'rule_definitions',
     exportKey: 'rules',
@@ -181,6 +200,6 @@ const ENTITY_CONFIG = {
 // locations before encounters (encounter conditions reference location IDs),
 // encounters last (needs charIdMap for NPC remapping).
 // rules last — they're standalone, no cross-references.
-const IMPORT_ORDER = ['status_effects', 'items', 'characters', 'locations', 'encounters', 'rules', 'random_tables', 'journal_notes'];
+const IMPORT_ORDER = ['status_effects', 'items', 'characters', 'locations', 'encounters', 'rules', 'random_tables', 'journal_notes', 'session_preps'];
 
 module.exports = { ENTITY_CONFIG, IMPORT_ORDER };

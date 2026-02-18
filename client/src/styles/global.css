@@ -257,6 +257,53 @@ textarea {
   color: white;
 }
 
+/* Collapsible Nav Group */
+.nav-group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  transition: background 0.1s, color 0.1s;
+  cursor: pointer;
+}
+.nav-group-header:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+.nav-group-header.active {
+  background: var(--accent);
+  color: white;
+}
+.nav-group-chevron {
+  margin-left: auto;
+  font-size: 10px;
+  transition: transform 0.15s;
+  display: inline-block;
+}
+.nav-group-chevron.expanded {
+  transform: rotate(90deg);
+}
+.nav-group-children {
+  display: flex;
+  flex-direction: column;
+  padding-left: 16px;
+  gap: 1px;
+}
+.nav-group-children a {
+  font-size: 12px !important;
+  padding: 7px 12px !important;
+}
+
 .main-content {
   flex: 1;
   overflow-y: auto;

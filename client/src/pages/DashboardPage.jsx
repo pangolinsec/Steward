@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import * as api from '../api';
 import DiceRoller from '../components/DiceRoller';
 import { useToast } from '../components/ToastContext';
+import { renderMarkdown, processWikilinks } from '../utils/markdown';
+import { resolveWikilink } from '../utils/wikilinkNavigate';
 
 export default function DashboardPage({ campaignId, campaign }) {
   const navigate = useNavigate();
@@ -13,16 +15,18 @@ export default function DashboardPage({ campaignId, campaign }) {
   const [journalNotes, setJournalNotes] = useState([]);
   const [randomTables, setRandomTables] = useState([]);
   const [tableResults, setTableResults] = useState({});
+  const [activePrep, setActivePrep] = useState(null);
 
   const load = useCallback(async () => {
     if (!campaignId) return;
-    const [chars, env, combat, log, journal, tables] = await Promise.all([
+    const [chars, env, combat, log, journal, tables, prep] = await Promise.all([
       api.getCharacters(campaignId).catch(() => []),
       api.getEnvironment(campaignId).catch(() => null),
       api.getCombatState(campaignId).catch(() => ({ active: false })),
       api.getSessionLog(campaignId, 'limit=8').catch(() => ({ entries: [] })),
       api.getJournalNotes(campaignId, 'starred=1&limit=3').then(r => r.notes || []).catch(() => []),
       api.getRandomTables(campaignId).catch(() => []),
+      api.getActiveSessionPrep(campaignId).catch(() => null),
     ]);
     setCharacters(chars);
     setEnvironment(env);
@@ -30,6 +34,7 @@ export default function DashboardPage({ campaignId, campaign }) {
     setLogEntries(log.entries || []);
     setJournalNotes(Array.isArray(journal) ? journal : []);
     setRandomTables(tables);
+    setActivePrep(prep);
   }, [campaignId]);
 
   useEffect(() => { load(); }, [load]);
@@ -184,6 +189,9 @@ export default function DashboardPage({ campaignId, campaign }) {
         {/* Quick Advance */}
         <QuickAdvanceCard campaignId={campaignId} campaign={campaign} onAdvance={handleAdvance} processEvents={processEvents} onUpdate={load} />
 
+        {/* Session Prep */}
+        <SessionPrepCard activePrep={activePrep} campaignId={campaignId} onUpdate={load} navigate={navigate} />
+
         {/* Combat Status */}
         <div className="dashboard-card">
           <div className="dashboard-card-header">
@@ -305,8 +313,8 @@ function formatPresetTime(hours, minutes) {
 function QuickAdvanceCard({ campaignId, campaign, onAdvance, processEvents, onUpdate }) {
   const [editing, setEditing] = useState(false);
   const [presets, setPresets] = useState(campaign?.dashboard_time_presets || DEFAULT_DASHBOARD_PRESETS);
-  const dragIdx = useRef(null);
-  const dragOverIdx = useRef(null);
+  const dragIdxRef = useRef(null);
+  const dragOverIdxRef = useRef(null);
 
   useEffect(() => {
     if (campaign?.dashboard_time_presets) setPresets(campaign.dashboard_time_presets);
@@ -323,17 +331,17 @@ function QuickAdvanceCard({ campaignId, campaign, onAdvance, processEvents, onUp
   };
 
   const handleDragEnd = () => {
-    if (dragIdx.current === null || dragOverIdx.current === null || dragIdx.current === dragOverIdx.current) {
-      dragIdx.current = null;
-      dragOverIdx.current = null;
+    if (dragIdxRef.current === null || dragOverIdxRef.current === null || dragIdxRef.current === dragOverIdxRef.current) {
+      dragIdxRef.current = null;
+      dragOverIdxRef.current = null;
       return;
     }
     const reordered = [...presets];
-    const [moved] = reordered.splice(dragIdx.current, 1);
-    reordered.splice(dragOverIdx.current, 0, moved);
+    const [moved] = reordered.splice(dragIdxRef.current, 1);
+    reordered.splice(dragOverIdxRef.current, 0, moved);
     setPresets(reordered);
-    dragIdx.current = null;
-    dragOverIdx.current = null;
+    dragIdxRef.current = null;
+    dragOverIdxRef.current = null;
   };
 
   return (
@@ -355,8 +363,8 @@ function QuickAdvanceCard({ campaignId, campaign, onAdvance, processEvents, onUp
           {presets.map((p, i) => (
             <div key={i}
               draggable
-              onDragStart={() => { dragIdx.current = i; }}
-              onDragOver={e => { e.preventDefault(); dragOverIdx.current = i; }}
+              onDragStart={() => { dragIdxRef.current = i; }}
+              onDragOver={e => { e.preventDefault(); dragOverIdxRef.current = i; }}
               onDragEnd={handleDragEnd}
               style={{ display: 'flex', gap: 4, alignItems: 'center', padding: '3px 0', borderRadius: 'var(--radius-sm)', cursor: 'grab' }}
             >
@@ -405,6 +413,72 @@ function QuickAdvanceCard({ campaignId, campaign, onAdvance, processEvents, onUp
             }}>Long Rest</button>
           </div>
         </>
+      )}
+    </div>
+  );
+}
+
+function SessionPrepCard({ activePrep, campaignId, onUpdate, navigate }) {
+  const toggleScene = async (idx) => {
+    if (!activePrep) return;
+    const scenes = activePrep.scenes.map((s, i) => i === idx ? { ...s, done: !s.done } : s);
+    await api.updateSessionPrep(campaignId, activePrep.id, { scenes });
+    onUpdate();
+  };
+
+  const handleWikilinkClick = async (e) => {
+    const wikilink = e.target.closest('[data-wikilink]');
+    if (!wikilink) return;
+    e.preventDefault();
+    const name = decodeURIComponent(wikilink.dataset.wikilink);
+    const path = await resolveWikilink(campaignId, name);
+    if (path) navigate(path);
+  };
+
+  return (
+    <div className="dashboard-card" onClick={handleWikilinkClick}>
+      <div className="dashboard-card-header">
+        <span>Session Prep</span>
+        <button className="btn btn-ghost btn-sm" style={{ fontSize: 10, textTransform: 'none' }} onClick={() => navigate('/session-prep')}>
+          {activePrep ? 'Open Prep' : 'View All'}
+        </button>
+      </div>
+      {activePrep ? (
+        <div>
+          <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 6, cursor: 'pointer' }} onClick={() => navigate('/session-prep')}>
+            {activePrep.title || 'Untitled'}
+          </div>
+          {activePrep.strong_start && (
+            <div
+              className="markdown-content"
+              style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 8, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}
+              dangerouslySetInnerHTML={{ __html: renderMarkdown(activePrep.strong_start) }}
+            />
+          )}
+          {activePrep.scenes?.length > 0 && (
+            <div style={{ marginBottom: 8 }}>
+              {activePrep.scenes.map((scene, idx) => (
+                <label key={idx} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, padding: '2px 0', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={scene.done} onChange={() => toggleScene(idx)} />
+                  <span
+                    style={{ textDecoration: scene.done ? 'line-through' : 'none', opacity: scene.done ? 0.5 : 1 }}
+                    dangerouslySetInnerHTML={{ __html: processWikilinks(scene.text || '(empty)') }}
+                  />
+                </label>
+              ))}
+            </div>
+          )}
+          {activePrep.secrets?.length > 0 && (
+            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+              {activePrep.secrets.filter(s => s.revealed).length}/{activePrep.secrets.length} secrets revealed
+            </div>
+          )}
+        </div>
+      ) : (
+        <div>
+          <p style={{ color: 'var(--text-muted)', fontSize: 12, marginBottom: 8 }}>No active session prep.</p>
+          <button className="btn btn-sm btn-secondary" onClick={() => navigate('/session-prep')}>Create One</button>
+        </div>
       )}
     </div>
   );

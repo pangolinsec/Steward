@@ -2,7 +2,7 @@ import { marked } from 'marked';
 
 marked.setOptions({ breaks: true, gfm: true });
 
-function processWikilinks(text) {
+export function processWikilinks(text) {
   return text.replace(/\[\[([^\]]+)\]\]/g, (match, name) => {
     return `<a class="wikilink" href="#" data-wikilink="${encodeURIComponent(name)}">${name}</a>`;
   });

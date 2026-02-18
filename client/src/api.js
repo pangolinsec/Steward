@@ -141,6 +141,16 @@ export const rollRandomTable = (cId, tableId) => request(`/campaigns/${cId}/rand
 export const startEncounter = (cId, encId) => request(`/campaigns/${cId}/encounters/${encId}/start`, { method: 'POST' });
 export const endEncounter = (cId, encId) => request(`/campaigns/${cId}/encounters/${encId}/end`, { method: 'POST' });
 
+// Session Prep
+export const getSessionPreps = (cId, params = '') => request(`/campaigns/${cId}/session-preps${params ? '?' + params : ''}`);
+export const getActiveSessionPrep = (cId) => request(`/campaigns/${cId}/session-preps/active`);
+export const getSessionPrep = (cId, prepId) => request(`/campaigns/${cId}/session-preps/${prepId}`);
+export const createSessionPrep = (cId, data) => request(`/campaigns/${cId}/session-preps`, { method: 'POST', body: JSON.stringify(data) });
+export const updateSessionPrep = (cId, prepId, data) => request(`/campaigns/${cId}/session-preps/${prepId}`, { method: 'PUT', body: JSON.stringify(data) });
+export const activateSessionPrep = (cId, prepId) => request(`/campaigns/${cId}/session-preps/${prepId}/activate`, { method: 'PUT' });
+export const completeSessionPrep = (cId, prepId) => request(`/campaigns/${cId}/session-preps/${prepId}/complete`, { method: 'PUT' });
+export const deleteSessionPrep = (cId, prepId) => request(`/campaigns/${cId}/session-preps/${prepId}`, { method: 'DELETE' });
+
 // Export / Import
 export const exportCampaign = (cId) => request(`/campaigns/${cId}/export`);
 export const importCampaign = (cId, data) => request(`/campaigns/${cId}/import`, { method: 'POST', body: JSON.stringify(data) });

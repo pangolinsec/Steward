@@ -213,6 +213,13 @@ function evaluateRules(campaignId, triggerType, triggerContext = {}, cascadeDept
     }
   }
 
+  // Update last_triggered_at for all fired rules
+  if (fired.length > 0) {
+    const firedIds = [...new Set(fired.map(f => f.rule_id))];
+    const placeholders = firedIds.map(() => '?').join(',');
+    db.prepare(`UPDATE rule_definitions SET last_triggered_at = datetime('now') WHERE id IN (${placeholders})`).run(...firedIds);
+  }
+
   // Handle cascading time advances (aggregate and apply once)
   if (pendingTimeAdvances.length > 0) {
     const totalHours = pendingTimeAdvances.reduce((s, t) => s + t.hours, 0);

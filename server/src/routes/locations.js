@@ -29,6 +29,25 @@ function parseEdge(edge) {
   };
 }
 
+function checkSessionPrepAtLocation(campaignId, locationId, locationName) {
+  const prep = db.prepare("SELECT * FROM session_preps WHERE campaign_id = ? AND status = 'active' LIMIT 1").get(campaignId);
+  if (!prep) return;
+  const scenes = JSON.parse(prep.scenes || '[]');
+  const secrets = JSON.parse(prep.secrets || '[]');
+  for (const s of scenes) {
+    if (!s.done && Array.isArray(s.location_ids) && s.location_ids.includes(locationId)) {
+      db.prepare("INSERT INTO notifications (campaign_id, notification_type, message, severity, rule_name) VALUES (?, 'system', ?, 'info', 'Session Prep')")
+        .run(campaignId, `Session prep — Scene at ${locationName}: ${s.text}`);
+    }
+  }
+  for (const s of secrets) {
+    if (!s.revealed && Array.isArray(s.location_ids) && s.location_ids.includes(locationId)) {
+      db.prepare("INSERT INTO notifications (campaign_id, notification_type, message, severity, rule_name) VALUES (?, 'system', ?, 'info', 'Session Prep')")
+        .run(campaignId, `Session prep — Secret at ${locationName}: ${s.text}`);
+    }
+  }
+}
+
 // GET all locations
 router.get('/', (req, res) => {
   const locations = db.prepare('SELECT * FROM locations WHERE campaign_id = ? ORDER BY name').all(req.params.id);
@@ -240,6 +259,8 @@ router.post('/travel', (req, res) => {
   });
   result.events.push(...locResult.events);
 
+  checkSessionPrepAtLocation(req.params.id, destinationId, toLoc?.name || 'Unknown');
+
   // Update response with final location
   result.current_location_id = destinationId;
   result.current_location_name = toLoc?.name || null;
@@ -266,6 +287,8 @@ router.patch('/position', (req, res) => {
     fireRules(req.params.id, 'on_location_change', {
       direction: 'arriving', location_id, location_name: locationName,
     });
+
+    checkSessionPrepAtLocation(req.params.id, location_id, locationName);
   }
 
   res.json({ success: true, current_location_id: location_id, current_location_name: locationName });

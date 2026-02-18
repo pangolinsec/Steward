@@ -252,6 +252,20 @@ function initialize() {
       updated_at TEXT DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_journal_notes_campaign ON journal_notes(campaign_id);
+
+    CREATE TABLE IF NOT EXISTS session_preps (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+      title TEXT NOT NULL DEFAULT '',
+      status TEXT DEFAULT 'prep' CHECK(status IN ('prep', 'active', 'completed')),
+      strong_start TEXT DEFAULT '',
+      scenes TEXT DEFAULT '[]',
+      secrets TEXT DEFAULT '[]',
+      notes TEXT DEFAULT '',
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_session_preps_campaign ON session_preps(campaign_id);
   `);
 }
 
@@ -291,6 +305,7 @@ const migrations = [
     { label: "+1h", hours: 1, minutes: 0 },
     { label: "+4h", hours: 4, minutes: 0 },
   ])}'`,
+  `ALTER TABLE rule_definitions ADD COLUMN last_triggered_at TEXT DEFAULT NULL`,
 ];
 
 for (const sql of migrations) {

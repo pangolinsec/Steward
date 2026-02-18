@@ -9,7 +9,7 @@ interface ToolControl {
 export const TOOLSETS: Record<string, { description: string; tools: string[] }> = {
   world_building: {
     description:
-      "Campaign settings, character/effect/item/location/path/encounter/journal/random-table CRUD (25 tools)",
+      "Campaign settings, character/effect/item/location/path/encounter/journal/random-table/session-prep CRUD (28 tools)",
     tools: [
       "almanac_update_campaign",
       "almanac_create_character",
@@ -36,6 +36,9 @@ export const TOOLSETS: Record<string, { description: string; tools: string[] }> 
       "almanac_create_random_table",
       "almanac_update_random_table",
       "almanac_delete_random_table",
+      "almanac_create_session_prep",
+      "almanac_update_session_prep",
+      "almanac_delete_session_prep",
     ],
   },
   rules: {
