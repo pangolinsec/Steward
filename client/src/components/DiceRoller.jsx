@@ -76,9 +76,10 @@ export default function DiceRoller({ campaignId, campaign, inline }) {
               <button className="dice-qty-btn" onClick={() => setQty(d.sides, getQty(d.sides) + 1)}>+</button>
             </div>
           ))}
-          <button className="btn btn-primary btn-sm" style={{ width: '100%', marginTop: 6 }} disabled={!hasAny} onClick={roll}>
-            Roll
-          </button>
+          <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+            <button className="btn btn-primary btn-sm" style={{ flex: 1 }} disabled={!hasAny} onClick={roll}>Roll</button>
+            <button className="btn btn-secondary btn-sm" disabled={!hasAny} onClick={() => { setQuantities({}); setResult(null); }}>Clear</button>
+          </div>
           {result && (
             <div className="dice-result">
               <div className="dice-result-total">{result.total}</div>
