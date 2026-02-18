@@ -163,6 +163,19 @@ function remapCharacterEncounterRefs(db, campaignId, characters, charIdMap, enco
   }
 }
 
+// --- Location parent_id remapping ---
+
+function remapLocationParentIds(db, campaignId, locations, locationIdMap) {
+  for (const location of locations) {
+    if (location.parent_id == null) continue;
+    const newLocId = locationIdMap[location.id];
+    if (!newLocId) continue;
+    const newParentId = locationIdMap[location.parent_id] ?? null;
+    db.prepare('UPDATE locations SET parent_id = ? WHERE id = ?')
+      .run(newParentId, newLocId);
+  }
+}
+
 // --- Location edge import ---
 
 function remapLocationEdges(db, campaignId, edges, locationIdMap, locationOrder) {
@@ -531,6 +544,7 @@ function executeMergeImport(db, campaignId, importData, decisions, entityTypes) 
     }
     if (config.postProcess === 'remapLocationEdges') {
       const locationIdMap = idMaps.locationIdMap || {};
+      remapLocationParentIds(db, campaignId, entities, locationIdMap);
       idMaps.edgeIdMap = remapLocationEdges(db, campaignId, data.edges, locationIdMap, insertionOrder);
     }
     if (config.postProcess === 'remapSessionPrepLocations') {
@@ -560,6 +574,7 @@ module.exports = {
   validateModifierAttributes,
   remapEncounterNpcs,
   remapEncounterConditionLocations,
+  remapLocationParentIds,
   remapLocationEdges,
   remapSessionPrepLocations,
   remapCharacterEncounterRefs,

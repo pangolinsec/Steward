@@ -11,6 +11,8 @@ interface Character {
   portrait_url: string;
   base_attributes: Record<string, unknown>;
   max_attributes: Record<string, unknown>;
+  dm_notes: string;
+  archived: boolean;
 }
 
 interface EffectBreakdown {
@@ -46,8 +48,10 @@ interface ComputedStats {
 function formatCharacterSheet(stats: ComputedStats): string {
   const ch = stats.character;
   const lines: string[] = [];
-  lines.push(`## ${ch.name} (${ch.type})\n`);
+  const archivedTag = ch.archived ? " [archived]" : "";
+  lines.push(`## ${ch.name} (${ch.type})${archivedTag}\n`);
   if (ch.description) lines.push(`*${ch.description}*\n`);
+  if (ch.dm_notes) lines.push(`> **DM Notes:** ${ch.dm_notes}\n`);
 
   // Effective attributes
   const maxAttrs = stats.max_attributes || {};
@@ -386,6 +390,7 @@ export function registerCharacterTools(server: McpServer): void {
         portrait_url: z.string().optional().describe("Portrait image URL"),
         base_attributes: z.record(z.union([z.number(), z.string()])).optional().describe("Base attributes (e.g. { strength: 14, class: 'Fighter' })"),
         max_attributes: z.record(z.number()).optional().describe("Max values for resource attributes (e.g. { hp: 20 })"),
+        dm_notes: z.string().optional().describe("DM-only notes (private, not shown to players)"),
       },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
@@ -399,6 +404,7 @@ export function registerCharacterTools(server: McpServer): void {
           portrait_url: params.portrait_url ?? "",
           base_attributes: params.base_attributes ?? {},
           max_attributes: params.max_attributes ?? {},
+          dm_notes: params.dm_notes ?? "",
         });
         return { content: [{ type: "text", text: `Character **${result.name}** created (id: ${result.id})` }] };
       } catch (error) {
@@ -422,6 +428,8 @@ export function registerCharacterTools(server: McpServer): void {
         portrait_url: z.string().optional().describe("Portrait URL"),
         base_attributes: z.record(z.union([z.number(), z.string()])).optional().describe("Base attributes (replaces all)"),
         max_attributes: z.record(z.number()).optional().describe("Max values for resource attributes (replaces all)"),
+        dm_notes: z.string().optional().describe("DM-only notes (private, not shown to players)"),
+        archived: z.boolean().optional().describe("Archive this character (hidden from default lists)"),
       },
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
     },

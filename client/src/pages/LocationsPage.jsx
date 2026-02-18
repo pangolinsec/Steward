@@ -58,6 +58,7 @@ export default function LocationsPage({ campaignId, campaign, environment, onUpd
   const [traveling, setTraveling] = useState(false);
   const [travelProgress, setTravelProgress] = useState(0);
   const [encounterEvent, setEncounterEvent] = useState(null);
+  const [characters, setCharacters] = useState([]);
 
   const load = useCallback(async () => {
     if (!campaignId) return;
@@ -67,6 +68,9 @@ export default function LocationsPage({ campaignId, campaign, environment, onUpd
   }, [campaignId]);
 
   useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    if (campaignId) api.getCharacters(campaignId).then(setCharacters).catch(() => {});
+  }, [campaignId]);
 
   // Derived route object
   const route = useMemo(() => {
@@ -465,6 +469,7 @@ export default function LocationsPage({ campaignId, campaign, environment, onUpd
       {encounterEvent && (
         <EncounterTriggerModal
           event={encounterEvent}
+          characters={characters}
           onStart={() => handleStartEncounter(encounterEvent.encounter)}
           onDismiss={() => { setEncounterEvent(null); addToast('Encounter dismissed', 'info'); }}
         />
@@ -534,7 +539,7 @@ function TravelRoutePanel({ route, traveling, travelProgress, onTravel, onClear,
   );
 }
 
-function EncounterTriggerModal({ event, onStart, onDismiss }) {
+function EncounterTriggerModal({ event, characters = [], onStart, onDismiss }) {
   const enc = event.encounter;
   return (
     <div className="modal-overlay" onClick={onDismiss}>
@@ -551,7 +556,11 @@ function EncounterTriggerModal({ event, onStart, onDismiss }) {
             <div style={{ marginBottom: 8 }}>
               <strong style={{ fontSize: 12 }}>NPCs:</strong>
               <ul style={{ marginLeft: 16, marginTop: 2, fontSize: 13 }}>
-                {enc.npcs.map((n, i) => <li key={i}>Character #{n.character_id} ({n.role || 'member'})</li>)}
+                {enc.npcs.map((n, i) => {
+                  const name = n.name || characters.find(c => c.id === n.character_id)?.name || `Character #${n.character_id}`;
+                  const count = n.count > 1 ? ` x${n.count}` : '';
+                  return <li key={i}>{name}{count} ({n.role || 'member'})</li>;
+                })}
               </ul>
             </div>
           )}

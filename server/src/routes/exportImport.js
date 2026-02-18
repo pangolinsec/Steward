@@ -8,6 +8,7 @@ const {
   insertEntity,
   remapEncounterNpcs,
   remapEncounterConditionLocations,
+  remapLocationParentIds,
   remapLocationEdges,
   remapSessionPrepLocations,
   remapCharacterEncounterRefs,
@@ -170,6 +171,7 @@ router.post('/import', (req, res) => {
       }
       if (config.postProcess === 'remapLocationEdges') {
         const locationIdMap = idMaps.locationIdMap || {};
+        remapLocationParentIds(db, newCampaignId, entities, locationIdMap);
         idMaps.edgeIdMap = remapLocationEdges(db, newCampaignId, data.edges, locationIdMap, insertionOrder);
       }
       if (config.postProcess === 'remapSessionPrepLocations') {
