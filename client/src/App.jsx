@@ -156,7 +156,7 @@ export default function App() {
             <Route path="/locations" element={<LocationsPage campaignId={activeCampaignId} campaign={activeCampaign} environment={environment} onUpdate={() => { refreshEnvironment(); }} />} />
             <Route path="/journal" element={<JournalPage campaignId={activeCampaignId} />} />
             <Route path="/environment" element={<EnvironmentSettingsPage campaignId={activeCampaignId} campaign={activeCampaign} onUpdate={() => { refreshCampaign(); refreshEnvironment(); }} />} />
-            <Route path="/session-log" element={<SessionLogPage campaignId={activeCampaignId} />} />
+            <Route path="/session-log" element={<SessionLogPage campaignId={activeCampaignId} campaign={activeCampaign} />} />
           </Routes>
         </div>
       </div>

@@ -1,14 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import * as api from '../api';
 
-export default function SessionLogPage({ campaignId }) {
+export default function SessionLogPage({ campaignId, campaign }) {
   const [logData, setLogData] = useState({ entries: [], total: 0 });
   const [offset, setOffset] = useState(0);
   const [typeFilter, setTypeFilter] = useState('');
   const [hideDiceRolls, setHideDiceRolls] = useState(false);
+  const [showGameTime, setShowGameTime] = useState(false);
   const [newMessage, setNewMessage] = useState('');
   const [newType, setNewType] = useState('manual');
   const limit = 50;
+
+  const formatGameTime = (gameTime) => {
+    if (!gameTime) return null;
+    const match = gameTime.match(/^(\d+)-(\d+)-(\d+)T(\d+):(\d+)$/);
+    if (!match) return gameTime;
+    const [, year, month, day, hour, minute] = match;
+    const months = campaign?.calendar_config?.months || [];
+    const monthName = months[Number(month) - 1]?.name || `Month ${month}`;
+    const h = Number(hour);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    return `${monthName} ${Number(day)}, ${Number(year)} \u2014 ${h12}:${minute.padStart(2, '0')} ${ampm}`;
+  };
 
   const load = async () => {
     if (!campaignId) return;
@@ -39,7 +53,10 @@ export default function SessionLogPage({ campaignId }) {
   };
 
   const handleExport = () => {
-    const text = logData.entries.map(e => `[${e.timestamp}] [${e.entry_type}] ${e.message}`).join('\n');
+    const text = logData.entries.map(e => {
+      const ts = showGameTime && e.game_time ? formatGameTime(e.game_time) : e.timestamp;
+      return `[${ts}] [${e.entry_type}] ${e.message}`;
+    }).join('\n');
     const blob = new Blob([text], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -91,6 +108,10 @@ export default function SessionLogPage({ campaignId }) {
           <input type="checkbox" checked={hideDiceRolls} onChange={e => { setHideDiceRolls(e.target.checked); setOffset(0); }} />
           Hide dice rolls
         </label>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-secondary)', cursor: 'pointer' }}>
+          <input type="checkbox" checked={showGameTime} onChange={e => setShowGameTime(e.target.checked)} />
+          Game time
+        </label>
         <span style={{ color: 'var(--text-muted)', fontSize: 12, alignSelf: 'center' }}>{logData.total} entries</span>
       </div>
 
@@ -100,8 +121,8 @@ export default function SessionLogPage({ campaignId }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {logData.entries.map(entry => (
             <div key={entry.id} style={{ display: 'flex', gap: 12, padding: '8px 12px', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                {new Date(entry.timestamp + 'Z').toLocaleString()}
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: showGameTime ? 'var(--accent)' : 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                {showGameTime ? (formatGameTime(entry.game_time) || new Date(entry.timestamp + 'Z').toLocaleString()) : new Date(entry.timestamp + 'Z').toLocaleString()}
               </span>
               <span className="tag" style={{ fontSize: 10, borderColor: typeColors[entry.entry_type] || undefined, color: typeColors[entry.entry_type] || undefined }}>{entry.entry_type}</span>
               <span style={{ flex: 1 }}>{entry.message}</span>

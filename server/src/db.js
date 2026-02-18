@@ -277,6 +277,7 @@ const migrations = [
   `ALTER TABLE environment_state ADD COLUMN combat_state TEXT DEFAULT NULL`,
   `ALTER TABLE characters ADD COLUMN dm_notes TEXT DEFAULT ''`,
   `ALTER TABLE characters ADD COLUMN max_attributes TEXT DEFAULT '{}'`,
+  `ALTER TABLE session_log ADD COLUMN game_time TEXT DEFAULT NULL`,
 ];
 
 for (const sql of migrations) {
@@ -284,6 +285,19 @@ for (const sql of migrations) {
     if (!e.message.includes('duplicate column')) throw e;
   }
 }
+
+// Auto-populate game_time on session_log inserts from environment_state
+db.exec(`
+  CREATE TRIGGER IF NOT EXISTS trg_session_log_game_time
+  AFTER INSERT ON session_log
+  WHEN NEW.game_time IS NULL
+  BEGIN
+    UPDATE session_log SET game_time = (
+      SELECT printf('%04d-%02d-%02dT%02d:%02d', current_year, current_month, current_day, current_hour, current_minute)
+      FROM environment_state WHERE campaign_id = NEW.campaign_id
+    ) WHERE id = NEW.rowid;
+  END;
+`);
 
 // Fix rule_state.rule_id to be nullable (for general state like last_rest_time)
 try {
