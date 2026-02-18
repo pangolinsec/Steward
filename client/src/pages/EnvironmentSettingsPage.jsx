@@ -4,6 +4,7 @@ import * as api from '../api';
 import RuleRefBadge from '../components/RuleRefBadge';
 import TagPresetBrowser from '../components/TagPresetBrowser';
 import PresetBuilder from '../components/PresetBuilder';
+import WeatherTransitionGraph from '../components/WeatherTransitionGraph';
 
 export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate }) {
   const [env, setEnv] = useState(null);
@@ -457,37 +458,11 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
               <button className="btn btn-ghost btn-sm" onClick={() => setTransitionTable(null)}>Clear (use default)</button>
             </div>
             {transitionTable ? (
-              <>
-                <p style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>
-                  Toggle which weather types can transition to each other. Non-adjacent transitions are blocked.
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
-                  {weatherOptions.map(from => {
-                    const row = transitionTable[from] || {};
-                    return (
-                      <div key={from} style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: 12, fontWeight: 500, minWidth: 90, color: 'var(--text-primary)' }}>{from}</span>
-                        {weatherOptions.filter(w => w !== from).map(to => {
-                          const isOn = (row[to] || 0) > 0;
-                          return (
-                            <button key={to} className="btn btn-sm"
-                              style={{
-                                fontSize: 11, padding: '2px 8px',
-                                background: isOn ? 'var(--accent)' : 'var(--bg-input)',
-                                color: isOn ? '#fff' : 'var(--text-muted)',
-                                border: `1px solid ${isOn ? 'var(--accent)' : 'var(--border)'}`,
-                              }}
-                              onClick={() => toggleAdjacency(from, to)}
-                            >
-                              {to}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
+              <WeatherTransitionGraph
+                weatherOptions={weatherOptions}
+                transitionTable={transitionTable}
+                onSetTransitionTable={setTransitionTable}
+              />
             ) : (
               <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
                 Using auto-generated defaults. Click "Auto-generate" to customize.
