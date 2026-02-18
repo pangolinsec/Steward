@@ -20,14 +20,14 @@ export default function DashboardPage({ campaignId, campaign }) {
       api.getEnvironment(campaignId).catch(() => null),
       api.getCombatState(campaignId).catch(() => ({ active: false })),
       api.getSessionLog(campaignId, 'limit=8').catch(() => ({ entries: [] })),
-      api.getJournalNotes(campaignId, 'starred=1&limit=3').catch(() => []),
+      api.getJournalNotes(campaignId, 'starred=1&limit=3').then(r => r.notes || []).catch(() => []),
       api.getRandomTables(campaignId).catch(() => []),
     ]);
     setCharacters(chars);
     setEnvironment(env);
     setCombatState(combat?.active ? combat : null);
     setLogEntries(log.entries || []);
-    setJournalNotes(Array.isArray(journal) ? journal.filter(n => n.starred) : []);
+    setJournalNotes(Array.isArray(journal) ? journal : []);
     setRandomTables(tables);
   }, [campaignId]);
 
