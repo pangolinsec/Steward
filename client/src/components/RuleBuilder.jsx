@@ -14,7 +14,7 @@ const CONDITION_TYPES = [
   { value: 'time_between', label: 'Time Between', fields: ['from_hour', 'to_hour'] },
   { value: 'location_is', label: 'At Location', fields: ['location_id'] },
   { value: 'location_property', label: 'Location Property', fields: ['property', 'value'] },
-  { value: 'random_chance', label: 'Random Chance', fields: ['probability'] },
+  { value: 'random_chance', label: '% Probability', fields: ['probability'] },
   { value: 'hours_since_last_rest', label: 'Hours Since Rest', fields: ['operator', 'hours'] },
   { value: 'season_is', label: 'Season Is', fields: ['value'] },
 ];
@@ -558,9 +558,11 @@ function ConditionRow({ condition, onChange, onRemove, entityLists, campaign }) 
           type="number"
           value={condition[field] ?? ''}
           onChange={e => onChange({ ...condition, [field]: Number(e.target.value) })}
-          placeholder={field}
+          placeholder={field === 'probability' ? '0.0 – 1.0' : field}
           style={{ flex: 1, minWidth: 60, fontSize: 11, padding: '4px 6px' }}
           step={field === 'probability' ? '0.1' : undefined}
+          min={field === 'probability' ? '0' : undefined}
+          max={field === 'probability' ? '1' : undefined}
         />
       );
     }
@@ -731,6 +733,17 @@ function ActionRow({ action, index, total, onChange, onRemove, onMove, entityLis
           placeholder="severity"
         />
       );
+    } else if (field === 'items') {
+      const arr = action[field] || [];
+      fieldElement = (
+        <input
+          type="text"
+          value={arr.join(', ')}
+          onChange={e => onChange({ ...action, [field]: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+          placeholder="item1, item2, item3"
+          style={{ flex: 1, minWidth: 120, fontSize: 11, padding: '4px 6px' }}
+        />
+      );
     } else if (['delta', 'quantity', 'hours', 'minutes'].includes(field)) {
       fieldElement = (
         <input
@@ -776,7 +789,7 @@ function ActionRow({ action, index, total, onChange, onRemove, onMove, entityLis
         {ACTION_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
       </select>
       <div style={{ display: 'flex', gap: 4, flex: 1, flexWrap: 'wrap', alignItems: 'center' }}>
-        {(typeDef?.fields || []).filter(f => f !== 'items').map(renderField)}
+        {(typeDef?.fields || []).map(renderField)}
       </div>
       <button type="button" className="btn btn-danger btn-sm" style={{ padding: '2px 6px', fontSize: 10 }} onClick={onRemove}>&#x2715;</button>
     </div>

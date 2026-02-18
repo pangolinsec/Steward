@@ -181,6 +181,12 @@ export default function RulesPage({ campaignId, campaign }) {
     load();
   };
 
+  const handleDuplicate = async (rule) => {
+    const { id, created_at, updated_at, ...data } = rule;
+    await api.createRule(campaignId, { ...data, name: `${data.name} (copy)` });
+    load();
+  };
+
   const triggerLabel = (type) => TRIGGER_TYPES.find(t => t.value === type)?.label || type;
 
   const summarizeConditions = (conditions) => {
@@ -240,6 +246,7 @@ export default function RulesPage({ campaignId, campaign }) {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => setExpandedId(expandedId === rule.id ? null : rule.id)}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)', transition: 'transform 0.15s', transform: expandedId === rule.id ? 'rotate(90deg)' : 'none' }}>&#x25B6;</span>
                       <span style={{ fontWeight: 600, fontSize: 15 }}>{rule.name}</span>
                       <span className="tag" style={{ fontSize: 10 }}>{triggerLabel(rule.trigger_type)}</span>
                       <span className={`tag ${rule.action_mode === 'auto' ? 'tag-buff' : ''}`} style={{ fontSize: 10 }}>
@@ -272,6 +279,7 @@ export default function RulesPage({ campaignId, campaign }) {
                       {rule.enabled ? 'Disable' : 'Enable'}
                     </button>
                     <button className="btn btn-ghost btn-sm" onClick={() => setTestRule(rule)}>Test</button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => handleDuplicate(rule)}>Duplicate</button>
                     <button className="btn btn-ghost btn-sm" onClick={() => { setEditRule(rule); setShowForm(true); }}>Edit</button>
                     <button className="btn btn-danger btn-sm" onClick={() => handleDelete(rule.id, rule.name)}>Delete</button>
                   </div>
@@ -337,6 +345,7 @@ export default function RulesPage({ campaignId, campaign }) {
           entityLists={entityLists}
           onClose={() => { setShowForm(false); setEditRule(null); }}
           onSave={() => { setShowForm(false); setEditRule(null); load(); }}
+          onSaveAndTest={async (savedRule) => { setShowForm(false); setEditRule(null); await load(); setTestRule(savedRule); }}
         />
       )}
       {showImport && (
@@ -470,7 +479,7 @@ function TargetConfigPicker({ value, onChange, characters }) {
   );
 }
 
-function RuleForm({ campaignId, campaign, rule, entityLists, onClose, onSave }) {
+function RuleForm({ campaignId, campaign, rule, entityLists, onClose, onSave, onSaveAndTest }) {
   const [name, setName] = useState(rule?.name || '');
   const [description, setDescription] = useState(rule?.description || '');
   const [triggerType, setTriggerType] = useState(rule?.trigger_type || 'on_time_advance');
@@ -487,11 +496,12 @@ function RuleForm({ campaignId, campaign, rule, entityLists, onClose, onSave }) 
   const [useRawJson, setUseRawJson] = useState(false);
   const [rawConditions, setRawConditions] = useState(JSON.stringify(rule?.conditions || { all: [] }, null, 2));
   const [rawActions, setRawActions] = useState(JSON.stringify(rule?.actions || [], null, 2));
+  const hasAdvancedValues = rule && (rule.priority !== 100 || rule.target_mode !== 'environment' || (rule.tags || []).length > 0);
+  const [showAdvanced, setShowAdvanced] = useState(!!hasAdvancedValues);
 
   const characters = entityLists?.characters || [];
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const buildData = () => {
     let finalTriggerConfig, target_config, finalConditions, finalActions;
     try {
       finalTriggerConfig = showRawTrigger ? JSON.parse(rawTriggerStr) : triggerConfig;
@@ -505,7 +515,7 @@ function RuleForm({ campaignId, campaign, rule, entityLists, onClose, onSave }) 
       }
     } catch {
       alert('Invalid JSON in one of the fields');
-      return;
+      return null;
     }
     if (targetMode === 'environment') {
       const charActions = finalActions.filter(a => CHARACTER_ONLY_ACTIONS.has(a.type));
@@ -522,22 +532,39 @@ function RuleForm({ campaignId, campaign, rule, entityLists, onClose, onSave }) 
           charConds.forEach(c => issues.push(`  - ${summarizeConditionReadable(c)}`));
         }
         if (!confirm(`This rule targets "Environment" but has:\n\n${issues.join('\n')}\n\nThese will have no effect without a character target. Save anyway?`)) {
-          return;
+          return null;
         }
       }
     }
     const tags = tagsStr.split(',').map(s => s.trim()).filter(Boolean);
-    const data = {
+    return {
       name, description, trigger_type: triggerType, trigger_config: finalTriggerConfig,
       conditions: finalConditions, actions: finalActions,
       action_mode: actionMode, priority, tags, target_mode: targetMode, target_config,
     };
+  };
+
+  const saveRule = async () => {
+    const data = buildData();
+    if (!data) return null;
     if (rule) {
       await api.updateRule(campaignId, rule.id, data);
+      return { id: rule.id, name: data.name };
     } else {
-      await api.createRule(campaignId, data);
+      const created = await api.createRule(campaignId, data);
+      return { id: created.id, name: data.name };
     }
-    onSave();
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const saved = await saveRule();
+    if (saved) onSave();
+  };
+
+  const handleSaveAndTest = async () => {
+    const saved = await saveRule();
+    if (saved) onSaveAndTest(saved);
   };
 
   const toggleRawJson = () => {
@@ -576,34 +603,44 @@ function RuleForm({ campaignId, campaign, rule, entityLists, onClose, onSave }) 
             </div>
             <div className="form-row">
               <div className="form-group">
-                <label>Trigger Type</label>
+                <label>Trigger Type <span style={{ cursor: 'help', color: 'var(--text-muted)' }} title="When this rule is evaluated (e.g. every time advance, on rest, when items change)">(?)</span></label>
                 <select value={triggerType} onChange={e => { setTriggerType(e.target.value); setTriggerConfig({}); }}>
                   {TRIGGER_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
               </div>
               <div className="form-group">
-                <label>Action Mode</label>
+                <label>Action Mode <span style={{ cursor: 'help', color: 'var(--text-muted)' }} title="Auto-apply: actions run silently. Suggest: creates a notification for DM approval before executing.">(?)</span></label>
                 <select value={actionMode} onChange={e => setActionMode(e.target.value)}>
                   {ACTION_MODES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
                 </select>
               </div>
             </div>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Priority (lower = first)</label>
-                <input type="number" value={priority} onChange={e => setPriority(Number(e.target.value))} />
-              </div>
-              <div className="form-group">
-                <label>Target Mode</label>
-                <select value={targetMode} onChange={e => setTargetMode(e.target.value)}>
-                  {TARGET_MODES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-                </select>
-              </div>
-            </div>
-            <div className="form-group">
-              <label>Tags (comma-separated)</label>
-              <input type="text" value={tagsStr} onChange={e => setTagsStr(e.target.value)} placeholder="survival, combat, ..." />
-            </div>
+
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowAdvanced(!showAdvanced)}
+              style={{ fontSize: 11, color: 'var(--text-muted)', padding: '4px 0', marginBottom: showAdvanced ? 0 : 4 }}>
+              <span style={{ display: 'inline-block', transition: 'transform 0.15s', transform: showAdvanced ? 'rotate(90deg)' : 'none', marginRight: 4 }}>&#x25B6;</span>
+              Advanced{!showAdvanced && targetMode !== 'environment' ? ` (target: ${targetMode})` : ''}
+            </button>
+            {showAdvanced && (
+              <>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Priority <span style={{ cursor: 'help', color: 'var(--text-muted)' }} title="Lower numbers run first when multiple rules trigger simultaneously. Default: 100.">(?)</span></label>
+                    <input type="number" value={priority} onChange={e => setPriority(Number(e.target.value))} />
+                  </div>
+                  <div className="form-group">
+                    <label>Target Mode <span style={{ cursor: 'help', color: 'var(--text-muted)' }} title="Environment: rule runs once globally. Character targets: rule runs once per matching character, enabling per-character conditions and actions.">(?)</span></label>
+                    <select value={targetMode} onChange={e => setTargetMode(e.target.value)}>
+                      {TARGET_MODES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Tags <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 400 }}>(comma-separated)</span></label>
+                  <input type="text" value={tagsStr} onChange={e => setTagsStr(e.target.value)} placeholder="survival, combat, ..." />
+                </div>
+              </>
+            )}
 
             {needsTriggerConfig && (
               <div className="form-group">
@@ -672,6 +709,8 @@ function RuleForm({ campaignId, campaign, rule, entityLists, onClose, onSave }) 
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={handleSaveAndTest}
+              title="Saves the rule and opens the test panel">Save & Test</button>
             <button type="submit" className="btn btn-primary">{rule ? 'Save' : 'Create'}</button>
           </div>
         </form>
