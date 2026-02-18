@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as api from '../api';
+import DiceRoller from '../components/DiceRoller';
 
 export default function DashboardPage({ campaignId, campaign }) {
   const navigate = useNavigate();
@@ -11,9 +12,6 @@ export default function DashboardPage({ campaignId, campaign }) {
   const [journalNotes, setJournalNotes] = useState([]);
   const [randomTables, setRandomTables] = useState([]);
   const [tableResults, setTableResults] = useState({});
-  const [quickDie, setQuickDie] = useState(20);
-  const [quickMod, setQuickMod] = useState(0);
-  const [quickResult, setQuickResult] = useState(null);
 
   const load = useCallback(async () => {
     if (!campaignId) return;
@@ -62,20 +60,6 @@ export default function DashboardPage({ campaignId, campaign }) {
     encounter_start: 'var(--yellow)', encounter_end: 'var(--yellow)',
     travel: 'var(--green)', combat: 'var(--red)',
     table_roll: 'var(--accent)', dice_roll: 'var(--text-muted)',
-  };
-
-  const handleQuickRoll = async () => {
-    const roll = Math.floor(Math.random() * quickDie) + 1;
-    const total = roll + quickMod;
-    setQuickResult({ roll, mod: quickMod, total, die: quickDie });
-    if (campaign?.dice_settings?.log_rolls) {
-      try {
-        await api.addLogEntry(campaignId, {
-          entry_type: 'dice_roll',
-          message: `Rolled 1d${quickDie}(${roll})${quickMod ? ` + ${quickMod}` : ''} = ${total}`,
-        });
-      } catch {}
-    }
   };
 
   const handleAdvance = async (hours, minutes) => {
@@ -206,28 +190,12 @@ export default function DashboardPage({ campaignId, campaign }) {
           )}
         </div>
 
-        {/* Quick Roll */}
+        {/* Dice Roller */}
         <div className="dashboard-card">
           <div className="dashboard-card-header">
-            <span>Quick Roll</span>
+            <span>Dice Roller</span>
           </div>
-          <div className="quick-roll-inline">
-            <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>1d</span>
-            <select value={quickDie} onChange={e => setQuickDie(Number(e.target.value))} style={{ width: 65 }}>
-              {[4, 6, 8, 10, 12, 20, 100].map(d => <option key={d} value={d}>{d}</option>)}
-            </select>
-            <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>+</span>
-            <input type="number" value={quickMod} onChange={e => setQuickMod(Number(e.target.value))} style={{ width: 55, textAlign: 'center' }} />
-            <button className="btn btn-primary btn-sm" onClick={handleQuickRoll}>Roll</button>
-          </div>
-          {quickResult && (
-            <div style={{ marginTop: 8, textAlign: 'center' }}>
-              <div style={{ fontSize: 28, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--accent)' }}>{quickResult.total}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                1d{quickResult.die}({quickResult.roll}){quickResult.mod ? ` + ${quickResult.mod}` : ''}
-              </div>
-            </div>
-          )}
+          <DiceRoller campaignId={campaignId} campaign={campaign} inline />
         </div>
 
         {/* Recent Session Log */}

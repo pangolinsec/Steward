@@ -11,7 +11,7 @@ const DICE = [
   { sides: 100, label: 'd100' },
 ];
 
-export default function DiceRoller({ campaignId, campaign }) {
+export default function DiceRoller({ campaignId, campaign, inline }) {
   const [expanded, setExpanded] = useState(false);
   const [quantities, setQuantities] = useState({});
   const [result, setResult] = useState(null);
@@ -19,11 +19,13 @@ export default function DiceRoller({ campaignId, campaign }) {
   const [tables, setTables] = useState([]);
   const [tableResults, setTableResults] = useState({});
 
+  const isOpen = inline || expanded;
+
   useEffect(() => {
-    if (expanded && campaignId) {
+    if (isOpen && campaignId) {
       api.getRandomTables(campaignId).then(setTables).catch(() => {});
     }
-  }, [expanded, campaignId]);
+  }, [isOpen, campaignId]);
 
   const getQty = (sides) => quantities[sides] || 0;
 
@@ -64,23 +66,9 @@ export default function DiceRoller({ campaignId, campaign }) {
     }
   };
 
-  return (
-    <div className="dice-roller">
-      <div className="dice-roller-header" onClick={() => setExpanded(!expanded)}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <rect x="2" y="2" width="20" height="20" rx="3" />
-          <circle cx="8" cy="8" r="1.5" fill="currentColor" />
-          <circle cx="16" cy="8" r="1.5" fill="currentColor" />
-          <circle cx="8" cy="16" r="1.5" fill="currentColor" />
-          <circle cx="16" cy="16" r="1.5" fill="currentColor" />
-          <circle cx="12" cy="12" r="1.5" fill="currentColor" />
-        </svg>
-        <span>Dice Roller</span>
-        <span style={{ marginLeft: 'auto', fontSize: 10 }}>{expanded ? '\u25BC' : '\u25B2'}</span>
-      </div>
-      {expanded && (
-        <div className="dice-roller-body">
-          {DICE.map(d => (
+  const body = isOpen ? (
+    <div className="dice-roller-body">
+      {DICE.map(d => (
             <div key={d.sides} className="dice-row">
               <span className="dice-label">{d.label}</span>
               <button className="dice-qty-btn" onClick={() => setQty(d.sides, getQty(d.sides) - 1)}>-</button>
@@ -127,8 +115,26 @@ export default function DiceRoller({ campaignId, campaign }) {
               ))}
             </div>
           )}
-        </div>
-      )}
+    </div>
+  ) : null;
+
+  if (inline) return body;
+
+  return (
+    <div className="dice-roller">
+      <div className="dice-roller-header" onClick={() => setExpanded(!expanded)}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="2" y="2" width="20" height="20" rx="3" />
+          <circle cx="8" cy="8" r="1.5" fill="currentColor" />
+          <circle cx="16" cy="8" r="1.5" fill="currentColor" />
+          <circle cx="8" cy="16" r="1.5" fill="currentColor" />
+          <circle cx="16" cy="16" r="1.5" fill="currentColor" />
+          <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+        </svg>
+        <span>Dice Roller</span>
+        <span style={{ marginLeft: 'auto', fontSize: 10 }}>{expanded ? '\u25BC' : '\u25B2'}</span>
+      </div>
+      {body}
     </div>
   );
 }
