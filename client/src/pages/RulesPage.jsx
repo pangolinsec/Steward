@@ -31,6 +31,16 @@ const TARGET_MODES = [
   { value: 'specific', label: 'Specific Characters' },
 ];
 
+const CHARACTER_ONLY_ACTIONS = new Set([
+  'apply_effect', 'remove_effect', 'modify_attribute', 'consume_item', 'grant_item'
+]);
+
+const CHARACTER_ONLY_CONDITIONS = new Set([
+  'attribute_gte', 'attribute_lte', 'attribute_eq', 'trait_equals', 'trait_in',
+  'has_effect', 'lacks_effect', 'has_item', 'lacks_item', 'item_quantity_lte',
+  'character_type', 'hours_since_last_rest'
+]);
+
 function getMissingPrereqs(rule, entityLists) {
   if (!entityLists) return [];
   const warnings = [];
@@ -495,6 +505,25 @@ function RuleForm({ campaignId, campaign, rule, entityLists, onClose, onSave }) 
     } catch {
       alert('Invalid JSON in one of the fields');
       return;
+    }
+    if (targetMode === 'environment') {
+      const charActions = finalActions.filter(a => CHARACTER_ONLY_ACTIONS.has(a.type));
+      const condItems = finalConditions.all || finalConditions.any || [];
+      const charConds = condItems.filter(c => CHARACTER_ONLY_CONDITIONS.has(c.type));
+      if (charActions.length > 0 || charConds.length > 0) {
+        const issues = [];
+        if (charActions.length > 0) {
+          issues.push('Actions that require a character target:');
+          charActions.forEach(a => issues.push(`  - ${summarizeActionReadable(a)}`));
+        }
+        if (charConds.length > 0) {
+          issues.push('Conditions that require a character target:');
+          charConds.forEach(c => issues.push(`  - ${summarizeConditionReadable(c)}`));
+        }
+        if (!confirm(`This rule targets "Environment" but has:\n\n${issues.join('\n')}\n\nThese will have no effect without a character target. Save anyway?`)) {
+          return;
+        }
+      }
     }
     const tags = tagsStr.split(',').map(s => s.trim()).filter(Boolean);
     const data = {
