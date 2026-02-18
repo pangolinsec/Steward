@@ -16,11 +16,12 @@ RUN cd client && npm run build
 # Copy server source
 COPY server/ ./server/
 
-# Data directory
-RUN mkdir -p /data
+# Data directory (owned by node user, uid 1000)
+RUN mkdir -p /data && chown node:node /data
 ENV STEWARD_DATA_DIR=/data
 ENV PORT=3000
 
+USER node
 EXPOSE 3000
 
 CMD ["node", "server/src/index.js"]
