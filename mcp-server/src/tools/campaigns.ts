@@ -144,6 +144,21 @@ export function registerCampaignTools(server: McpServer): void {
         lines.push(`Enabled: ${campaign.encounter_settings.enabled}`);
         lines.push(`Base rate: ${campaign.encounter_settings.base_rate}`);
         lines.push(`Min interval: ${campaign.encounter_settings.min_interval_hours}h`);
+        lines.push("");
+
+        // Seasons
+        if (campaign.season_options?.length) {
+          lines.push(`### Seasons\n`);
+          lines.push(`Options: ${campaign.season_options.join(", ")}`);
+          lines.push("");
+        }
+
+        // Rules engine
+        if (campaign.rules_settings) {
+          lines.push(`### Rules Engine\n`);
+          lines.push(`Enabled: ${campaign.rules_settings.engine_enabled}`);
+          lines.push(`Cascade depth limit: ${campaign.rules_settings.cascade_depth_limit}`);
+        }
 
         return { content: [{ type: "text", text: lines.join("\n") }] };
       } catch (error) {
