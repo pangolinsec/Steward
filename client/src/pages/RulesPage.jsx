@@ -55,6 +55,68 @@ function getMissingPrereqs(rule, entityLists) {
   return warnings;
 }
 
+function summarizeConditionReadable(cond) {
+  switch (cond.type) {
+    case 'attribute_gte': return `${cond.attribute} >= ${cond.value}`;
+    case 'attribute_lte': return `${cond.attribute} <= ${cond.value}`;
+    case 'attribute_eq': return `${cond.attribute} == ${cond.value}`;
+    case 'has_effect': return `Has effect: ${cond.effect_name}`;
+    case 'lacks_effect': return `Lacks effect: ${cond.effect_name}`;
+    case 'has_item': return `Has item: ${cond.item_name}`;
+    case 'lacks_item': return `Lacks item: ${cond.item_name}`;
+    case 'item_quantity_lte': return `${cond.item_name} qty <= ${cond.value}`;
+    case 'character_type': return `Character is ${cond.value}`;
+    case 'weather_is': return `Weather is ${cond.value}`;
+    case 'weather_in': return `Weather in: ${(cond.values || []).join(', ')}`;
+    case 'time_of_day_is': return `Time of day is ${cond.value}`;
+    case 'time_between': return `Time between ${cond.from_hour}:00 and ${cond.to_hour}:00`;
+    case 'location_is': return `At location #${cond.location_id}`;
+    case 'location_property': return `Location ${cond.property} == ${cond.value}`;
+    case 'random_chance': return `${Math.round((cond.probability || 0) * 100)}% chance`;
+    case 'hours_since_last_rest': return `Hours since rest ${cond.operator || '??'} ${cond.hours}`;
+    case 'season_is': return `Season is ${cond.value}`;
+    default: return cond.type;
+  }
+}
+
+function summarizeActionReadable(action) {
+  switch (action.type) {
+    case 'apply_effect': return `Apply effect: ${action.effect_name}`;
+    case 'remove_effect': return `Remove effect: ${action.effect_name}`;
+    case 'modify_attribute': return `Modify ${action.attribute} by ${action.delta > 0 ? '+' : ''}${action.delta}`;
+    case 'consume_item': return `Consume ${action.quantity || 1}x ${action.item_name}`;
+    case 'grant_item': return `Grant ${action.quantity || 1}x ${action.item_name}`;
+    case 'set_weather': return `Set weather to ${action.weather}`;
+    case 'set_environment_note': return `Set note: ${action.note}`;
+    case 'advance_time': return `Advance time ${action.hours || 0}h ${action.minutes || 0}m`;
+    case 'notify': return `Notify (${action.severity || 'info'}): ${action.message}`;
+    case 'log': return `Log: ${action.message}`;
+    case 'roll_dice': return `Roll ${action.formula} -> ${action.store_as}`;
+    case 'random_from_list': return `Random from list -> ${action.store_as}`;
+    default: return action.type;
+  }
+}
+
+function summarizeTriggerConfig(type, config) {
+  if (!config || Object.keys(config).length === 0) return null;
+  switch (type) {
+    case 'on_threshold':
+      return `When ${config.attribute || '?'} crosses ${config.threshold ?? '?'} (${config.direction || 'either'})`;
+    case 'on_schedule': {
+      const parts = [];
+      if (config.month) parts.push(`month ${config.month}`);
+      if (config.day) parts.push(`day ${config.day}`);
+      const time = `${config.hour ?? 0}:${String(config.minute ?? 0).padStart(2, '0')}`;
+      parts.push(time);
+      return `At ${parts.join(', ')}`;
+    }
+    case 'on_encounter':
+      return config.encounter_type ? `On encounter (type: ${config.encounter_type})` : 'On any encounter';
+    default:
+      return null;
+  }
+}
+
 export default function RulesPage({ campaignId, campaign }) {
   const [rules, setRules] = useState([]);
   const [search, setSearch] = useState('');
@@ -113,12 +175,16 @@ export default function RulesPage({ campaignId, campaign }) {
     const items = tree.all || tree.any || [];
     if (items.length === 0) return 'No conditions (always passes)';
     const op = tree.all ? 'ALL' : 'ANY';
-    return `${op} of ${items.length} condition${items.length !== 1 ? 's' : ''}`;
+    const previews = items.slice(0, 3).map(summarizeConditionReadable);
+    const more = items.length > 3 ? ` +${items.length - 3} more` : '';
+    return `${op}: ${previews.join('; ')}${more}`;
   };
 
   const summarizeActions = (actions) => {
     if (!actions || actions.length === 0) return 'No actions';
-    return actions.map(a => a.type).join(', ');
+    const previews = actions.slice(0, 3).map(summarizeActionReadable);
+    const more = actions.length > 3 ? ` +${actions.length - 3} more` : '';
+    return previews.join('; ') + more;
   };
 
   const handleExport = async () => {
@@ -199,29 +265,49 @@ export default function RulesPage({ campaignId, campaign }) {
                 </div>
                 {expandedId === rule.id && (
                   <div style={{ marginTop: 12, padding: 12, background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', fontSize: 13 }}>
+                    {(() => {
+                      const triggerSummary = summarizeTriggerConfig(rule.trigger_type, rule.trigger_config);
+                      return triggerSummary ? (
+                        <div style={{ marginBottom: 8 }}>
+                          <strong>Trigger:</strong>{' '}
+                          <span style={{ color: 'var(--text-secondary)' }}>{triggerSummary}</span>
+                        </div>
+                      ) : null;
+                    })()}
                     <div style={{ marginBottom: 8 }}>
-                      <strong>Conditions:</strong> {summarizeConditions(rule.conditions)}
-                    </div>
-                    <div style={{ marginBottom: 8 }}>
-                      <strong>Actions:</strong> {summarizeActions(rule.actions)}
-                    </div>
-                    <div style={{ marginBottom: 8 }}>
-                      <strong>Trigger Config:</strong>
-                      <pre style={{ fontSize: 11, fontFamily: 'var(--font-mono)', marginTop: 4, whiteSpace: 'pre-wrap', color: 'var(--text-secondary)' }}>
-                        {JSON.stringify(rule.trigger_config, null, 2)}
-                      </pre>
-                    </div>
-                    <div style={{ marginBottom: 8 }}>
-                      <strong>Conditions (raw):</strong>
-                      <pre style={{ fontSize: 11, fontFamily: 'var(--font-mono)', marginTop: 4, whiteSpace: 'pre-wrap', color: 'var(--text-secondary)' }}>
-                        {JSON.stringify(rule.conditions, null, 2)}
-                      </pre>
+                      <strong>Conditions:</strong>
+                      {(() => {
+                        const tree = rule.conditions || {};
+                        const items = tree.all || tree.any || [];
+                        if (items.length === 0) return <span style={{ color: 'var(--text-muted)', marginLeft: 4 }}>None (always passes)</span>;
+                        const op = tree.all ? 'ALL' : 'ANY';
+                        return (
+                          <>
+                            <span style={{ color: 'var(--text-muted)', marginLeft: 4, fontSize: 11 }}>({op} must match)</span>
+                            <ul style={{ margin: '4px 0 0 16px', padding: 0, listStyle: 'disc' }}>
+                              {items.map((c, i) => (
+                                <li key={i} style={{ color: 'var(--text-secondary)', fontSize: 12, marginBottom: 2 }}>
+                                  {summarizeConditionReadable(c)}
+                                </li>
+                              ))}
+                            </ul>
+                          </>
+                        );
+                      })()}
                     </div>
                     <div>
-                      <strong>Actions (raw):</strong>
-                      <pre style={{ fontSize: 11, fontFamily: 'var(--font-mono)', marginTop: 4, whiteSpace: 'pre-wrap', color: 'var(--text-secondary)' }}>
-                        {JSON.stringify(rule.actions, null, 2)}
-                      </pre>
+                      <strong>Actions:</strong>
+                      {(!rule.actions || rule.actions.length === 0) ? (
+                        <span style={{ color: 'var(--text-muted)', marginLeft: 4 }}>None</span>
+                      ) : (
+                        <ol style={{ margin: '4px 0 0 16px', padding: 0 }}>
+                          {rule.actions.map((a, i) => (
+                            <li key={i} style={{ color: 'var(--text-secondary)', fontSize: 12, marginBottom: 2 }}>
+                              {summarizeActionReadable(a)}
+                            </li>
+                          ))}
+                        </ol>
+                      )}
                     </div>
                   </div>
                 )}

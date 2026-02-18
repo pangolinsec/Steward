@@ -248,6 +248,7 @@ const migrations = [
   `ALTER TABLE location_edges ADD COLUMN weather_override TEXT DEFAULT NULL`,
   `ALTER TABLE campaigns ADD COLUMN rules_settings TEXT DEFAULT '{"cascade_depth_limit":3,"engine_enabled":true}'`,
   `ALTER TABLE campaigns ADD COLUMN property_key_registry TEXT DEFAULT '[]'`,
+  `ALTER TABLE campaigns ADD COLUMN season_options TEXT DEFAULT '["Spring","Summer","Autumn","Winter"]'`,
 ];
 
 for (const sql of migrations) {

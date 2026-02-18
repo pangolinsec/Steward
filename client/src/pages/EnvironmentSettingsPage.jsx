@@ -24,6 +24,10 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
   // Rules engine settings
   const [rulesSettings, setRulesSettings] = useState({ engine_enabled: false, cascade_depth_limit: 3 });
 
+  // Season options
+  const [seasonOptions, setSeasonOptions] = useState([]);
+  const [newSeason, setNewSeason] = useState('');
+
   // Property key registry — normalized to {key, values}[] format
   const [propertyKeyRegistry, setPropertyKeyRegistry] = useState([]);
   const [newPropKey, setNewPropKey] = useState('');
@@ -40,10 +44,10 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
   const getCurrentSettings = useCallback(() => JSON.stringify({
     attrs, thresholds, calendarConfig, weatherOptions,
     weatherVolatility, transitionTable, encounterSettings,
-    rulesSettings, propertyKeyRegistry,
+    rulesSettings, propertyKeyRegistry, seasonOptions,
   }), [attrs, thresholds, calendarConfig, weatherOptions,
     weatherVolatility, transitionTable, encounterSettings,
-    rulesSettings, propertyKeyRegistry]);
+    rulesSettings, propertyKeyRegistry, seasonOptions]);
 
   const isDirty = savedSnapshot.current !== null && savedSnapshot.current !== getCurrentSettings();
 
@@ -77,6 +81,7 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
     setEncounterSettings(campaign.encounter_settings || { enabled: false, base_rate: 0.1, min_interval_hours: 1 });
     setRulesSettings(campaign.rules_settings || { engine_enabled: true, cascade_depth_limit: 3 });
     setPropertyKeyRegistry(campaign.property_key_registry || []);
+    setSeasonOptions(campaign.season_options || ["Spring", "Summer", "Autumn", "Winter"]);
     api.getEnvironment(campaignId).then(setEnv).catch(() => {});
     // Set saved snapshot after state settles
     requestAnimationFrame(() => {
@@ -90,6 +95,7 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
         encounterSettings: campaign.encounter_settings || { enabled: false, base_rate: 0.1, min_interval_hours: 1 },
         rulesSettings: campaign.rules_settings || { engine_enabled: true, cascade_depth_limit: 3 },
         propertyKeyRegistry: campaign.property_key_registry || [],
+        seasonOptions: campaign.season_options || ["Spring", "Summer", "Autumn", "Winter"],
       });
     });
   }, [campaignId, campaign]);
@@ -107,6 +113,7 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
         encounter_settings: encounterSettings,
         rules_settings: rulesSettings,
         property_key_registry: propertyKeyRegistry,
+        season_options: seasonOptions,
       });
       savedSnapshot.current = getCurrentSettings();
       onUpdate();
@@ -270,6 +277,25 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
             <input type="text" value={newWeather} onChange={e => setNewWeather(e.target.value)} placeholder="New weather type" style={{ flex: 1 }}
               onKeyDown={e => { if (e.key === 'Enter' && newWeather.trim()) { setWeatherOptions([...weatherOptions, newWeather.trim()]); setNewWeather(''); } }} />
             <button className="btn btn-secondary btn-sm" onClick={() => { if (newWeather.trim()) { setWeatherOptions([...weatherOptions, newWeather.trim()]); setNewWeather(''); } }}>Add</button>
+          </div>
+        </div>
+
+        {/* Season Options */}
+        <div className="card">
+          <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 12 }}>Season Options</h3>
+          <div className="inline-flex gap-sm flex-wrap" style={{ marginBottom: 8 }}>
+            {seasonOptions.map((s, i) => (
+              <span key={i} className="tag" style={{ gap: 6 }}>
+                {s}
+                <button style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 0, fontSize: 11 }}
+                  onClick={() => setSeasonOptions(seasonOptions.filter((_, idx) => idx !== i))}>&#x2715;</button>
+              </span>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input type="text" value={newSeason} onChange={e => setNewSeason(e.target.value)} placeholder="New season" style={{ flex: 1 }}
+              onKeyDown={e => { if (e.key === 'Enter' && newSeason.trim()) { setSeasonOptions([...seasonOptions, newSeason.trim()]); setNewSeason(''); } }} />
+            <button className="btn btn-secondary btn-sm" onClick={() => { if (newSeason.trim()) { setSeasonOptions([...seasonOptions, newSeason.trim()]); setNewSeason(''); } }}>Add</button>
           </div>
         </div>
 

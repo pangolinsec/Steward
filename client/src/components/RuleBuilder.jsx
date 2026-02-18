@@ -59,6 +59,129 @@ export function stripIds(data) {
   return data;
 }
 
+// Reusable select with optional "Custom..." escape hatch
+function FieldSelect({ value, onChange, options, allowCustom, placeholder }) {
+  const [customMode, setCustomMode] = useState(false);
+  const isCustomValue = allowCustom && value && !options.some(o =>
+    (typeof o === 'object' ? o.value : o) === value
+  );
+
+  if (!allowCustom) {
+    return (
+      <select
+        value={value ?? ''}
+        onChange={e => onChange(e.target.value)}
+        style={{ flex: 1, minWidth: 60, fontSize: 11, padding: '4px 28px 4px 6px' }}
+      >
+        <option value="">{placeholder || 'Select...'}</option>
+        {options.map(o => {
+          const val = typeof o === 'object' ? o.value : o;
+          const label = typeof o === 'object' ? o.label : o;
+          return <option key={val} value={val}>{label}</option>;
+        })}
+      </select>
+    );
+  }
+
+  if (customMode || isCustomValue) {
+    return (
+      <span style={{ display: 'inline-flex', flex: 1, minWidth: 60, gap: 2, alignItems: 'center' }}>
+        <input
+          type="text"
+          value={value ?? ''}
+          onChange={e => onChange(e.target.value)}
+          placeholder={placeholder || 'Custom value'}
+          style={{ flex: 1, minWidth: 40, fontSize: 11, padding: '4px 6px' }}
+        />
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm"
+          style={{ padding: '2px 4px', fontSize: 9, whiteSpace: 'nowrap' }}
+          onClick={() => { setCustomMode(false); }}
+          title="Switch to dropdown"
+        >&laquo;</button>
+      </span>
+    );
+  }
+
+  return (
+    <select
+      value={value ?? ''}
+      onChange={e => {
+        if (e.target.value === '__custom__') {
+          setCustomMode(true);
+        } else {
+          onChange(e.target.value);
+        }
+      }}
+      style={{ flex: 1, minWidth: 60, fontSize: 11, padding: '4px 28px 4px 6px' }}
+    >
+      <option value="">{placeholder || 'Select...'}</option>
+      {options.map(o => {
+        const val = typeof o === 'object' ? o.value : o;
+        const label = typeof o === 'object' ? o.label : o;
+        return <option key={val} value={val}>{label}</option>;
+      })}
+      <option value="__custom__">Custom...</option>
+    </select>
+  );
+}
+
+// Checkbox multi-select for weather_in with escape hatch
+function MultiCheckboxSelect({ values, onChange, options, allowCustom }) {
+  const [customMode, setCustomMode] = useState(false);
+  const arr = values || [];
+
+  if (customMode) {
+    return (
+      <span style={{ display: 'inline-flex', flex: 1, minWidth: 60, gap: 2, alignItems: 'center' }}>
+        <input
+          type="text"
+          value={arr.join(', ')}
+          onChange={e => onChange(e.target.value.split(',').map(s => s.trim()))}
+          placeholder="value1, value2"
+          style={{ flex: 1, minWidth: 40, fontSize: 11, padding: '4px 6px' }}
+        />
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm"
+          style={{ padding: '2px 4px', fontSize: 9 }}
+          onClick={() => setCustomMode(false)}
+          title="Switch to checkboxes"
+        >&laquo;</button>
+      </span>
+    );
+  }
+
+  return (
+    <span style={{ display: 'inline-flex', flex: 1, minWidth: 60, gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
+      {options.map(opt => (
+        <label key={opt} style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 10, cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={arr.includes(opt)}
+            onChange={e => {
+              if (e.target.checked) onChange([...arr, opt]);
+              else onChange(arr.filter(v => v !== opt));
+            }}
+            style={{ width: 12, height: 12 }}
+          />
+          {opt}
+        </label>
+      ))}
+      {allowCustom && (
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm"
+          style={{ padding: '1px 4px', fontSize: 9 }}
+          onClick={() => setCustomMode(true)}
+          title="Free text entry"
+        >...</button>
+      )}
+    </span>
+  );
+}
+
 export function ConditionBuilder({ value, onChange, entityLists, campaign }) {
   // value = { all: [...] } or { any: [...] }
   const operator = value?.any ? 'any' : 'all';
@@ -87,8 +210,6 @@ export function ConditionBuilder({ value, onChange, entityLists, campaign }) {
     onChange({ [operator]: conditions.filter((_, i) => i !== index) });
   };
 
-  const registry = (campaign?.property_key_registry || []).map(r => typeof r === 'string' ? r : r.key);
-
   return (
     <div style={{ padding: 10, background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
@@ -113,15 +234,17 @@ export function ConditionBuilder({ value, onChange, entityLists, campaign }) {
             onChange={updated => updateCondition(i, updated)}
             onRemove={() => removeCondition(i)}
             entityLists={entityLists}
-            registry={registry} />
+            campaign={campaign} />
         ))}
       </div>
     </div>
   );
 }
 
-function ConditionRow({ condition, onChange, onRemove, entityLists, registry }) {
+function ConditionRow({ condition, onChange, onRemove, entityLists, campaign }) {
   const typeDef = CONDITION_TYPES.find(t => t.value === condition.type);
+  const registry = (campaign?.property_key_registry || []).map(r => typeof r === 'string' ? { key: r, values: [] } : r);
+  const registryKeys = registry.map(r => r.key);
 
   const getWarning = (field) => {
     if (!entityLists) return null;
@@ -136,6 +259,213 @@ function ConditionRow({ condition, onChange, onRemove, entityLists, registry }) 
     return null;
   };
 
+  const renderField = (field) => {
+    const warning = getWarning(field);
+    const condType = condition.type;
+
+    let fieldElement;
+
+    // effect_name fields
+    if (field === 'effect_name') {
+      fieldElement = (
+        <FieldSelect
+          value={condition[field]}
+          onChange={v => onChange({ ...condition, [field]: v })}
+          options={entityLists?.effects || []}
+          allowCustom
+          placeholder="effect_name"
+        />
+      );
+    }
+    // item_name fields
+    else if (field === 'item_name') {
+      fieldElement = (
+        <FieldSelect
+          value={condition[field]}
+          onChange={v => onChange({ ...condition, [field]: v })}
+          options={entityLists?.items || []}
+          allowCustom
+          placeholder="item_name"
+        />
+      );
+    }
+    // attribute field
+    else if (field === 'attribute') {
+      const attrOptions = (campaign?.attribute_definitions || []).map(a => ({ value: a.key, label: a.label }));
+      fieldElement = (
+        <FieldSelect
+          value={condition[field]}
+          onChange={v => onChange({ ...condition, [field]: v })}
+          options={attrOptions}
+          allowCustom
+          placeholder="attribute"
+        />
+      );
+    }
+    // weather_is value
+    else if (field === 'value' && condType === 'weather_is') {
+      fieldElement = (
+        <FieldSelect
+          value={condition[field]}
+          onChange={v => onChange({ ...condition, [field]: v })}
+          options={campaign?.weather_options || []}
+          allowCustom
+          placeholder="weather"
+        />
+      );
+    }
+    // weather_in values
+    else if (field === 'values' && condType === 'weather_in') {
+      fieldElement = (
+        <MultiCheckboxSelect
+          values={condition[field]}
+          onChange={v => onChange({ ...condition, [field]: v })}
+          options={campaign?.weather_options || []}
+          allowCustom
+        />
+      );
+    }
+    // time_of_day_is value
+    else if (field === 'value' && condType === 'time_of_day_is') {
+      const labels = [...new Set((campaign?.time_of_day_thresholds || []).map(t => t.label))];
+      fieldElement = (
+        <FieldSelect
+          value={condition[field]}
+          onChange={v => onChange({ ...condition, [field]: v })}
+          options={labels}
+          allowCustom={false}
+          placeholder="time of day"
+        />
+      );
+    }
+    // season_is value
+    else if (field === 'value' && condType === 'season_is') {
+      fieldElement = (
+        <FieldSelect
+          value={condition[field]}
+          onChange={v => onChange({ ...condition, [field]: v })}
+          options={campaign?.season_options || []}
+          allowCustom
+          placeholder="season"
+        />
+      );
+    }
+    // character_type value
+    else if (field === 'value' && condType === 'character_type') {
+      fieldElement = (
+        <FieldSelect
+          value={condition[field]}
+          onChange={v => onChange({ ...condition, [field]: v })}
+          options={['PC', 'NPC']}
+          allowCustom={false}
+          placeholder="type"
+        />
+      );
+    }
+    // operator for hours_since_last_rest
+    else if (field === 'operator' && condType === 'hours_since_last_rest') {
+      fieldElement = (
+        <FieldSelect
+          value={condition[field]}
+          onChange={v => onChange({ ...condition, [field]: v })}
+          options={[
+            { value: 'gte', label: '>=' },
+            { value: 'lte', label: '<=' },
+            { value: 'eq', label: '==' },
+          ]}
+          allowCustom={false}
+          placeholder="operator"
+        />
+      );
+    }
+    // location_id for location_is
+    else if (field === 'location_id' && condType === 'location_is') {
+      const locOptions = (entityLists?.locations || []).map(l => ({ value: l.id, label: l.name }));
+      fieldElement = (
+        <FieldSelect
+          value={condition[field]?.toString()}
+          onChange={v => onChange({ ...condition, [field]: Number(v) })}
+          options={locOptions}
+          allowCustom={false}
+          placeholder="location"
+        />
+      );
+    }
+    // location_property: property key
+    else if (field === 'property' && condType === 'location_property') {
+      fieldElement = (
+        <FieldSelect
+          value={condition[field]}
+          onChange={v => onChange({ ...condition, [field]: v })}
+          options={registryKeys}
+          allowCustom
+          placeholder="property"
+        />
+      );
+    }
+    // location_property: value field
+    else if (field === 'value' && condType === 'location_property') {
+      const selectedKey = condition.property;
+      const registryEntry = registry.find(r => r.key === selectedKey);
+      const valOptions = registryEntry?.values || [];
+      if (valOptions.length > 0) {
+        fieldElement = (
+          <FieldSelect
+            value={condition[field]}
+            onChange={v => onChange({ ...condition, [field]: v })}
+            options={valOptions}
+            allowCustom
+            placeholder="value"
+          />
+        );
+      } else {
+        fieldElement = (
+          <input
+            type="text"
+            value={condition[field] ?? ''}
+            onChange={e => onChange({ ...condition, [field]: e.target.value })}
+            placeholder="value"
+            style={{ flex: 1, minWidth: 60, fontSize: 11, padding: '4px 6px' }}
+          />
+        );
+      }
+    }
+    // Number fields
+    else if (['value', 'probability', 'hours', 'from_hour', 'to_hour'].includes(field)) {
+      fieldElement = (
+        <input
+          type="number"
+          value={condition[field] ?? ''}
+          onChange={e => onChange({ ...condition, [field]: Number(e.target.value) })}
+          placeholder={field}
+          style={{ flex: 1, minWidth: 60, fontSize: 11, padding: '4px 6px' }}
+          step={field === 'probability' ? '0.1' : undefined}
+        />
+      );
+    }
+    // Default text input
+    else {
+      fieldElement = (
+        <input
+          type="text"
+          value={condition[field] ?? ''}
+          onChange={e => onChange({ ...condition, [field]: e.target.value })}
+          placeholder={field}
+          style={{ flex: 1, minWidth: 60, fontSize: 11, padding: '4px 6px' }}
+        />
+      );
+    }
+
+    return (
+      <span key={field} style={{ display: 'inline-flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 60 }}>
+        {fieldElement}
+        {warning && (
+          <span style={{ color: 'var(--yellow)', fontSize: 13, cursor: 'help', flexShrink: 0 }} title={warning}>&#x26A0;</span>
+        )}
+      </span>
+    );
+  };
+
   return (
     <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 6, padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
       <select value={condition.type} onChange={e => onChange({ type: e.target.value })}
@@ -143,45 +473,7 @@ function ConditionRow({ condition, onChange, onRemove, entityLists, registry }) 
         {CONDITION_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
       </select>
       <div style={{ display: 'flex', gap: 4, flex: 1, flexWrap: 'wrap', alignItems: 'center' }}>
-        {(typeDef?.fields || []).map(field => {
-          const warning = getWarning(field);
-          const isPropertyField = field === 'property' && condition.type === 'location_property';
-          return (
-            <span key={field} style={{ display: 'inline-flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 60 }}>
-              {isPropertyField ? (
-                <>
-                  <input
-                    type="text"
-                    list="property-keys-list"
-                    value={condition[field] ?? ''}
-                    onChange={e => onChange({ ...condition, [field]: e.target.value })}
-                    placeholder={field}
-                    style={{ flex: 1, minWidth: 60, fontSize: 11, padding: '4px 6px' }}
-                  />
-                  <datalist id="property-keys-list">
-                    {registry.map(k => <option key={k} value={k} />)}
-                  </datalist>
-                </>
-              ) : (
-                <input
-                  type={['value', 'probability', 'hours', 'from_hour', 'to_hour', 'location_id', 'delta'].includes(field) ? 'number' : 'text'}
-                  value={field === 'values' ? (condition[field] || []).join(', ') : (condition[field] ?? '')}
-                  onChange={e => {
-                    const val = field === 'values' ? e.target.value.split(',').map(s => s.trim()) :
-                      e.target.type === 'number' ? Number(e.target.value) : e.target.value;
-                    onChange({ ...condition, [field]: val });
-                  }}
-                  placeholder={field}
-                  style={{ flex: 1, minWidth: 60, fontSize: 11, padding: '4px 6px' }}
-                  step={field === 'probability' ? '0.1' : undefined}
-                />
-              )}
-              {warning && (
-                <span style={{ color: 'var(--yellow)', fontSize: 13, cursor: 'help', flexShrink: 0 }} title={warning}>&#x26A0;</span>
-              )}
-            </span>
-          );
-        })}
+        {(typeDef?.fields || []).map(renderField)}
       </div>
       <button type="button" className="btn btn-danger btn-sm" style={{ padding: '2px 6px', fontSize: 10 }} onClick={onRemove}>&#x2715;</button>
     </div>
@@ -263,6 +555,93 @@ function ActionRow({ action, index, total, onChange, onRemove, onMove, entityLis
     return null;
   };
 
+  const renderField = (field) => {
+    const warning = getWarning(field);
+    let fieldElement;
+
+    if (field === 'effect_name') {
+      fieldElement = (
+        <FieldSelect
+          value={action[field]}
+          onChange={v => onChange({ ...action, [field]: v })}
+          options={entityLists?.effects || []}
+          allowCustom
+          placeholder="effect_name"
+        />
+      );
+    } else if (field === 'item_name') {
+      fieldElement = (
+        <FieldSelect
+          value={action[field]}
+          onChange={v => onChange({ ...action, [field]: v })}
+          options={entityLists?.items || []}
+          allowCustom
+          placeholder="item_name"
+        />
+      );
+    } else if (field === 'weather') {
+      fieldElement = (
+        <FieldSelect
+          value={action[field]}
+          onChange={v => onChange({ ...action, [field]: v })}
+          options={campaign?.weather_options || []}
+          allowCustom
+          placeholder="weather"
+        />
+      );
+    } else if (field === 'attribute') {
+      const attrOptions = (campaign?.attribute_definitions || []).map(a => ({ value: a.key, label: a.label }));
+      fieldElement = (
+        <FieldSelect
+          value={action[field]}
+          onChange={v => onChange({ ...action, [field]: v })}
+          options={attrOptions}
+          allowCustom
+          placeholder="attribute"
+        />
+      );
+    } else if (field === 'severity') {
+      fieldElement = (
+        <FieldSelect
+          value={action[field]}
+          onChange={v => onChange({ ...action, [field]: v })}
+          options={['info', 'warning', 'error']}
+          allowCustom={false}
+          placeholder="severity"
+        />
+      );
+    } else if (['delta', 'quantity', 'hours', 'minutes'].includes(field)) {
+      fieldElement = (
+        <input
+          type="number"
+          value={action[field] ?? ''}
+          onChange={e => onChange({ ...action, [field]: Number(e.target.value) })}
+          placeholder={field}
+          style={{ flex: 1, minWidth: 60, fontSize: 11, padding: '4px 6px' }}
+        />
+      );
+    } else {
+      fieldElement = (
+        <input
+          type="text"
+          value={action[field] ?? ''}
+          onChange={e => onChange({ ...action, [field]: e.target.value })}
+          placeholder={field}
+          style={{ flex: 1, minWidth: 60, fontSize: 11, padding: '4px 6px' }}
+        />
+      );
+    }
+
+    return (
+      <span key={field} style={{ display: 'inline-flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 60 }}>
+        {fieldElement}
+        {warning && (
+          <span style={{ color: 'var(--yellow)', fontSize: 13, cursor: 'help', flexShrink: 0 }} title={warning}>&#x26A0;</span>
+        )}
+      </span>
+    );
+  };
+
   return (
     <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 6, padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -276,26 +655,7 @@ function ActionRow({ action, index, total, onChange, onRemove, onMove, entityLis
         {ACTION_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
       </select>
       <div style={{ display: 'flex', gap: 4, flex: 1, flexWrap: 'wrap', alignItems: 'center' }}>
-        {(typeDef?.fields || []).filter(f => f !== 'items').map(field => {
-          const warning = getWarning(field);
-          return (
-            <span key={field} style={{ display: 'inline-flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 60 }}>
-              <input
-                type={['delta', 'quantity', 'hours', 'minutes'].includes(field) ? 'number' : 'text'}
-                value={action[field] ?? ''}
-                onChange={e => {
-                  const val = e.target.type === 'number' ? Number(e.target.value) : e.target.value;
-                  onChange({ ...action, [field]: val });
-                }}
-                placeholder={field}
-                style={{ flex: 1, minWidth: 60, fontSize: 11, padding: '4px 6px' }}
-              />
-              {warning && (
-                <span style={{ color: 'var(--yellow)', fontSize: 13, cursor: 'help', flexShrink: 0 }} title={warning}>&#x26A0;</span>
-              )}
-            </span>
-          );
-        })}
+        {(typeDef?.fields || []).filter(f => f !== 'items').map(renderField)}
       </div>
       <button type="button" className="btn btn-danger btn-sm" style={{ padding: '2px 6px', fontSize: 10 }} onClick={onRemove}>&#x2715;</button>
     </div>

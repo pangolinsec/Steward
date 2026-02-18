@@ -142,9 +142,14 @@ function EncounterForm({ campaignId, campaign, encounter, onClose, onSave }) {
   const [name, setName] = useState(encounter?.name || '');
   const [description, setDescription] = useState(encounter?.description || '');
   const [notes, setNotes] = useState(encounter?.notes || '');
-  const [npcsStr, setNpcsStr] = useState(JSON.stringify(encounter?.npcs || [], null, 2));
-  const [envStr, setEnvStr] = useState(JSON.stringify(encounter?.environment_overrides || {}, null, 2));
-  const [lootStr, setLootStr] = useState(JSON.stringify(encounter?.loot_table || [], null, 2));
+
+  // Structured data instead of JSON strings
+  const [npcs, setNpcs] = useState(encounter?.npcs || []);
+  const [loot, setLoot] = useState(encounter?.loot_table || []);
+  const [envOverrides, setEnvOverrides] = useState(() => {
+    const eo = encounter?.environment_overrides || {};
+    return Object.entries(eo).map(([k, v]) => ({ key: k, value: v }));
+  });
 
   // Conditions
   const [condLocationIds, setCondLocationIds] = useState(encounter?.conditions?.location_ids || []);
@@ -152,12 +157,15 @@ function EncounterForm({ campaignId, campaign, encounter, onClose, onSave }) {
   const [condWeather, setCondWeather] = useState(encounter?.conditions?.weather || []);
   const [condWeight, setCondWeight] = useState(encounter?.conditions?.weight || 1.0);
 
-  // Load locations for condition picker
+  // Load locations, characters, items for pickers
   const [locations, setLocations] = useState([]);
+  const [characters, setCharacters] = useState([]);
+  const [items, setItems] = useState([]);
   useEffect(() => {
-    if (campaignId) {
-      api.getLocations(campaignId).then(data => setLocations(data.locations || [])).catch(() => {});
-    }
+    if (!campaignId) return;
+    api.getLocations(campaignId).then(data => setLocations(data.locations || [])).catch(() => {});
+    api.getCharacters(campaignId).then(setCharacters).catch(() => {});
+    api.getItems(campaignId).then(setItems).catch(() => {});
   }, [campaignId]);
 
   const weatherOptions = campaign?.weather_options || [];
@@ -168,16 +176,47 @@ function EncounterForm({ campaignId, campaign, encounter, onClose, onSave }) {
     else setter([...arr, item]);
   };
 
+  const NPC_ROLES = ['leader', 'member', 'hostile', 'neutral'];
+
+  // NPC helpers
+  const addNpc = () => setNpcs([...npcs, { character_id: '', role: 'member' }]);
+  const updateNpc = (i, field, val) => {
+    const updated = [...npcs];
+    updated[i] = { ...updated[i], [field]: val };
+    setNpcs(updated);
+  };
+  const removeNpc = (i) => setNpcs(npcs.filter((_, idx) => idx !== i));
+
+  // Loot helpers
+  const addLoot = () => setLoot([...loot, { item_name: '', quantity: 1, drop_chance: 1 }]);
+  const updateLoot = (i, field, val) => {
+    const updated = [...loot];
+    updated[i] = { ...updated[i], [field]: val };
+    setLoot(updated);
+  };
+  const removeLoot = (i) => setLoot(loot.filter((_, idx) => idx !== i));
+
+  // Env override helpers
+  const addEnvOverride = () => setEnvOverrides([...envOverrides, { key: '', value: '' }]);
+  const updateEnvOverride = (i, field, val) => {
+    const updated = [...envOverrides];
+    updated[i] = { ...updated[i], [field]: val };
+    setEnvOverrides(updated);
+  };
+  const removeEnvOverride = (i) => setEnvOverrides(envOverrides.filter((_, idx) => idx !== i));
+
+  // Custom mode state for loot item escape hatch
+  const [customLootItems, setCustomLootItems] = useState({});
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    let npcs, environment_overrides, loot_table;
-    try {
-      npcs = JSON.parse(npcsStr);
-      environment_overrides = JSON.parse(envStr);
-      loot_table = JSON.parse(lootStr);
-    } catch {
-      alert('Invalid JSON in one of the fields');
-      return;
+    const cleanNpcs = npcs.filter(n => n.character_id).map(n => ({
+      character_id: Number(n.character_id),
+      role: n.role || 'member',
+    }));
+    const environment_overrides = {};
+    for (const eo of envOverrides) {
+      if (eo.key.trim()) environment_overrides[eo.key.trim()] = eo.value;
     }
     const conditions = {
       location_ids: condLocationIds,
@@ -185,7 +224,7 @@ function EncounterForm({ campaignId, campaign, encounter, onClose, onSave }) {
       weather: condWeather,
       weight: condWeight,
     };
-    const data = { name, description, notes, npcs, environment_overrides, loot_table, conditions };
+    const data = { name, description, notes, npcs: cleanNpcs, environment_overrides, loot_table: loot, conditions };
     if (encounter) {
       await api.updateEncounter(campaignId, encounter.id, data);
     } else {
@@ -215,17 +254,125 @@ function EncounterForm({ campaignId, campaign, encounter, onClose, onSave }) {
               <label>Notes</label>
               <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} />
             </div>
+
+            {/* NPCs Builder */}
             <div className="form-group">
-              <label>NPCs (JSON array)</label>
-              <textarea value={npcsStr} onChange={e => setNpcsStr(e.target.value)} rows={3} style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }} />
+              <label>NPCs</label>
+              <div style={{ padding: 8, background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                {npcs.length === 0 && (
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', padding: 4 }}>No NPCs added</div>
+                )}
+                {npcs.map((npc, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 6 }}>
+                    <select
+                      value={npc.character_id}
+                      onChange={e => updateNpc(i, 'character_id', e.target.value)}
+                      style={{ flex: 2, fontSize: 12 }}
+                    >
+                      <option value="">Select character...</option>
+                      {characters.map(c => <option key={c.id} value={c.id}>{c.name} ({c.type})</option>)}
+                    </select>
+                    <select
+                      value={npc.role || 'member'}
+                      onChange={e => updateNpc(i, 'role', e.target.value)}
+                      style={{ flex: 1, fontSize: 12 }}
+                    >
+                      {NPC_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                    <button type="button" className="btn btn-danger btn-sm" style={{ padding: '2px 6px', fontSize: 10 }}
+                      onClick={() => removeNpc(i)}>&#x2715;</button>
+                  </div>
+                ))}
+                <button type="button" className="btn btn-secondary btn-sm" onClick={addNpc}>+ Add NPC</button>
+              </div>
             </div>
+
+            {/* Loot Table Builder */}
             <div className="form-group">
-              <label>Environment Overrides (JSON object)</label>
-              <textarea value={envStr} onChange={e => setEnvStr(e.target.value)} rows={3} style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }} />
+              <label>Loot Table</label>
+              <div style={{ padding: 8, background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                {loot.length === 0 && (
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', padding: 4 }}>No loot entries</div>
+                )}
+                {loot.map((entry, i) => {
+                  const isCustom = customLootItems[i] || (entry.item_name && !items.some(it => it.name === entry.item_name));
+                  return (
+                    <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 6 }}>
+                      {isCustom ? (
+                        <span style={{ display: 'inline-flex', flex: 2, gap: 2, alignItems: 'center' }}>
+                          <input
+                            type="text"
+                            value={entry.item_name}
+                            onChange={e => updateLoot(i, 'item_name', e.target.value)}
+                            placeholder="Item name"
+                            style={{ flex: 1, fontSize: 12 }}
+                          />
+                          <button type="button" className="btn btn-ghost btn-sm" style={{ padding: '2px 4px', fontSize: 9 }}
+                            onClick={() => setCustomLootItems({ ...customLootItems, [i]: false })}
+                            title="Switch to dropdown">&laquo;</button>
+                        </span>
+                      ) : (
+                        <select
+                          value={entry.item_name}
+                          onChange={e => {
+                            if (e.target.value === '__custom__') {
+                              setCustomLootItems({ ...customLootItems, [i]: true });
+                            } else {
+                              updateLoot(i, 'item_name', e.target.value);
+                            }
+                          }}
+                          style={{ flex: 2, fontSize: 12 }}
+                        >
+                          <option value="">Select item...</option>
+                          {items.map(it => <option key={it.id} value={it.name}>{it.name}</option>)}
+                          <option value="__custom__">Custom...</option>
+                        </select>
+                      )}
+                      <input type="number" min="1" value={entry.quantity}
+                        onChange={e => updateLoot(i, 'quantity', Number(e.target.value))}
+                        style={{ width: 55, fontSize: 12 }} title="Quantity" placeholder="Qty" />
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 11, color: 'var(--text-secondary)' }}>
+                        <input type="number" min="0" max="100" step="1"
+                          value={Math.round((entry.drop_chance ?? 1) * 100)}
+                          onChange={e => updateLoot(i, 'drop_chance', Number(e.target.value) / 100)}
+                          style={{ width: 50, fontSize: 12 }} />%
+                      </span>
+                      <button type="button" className="btn btn-danger btn-sm" style={{ padding: '2px 6px', fontSize: 10 }}
+                        onClick={() => removeLoot(i)}>&#x2715;</button>
+                    </div>
+                  );
+                })}
+                <button type="button" className="btn btn-secondary btn-sm" onClick={addLoot}>+ Add Loot</button>
+              </div>
             </div>
+
+            {/* Environment Overrides Builder */}
             <div className="form-group">
-              <label>Loot Table (JSON array)</label>
-              <textarea value={lootStr} onChange={e => setLootStr(e.target.value)} rows={3} style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }} />
+              <label>Environment Overrides</label>
+              <div style={{ padding: 8, background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                {envOverrides.length === 0 && (
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', padding: 4 }}>No overrides</div>
+                )}
+                {envOverrides.map((eo, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 6 }}>
+                    <input type="text" value={eo.key} onChange={e => updateEnvOverride(i, 'key', e.target.value)}
+                      placeholder="Key" style={{ width: 100, fontSize: 12 }} />
+                    {eo.key === 'weather' ? (
+                      <EncWeatherSelect
+                        value={eo.value}
+                        onChange={v => updateEnvOverride(i, 'value', v)}
+                        options={weatherOptions}
+                      />
+                    ) : (
+                      <input type="text" value={eo.value} onChange={e => updateEnvOverride(i, 'value', e.target.value)}
+                        placeholder="Value" style={{ flex: 1, fontSize: 12 }} />
+                    )}
+                    <button type="button" className="btn btn-danger btn-sm" style={{ padding: '2px 6px', fontSize: 10 }}
+                      onClick={() => removeEnvOverride(i)}>&#x2715;</button>
+                  </div>
+                ))}
+                <button type="button" className="btn btn-secondary btn-sm" onClick={addEnvOverride}>+ Add Override</button>
+              </div>
             </div>
 
             {/* Conditions Section */}
@@ -296,5 +443,33 @@ function EncounterForm({ campaignId, campaign, encounter, onClose, onSave }) {
         </form>
       </div>
     </div>
+  );
+}
+
+// Weather select with escape hatch for env overrides
+function EncWeatherSelect({ value, onChange, options }) {
+  const [customMode, setCustomMode] = useState(false);
+  const isCustom = value && !options.includes(value);
+
+  if (customMode || isCustom) {
+    return (
+      <span style={{ display: 'inline-flex', flex: 1, gap: 2, alignItems: 'center' }}>
+        <input type="text" value={value} onChange={e => onChange(e.target.value)}
+          placeholder="Custom weather" style={{ flex: 1, fontSize: 12 }} />
+        <button type="button" className="btn btn-ghost btn-sm" style={{ padding: '2px 4px', fontSize: 9 }}
+          onClick={() => setCustomMode(false)}>&laquo;</button>
+      </span>
+    );
+  }
+
+  return (
+    <select value={value} onChange={e => {
+      if (e.target.value === '__custom__') setCustomMode(true);
+      else onChange(e.target.value);
+    }} style={{ flex: 1, fontSize: 12 }}>
+      <option value="">Select weather...</option>
+      {options.map(w => <option key={w} value={w}>{w}</option>)}
+      <option value="__custom__">Custom...</option>
+    </select>
   );
 }
