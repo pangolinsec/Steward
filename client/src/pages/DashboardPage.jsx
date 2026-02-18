@@ -185,7 +185,7 @@ export default function DashboardPage({ campaignId, campaign }) {
           ) : (
             <div>
               <p style={{ color: 'var(--text-muted)', fontSize: 12, marginBottom: 8 }}>No active combat.</p>
-              <button className="btn btn-sm btn-secondary" onClick={() => navigate('/characters')}>Start Combat</button>
+              <button className="btn btn-sm btn-secondary" onClick={() => navigate('/characters', { state: { startCombat: true } })}>Start Combat</button>
             </div>
           )}
         </div>
