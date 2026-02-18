@@ -231,6 +231,9 @@ export function ConditionBuilder({ value, onChange, entityLists, campaign }) {
           <option value="all">ALL conditions</option>
           <option value="any">ANY condition</option>
         </select>
+        <span style={{ fontSize: 10, color: 'var(--text-muted)', fontStyle: 'italic' }}>
+          Nested AND/OR groups available in Raw JSON
+        </span>
         <button type="button" className="btn btn-secondary btn-sm" onClick={addCondition} style={{ marginLeft: 'auto' }}>
           + Condition
         </button>

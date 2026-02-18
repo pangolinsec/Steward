@@ -130,10 +130,28 @@ function summarizeTriggerConfig(type, config) {
   }
 }
 
+function relativeTime(dateStr) {
+  if (!dateStr) return null;
+  const date = new Date(dateStr.endsWith('Z') ? dateStr : dateStr + 'Z');
+  const now = new Date();
+  const diffMs = now - date;
+  if (diffMs < 0) return 'just now';
+  const diffSec = Math.floor(diffMs / 1000);
+  if (diffSec < 60) return 'just now';
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  const diffDays = Math.floor(diffHr / 24);
+  return `${diffDays}d ago`;
+}
+
 export default function RulesPage({ campaignId, campaign }) {
   const [rules, setRules] = useState([]);
   const [search, setSearch] = useState('');
   const [filterTrigger, setFilterTrigger] = useState('');
+  const [filterEnabled, setFilterEnabled] = useState('');
+  const [sortBy, setSortBy] = useState('priority');
   const [showForm, setShowForm] = useState(false);
   const [editRule, setEditRule] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
@@ -169,6 +187,17 @@ export default function RulesPage({ campaignId, campaign }) {
       });
     });
   }, [campaignId]);
+
+  const displayRules = rules
+    .filter(r => filterEnabled === '' ? true : filterEnabled === 'enabled' ? r.enabled : !r.enabled)
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'name': return a.name.localeCompare(b.name);
+        case 'last_triggered': return (b.last_triggered_at || '').localeCompare(a.last_triggered_at || '');
+        case 'newest': return b.id - a.id;
+        default: return a.priority - b.priority;
+      }
+    });
 
   const handleDelete = async (id, name) => {
     if (!confirm(`Delete rule "${name}"?`)) return;
@@ -234,12 +263,23 @@ export default function RulesPage({ campaignId, campaign }) {
           <option value="">All triggers</option>
           {TRIGGER_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
         </select>
+        <select value={filterEnabled} onChange={e => setFilterEnabled(e.target.value)} style={{ width: 130 }}>
+          <option value="">All rules</option>
+          <option value="enabled">Enabled only</option>
+          <option value="disabled">Disabled only</option>
+        </select>
+        <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ width: 150 }}>
+          <option value="priority">Sort: Priority</option>
+          <option value="name">Sort: Name</option>
+          <option value="last_triggered">Sort: Last Fired</option>
+          <option value="newest">Sort: Newest</option>
+        </select>
       </div>
-      {rules.length === 0 ? (
-        <div className="empty-state"><p>No rules defined yet. Create rules to automate game-world changes.</p></div>
+      {displayRules.length === 0 ? (
+        <div className="empty-state"><p>{rules.length === 0 ? 'No rules defined yet. Create rules to automate game-world changes.' : 'No rules match the current filters.'}</p></div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {rules.map(rule => {
+          {displayRules.map(rule => {
             const warnings = getMissingPrereqs(rule, entityLists);
             return (
               <div key={rule.id} className="card" style={{ opacity: rule.enabled ? 1 : 0.5 }}>
@@ -265,6 +305,9 @@ export default function RulesPage({ campaignId, campaign }) {
                     <div className="inline-flex gap-sm mt-sm" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                       <span>Priority: {rule.priority}</span>
                       <span>Target: {rule.target_mode}</span>
+                      {rule.last_triggered_at && (
+                        <span title={rule.last_triggered_at}>Fired: {relativeTime(rule.last_triggered_at)}</span>
+                      )}
                       {rule.tags.length > 0 && rule.tags.map(t => (
                         <span key={t} className="tag" style={{ fontSize: 9, padding: '1px 5px' }}>{t}</span>
                       ))}
