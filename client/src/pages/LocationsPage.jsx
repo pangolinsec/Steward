@@ -6,7 +6,6 @@ import {
   Background,
   useNodesState,
   useEdgesState,
-  addEdge,
   Handle,
   Position,
   MarkerType,
@@ -118,11 +117,17 @@ export default function LocationsPage({ campaignId, campaign, environment, onUpd
       x: event.clientX,
       y: event.clientY,
     });
-    const name = prompt('Location name:');
-    if (!name) return;
-    await api.createLocation(campaignId, { name, position_x: position.x, position_y: position.y });
-    load();
-  }, [campaignId, reactFlowInstance, load]);
+    const newLoc = await api.createLocation(campaignId, {
+      name: 'New Location',
+      position_x: position.x,
+      position_y: position.y,
+    });
+    const { locations: locs, edges: edgs } = await api.getLocations(campaignId);
+    setLocations(locs);
+    setEdgesData(edgs);
+    const created = locs.find(l => l.id === newLoc.id);
+    if (created) setSelected({ type: 'node', id: created.id, data: created, isNew: true });
+  }, [campaignId, reactFlowInstance]);
 
   const onNodeClick = useCallback((event, node) => {
     const loc = locations.find(l => l.id === Number(node.id));
@@ -169,6 +174,7 @@ export default function LocationsPage({ campaignId, campaign, environment, onUpd
           onPaneClick={onPaneClick}
           onInit={setReactFlowInstance}
           nodeTypes={nodeTypes}
+          zoomOnDoubleClick={false}
           fitView
           proOptions={{ hideAttribution: true }}
           style={{ background: 'var(--bg-primary)' }}
@@ -193,6 +199,7 @@ export default function LocationsPage({ campaignId, campaign, environment, onUpd
               locations={locations}
               campaign={campaign}
               environment={environment}
+              autoFocus={selected.isNew}
               onSave={() => { load(); }}
               onDelete={() => handleDeleteLocation(selected.id)}
               onSetParty={() => handleSetPartyPosition(selected.id)}
@@ -225,7 +232,7 @@ export default function LocationsPage({ campaignId, campaign, environment, onUpd
   );
 }
 
-function LocationDetailPanel({ campaignId, location, locations, campaign, environment, onSave, onDelete, onSetParty, onClose }) {
+function LocationDetailPanel({ campaignId, location, locations, campaign, environment, onSave, onDelete, onSetParty, onClose, autoFocus }) {
   const [name, setName] = useState(location.name);
   const [description, setDescription] = useState(location.description || '');
   const [parentId, setParentId] = useState(location.parent_id || '');
@@ -235,6 +242,14 @@ function LocationDetailPanel({ campaignId, location, locations, campaign, enviro
     Object.entries(location.properties || {}).map(([k, v]) => `${k}: ${v}`).join('\n')
   );
   const [saving, setSaving] = useState(false);
+  const nameRef = useRef(null);
+
+  useEffect(() => {
+    if (autoFocus && nameRef.current) {
+      nameRef.current.focus();
+      nameRef.current.select();
+    }
+  }, [autoFocus]);
 
   const weatherOptions = campaign?.weather_options || [];
   const isPartyHere = environment?.current_location_id === location.id;
@@ -264,7 +279,7 @@ function LocationDetailPanel({ campaignId, location, locations, campaign, enviro
       </div>
       <div className="form-group">
         <label>Name</label>
-        <input type="text" value={name} onChange={e => setName(e.target.value)} />
+        <input ref={nameRef} type="text" value={name} onChange={e => setName(e.target.value)} />
       </div>
       <div className="form-group">
         <label>Description</label>
