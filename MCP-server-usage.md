@@ -98,11 +98,37 @@ Any client that supports the MCP stdio transport can use this server. The key co
 
 If you don't know your campaign ID, you can omit `ALMANAC_CAMPAIGN_ID` and ask the AI to call `almanac_list_campaigns`. It will return all campaigns with their IDs. Then either set the env var or pass `campaign_id` explicitly in tool calls.
 
-## Available tools (56 total)
+## Toolbox: dynamic tool loading
 
-### Session Play
+The server has 58 tools total, but to keep context overhead low, only **29 tools** are visible by default — the session play tools plus two meta-tools. The remaining tools are organized into loadable **toolsets** that the AI agent can open on demand:
 
-These tools power a live game session — the core DM assistant experience.
+| Toolset | Tools | Contents |
+|---|---|---|
+| `world_building` | 19 | Campaign settings, character/effect/item/location/path/encounter CRUD |
+| `rules` | 8 | Rule CRUD, enable/disable, dry-run testing, entity reference scanning |
+| `import_export` | 2 | Full campaign JSON export and import |
+
+The two meta-tools that manage this:
+
+| Tool | Description |
+|---|---|
+| `almanac_open_toolbox` | Load a toolset (e.g. `world_building`). The new tools appear in the client's tool list. |
+| `almanac_close_toolbox` | Unload a toolset to free up context. Session play tools always remain available. |
+
+When the agent needs to create a location or edit a rule, it calls `almanac_open_toolbox` first, does the work, then optionally calls `almanac_close_toolbox` to clean up. MCP clients are notified of tool list changes automatically via `notifications/tools/list_changed`.
+
+## Available tools (58 total)
+
+### Always available: Session Play (29 tools)
+
+These tools are always visible — they power a live game session plus toolbox management.
+
+#### Toolbox
+
+| Tool | Description |
+|---|---|
+| `almanac_open_toolbox` | Load a toolset: `world_building`, `rules`, or `import_export` |
+| `almanac_close_toolbox` | Unload a toolset to reduce context |
 
 #### Environment & Time
 
@@ -150,66 +176,46 @@ These tools power a live game session — the core DM assistant experience.
 | `almanac_get_session_log` | Read the session log with pagination and type filters |
 | `almanac_add_log_entry` | Add a narrative entry to the log |
 
-### World Building
-
-Create and manage campaign content.
-
-#### Campaign Settings
+#### Reference (read-only)
 
 | Tool | Description |
 |---|---|
 | `almanac_list_campaigns` | List all campaigns (discover campaign IDs) |
 | `almanac_get_campaign` | Full campaign config: attributes, calendar, weather, encounters, rules settings |
-| `almanac_update_campaign` | Update campaign settings |
+| `almanac_list_status_effects` | List effect definitions (filterable by name/tag) |
+| `almanac_list_items` | List item definitions (filterable by name/type) |
+| `almanac_list_locations` | Get all locations and edges (the map) |
+| `almanac_list_encounters` | List encounter definitions |
 
-#### Character Management
+### Toolset: `world_building` (19 tools)
+
+Loaded via `almanac_open_toolbox({ toolset: "world_building" })`. Create and manage campaign content.
 
 | Tool | Description |
 |---|---|
+| `almanac_update_campaign` | Update campaign settings |
 | `almanac_create_character` | Create a new PC or NPC |
 | `almanac_update_character` | Update character fields |
 | `almanac_delete_character` | Delete a character |
-
-#### Status Effects
-
-| Tool | Description |
-|---|---|
-| `almanac_list_status_effects` | List effect definitions (filterable by name/tag) |
 | `almanac_create_status_effect` | Create a new status effect |
 | `almanac_update_status_effect` | Update an effect definition |
 | `almanac_delete_status_effect` | Delete an effect (removes all applied instances) |
-
-#### Items
-
-| Tool | Description |
-|---|---|
-| `almanac_list_items` | List item definitions (filterable by name/type) |
 | `almanac_create_item` | Create a new item |
 | `almanac_update_item` | Update an item definition |
 | `almanac_delete_item` | Delete an item (removes from all inventories) |
-
-#### Locations & Paths
-
-| Tool | Description |
-|---|---|
-| `almanac_list_locations` | Get all locations and edges (the map) |
 | `almanac_create_location` | Create a map location |
 | `almanac_update_location` | Update a location |
 | `almanac_delete_location` | Delete a location and its edges |
 | `almanac_create_edge` | Create a path between two locations |
 | `almanac_update_edge` | Update a path |
 | `almanac_delete_edge` | Delete a path |
-
-#### Encounters
-
-| Tool | Description |
-|---|---|
-| `almanac_list_encounters` | List encounter definitions |
 | `almanac_create_encounter` | Create a new encounter with trigger conditions |
 | `almanac_update_encounter` | Update an encounter |
 | `almanac_delete_encounter` | Delete an encounter |
 
-### Rules & Automation
+### Toolset: `rules` (8 tools)
+
+Loaded via `almanac_open_toolbox({ toolset: "rules" })`. Manage automation rules.
 
 | Tool | Description |
 |---|---|
@@ -222,7 +228,9 @@ Create and manage campaign content.
 | `almanac_test_rule` | Dry-run a rule against current state (no side effects) |
 | `almanac_get_rule_references` | Find which rules reference a given entity (impact analysis) |
 
-### Import / Export
+### Toolset: `import_export` (2 tools)
+
+Loaded via `almanac_open_toolbox({ toolset: "import_export" })`. Full campaign backup and restore.
 
 | Tool | Description |
 |---|---|
@@ -295,7 +303,8 @@ mcp-server/
 ├── package.json
 ├── tsconfig.json
 ├── src/
-│   ├── index.ts              # Entry point: creates server, registers tools, connects stdio
+│   ├── index.ts              # Entry point: registers tools, wires toolbox, connects stdio
+│   ├── toolbox.ts            # Dynamic toolset enable/disable (world_building, rules, import_export)
 │   ├── client.ts             # HTTP client for Almanac API (get/post/put/patch/del)
 │   ├── constants.ts          # ALMANAC_URL, ALMANAC_CAMPAIGN_ID defaults
 │   └── tools/
