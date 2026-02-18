@@ -16,15 +16,21 @@ A self-hosted web application for tabletop RPG Dungeon Masters to manage homebre
 ## Quick Start (Docker)
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 The app will be available at `http://localhost:3000`.
 
+To load example seed data (optional):
+
+```bash
+docker compose exec almanac node server/src/seed.js
+```
+
 To use a custom port:
 
 ```bash
-PORT=8080 docker-compose up -d
+PORT=8080 docker compose up -d
 ```
 
 ## Bare-Metal Setup
