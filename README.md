@@ -2,6 +2,8 @@
 
 A self-hosted web application for tabletop RPG Dungeon Masters to manage homebrew content, characters, world state, and session automation. System-agnostic — define your own attributes, effects, items, and rules for any game system.
 
+Full docs at https://pangolinsec.github.io/Steward/
+
 ## Features
 
 - **Characters** — PCs and NPCs with custom numeric and tag attributes, computed effective stats, modifier breakdowns
