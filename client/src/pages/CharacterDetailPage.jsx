@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import * as api from '../api';
 import { ModifierSummary, formatModifier } from '../components/ModifierDisplay';
@@ -379,6 +379,7 @@ function EditCharacterModal({ campaignId, character, attrs, onClose, onSaved }) 
   const [description, setDescription] = useState(character.description || '');
   const [portraitUrl, setPortraitUrl] = useState(character.portrait_url || '');
   const [dmNotes, setDmNotes] = useState(character.dm_notes || '');
+  const dmNotesRef = useRef(null);
   const [baseAttrs, setBaseAttrs] = useState(() => {
     const result = {};
     attrs.forEach(a => { result[a.key] = base[a.key] ?? (a.type === 'tag' ? '' : 10); });
@@ -448,9 +449,10 @@ function EditCharacterModal({ campaignId, character, attrs, onClose, onSaved }) 
                 ))}
               </div>
             )}
-            <div className="form-group" style={{ marginTop: 12 }}>
+            <div className="form-group" style={{ marginTop: 12, position: 'relative' }}>
               <label>DM Notes</label>
-              <WikilinkAutocomplete campaignId={campaignId} value={dmNotes} onChange={setDmNotes} rows={4} placeholder="Private notes, [[wikilinks]] supported..." />
+              <textarea ref={dmNotesRef} value={dmNotes} onChange={e => setDmNotes(e.target.value)} rows={4} placeholder="Private notes, [[wikilinks]] supported..." />
+              <WikilinkAutocomplete campaignId={campaignId} textareaRef={dmNotesRef} value={dmNotes} onChange={setDmNotes} />
             </div>
           </div>
           <div className="modal-footer">
