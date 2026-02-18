@@ -286,6 +286,8 @@ Intra-party conflict is allowed and can be dramatic, but:
 | `almanac_travel` | Moving along a defined path. Always prefer this over manual time advance for path travel. |
 | `almanac_set_party_position` | Teleportation, waking up in a new place, or correcting position without time passage. |
 
+**Departure logging:** Before calling `almanac_travel`, create a journal entry summarizing the major events that occurred at the location the party is leaving. This serves as a per-location narrative record. Only log if something noteworthy happened — skip if the party is just passing through or nothing significant occurred. Example: "Millhaven: Pip accepted a job from Aldric Vane. Party resupplied and rested at the Broken Keg. Kael confronted a pickpocket in the market."
+
 ### Journal & Logging
 | Tool | When to Use |
 |------|-------------|
@@ -307,11 +309,11 @@ Intra-party conflict is allowed and can be dramatic, but:
 Use `almanac_add_log_entry` to maintain a living record of the campaign. Log entries serve as the campaign's memory across sessions.
 
 ### Always Log:
+- **Departure summaries:** Before traveling, summarize what happened at the current location: "Millhaven: Accepted Vane's job, resupplied, rested at the Broken Keg. Kael confronted a pickpocket." (See Section 7, Locations & Travel.)
 - **Combat outcomes:** "The party defeated the goblin ambush on Thornwood Trail. Kael took heavy damage (52 → 31 HP). Pip looted a pouch of 12 silver."
 - **Key story decisions:** "The party chose to side with Captain Holt over Lord Voss's envoy."
 - **NPC interactions with consequences:** "Pip insulted Lord Voss's lieutenant. The Ashen Pact may remember this."
 - **Discoveries:** "The party found Maren Duskhollow's map showing a sunken temple in Greyhollow Swamp."
-- **Location arrivals/departures:** "The party departed Millhaven heading south toward Greyhollow Swamp."
 - **Character deaths or major status changes:** "Sister Adara was cursed by the amulet. Wisdom reduced by 3."
 
 ### Don't Log:
