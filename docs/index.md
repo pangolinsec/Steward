@@ -1,3 +1,10 @@
+---
+title: Home
+layout: default
+nav_order: 1
+permalink: /
+---
+
 # Almanac — DM Homebrew Manager
 
 Almanac is a self-hosted web application for tabletop RPG Dungeon Masters. It manages homebrew content, tracks characters, automates game-world mechanics, and keeps a session log — all in one place.

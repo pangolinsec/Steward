@@ -1,3 +1,9 @@
+---
+title: Rules Engine
+layout: default
+nav_order: 4
+---
+
 # Rules Engine Guide
 
 The rules engine acts as a co-DM. You define rules that watch for game events (time passing, effects changing, travel, rest, etc.), check conditions against the current world state, and then either auto-apply changes or suggest them for your approval. Every auto-applied change can be undone.

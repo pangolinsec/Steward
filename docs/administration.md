@@ -1,3 +1,9 @@
+---
+title: Administration
+layout: default
+nav_order: 5
+---
+
 # Administration Guide
 
 ## Docker Deployment

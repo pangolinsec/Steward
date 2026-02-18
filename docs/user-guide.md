@@ -1,3 +1,9 @@
+---
+title: User Guide
+layout: default
+nav_order: 3
+---
+
 # User Guide
 
 This guide covers every feature in Almanac from the DM's perspective.

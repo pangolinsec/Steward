@@ -1,0 +1,21 @@
+title: Almanac
+description: DM Homebrew Manager — Documentation
+remote_theme: just-the-docs/just-the-docs@v0.10.1
+
+url: ""
+baseurl: "/DnDApp"
+
+# Footer
+aux_links:
+  "GitHub":
+    - "https://github.com/OWNER/DnDApp"
+
+# Search
+search_enabled: true
+search.heading_level: 3
+
+# Navigation
+nav_sort: order
+
+# Color scheme
+color_scheme: dark
