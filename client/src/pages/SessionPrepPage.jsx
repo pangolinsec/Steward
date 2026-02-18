@@ -360,6 +360,9 @@ export default function SessionPrepPage({ campaignId }) {
               </label>
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>
                 Linked locations trigger a reminder when the party arrives, until this item is resolved.
+                Only location nodes are available — travel paths aren't selectable since scenes and secrets involve
+                player interaction at a destination. To set up a mid-travel encounter, create a new location node
+                along the path (e.g. ruins discovered while traveling a forest road).
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {(selectedPrep.scenes || []).map((scene, idx) => (
