@@ -42,7 +42,7 @@ The MCP server is configured via environment variables:
 
 | Variable | Default | Description |
 |---|---|---|
-| `STEWARD_URL` | `http://localhost:3001/api` | Base URL for the Steward REST API. If Steward runs on port 3000 (the default Docker setup), set this to `http://localhost:3000/api`. |
+| `STEWARD_URL` | `http://localhost:3000/api` | Base URL for the Steward REST API |
 | `STEWARD_CAMPAIGN_ID` | *(none)* | Default campaign ID. When set, all tools use this campaign automatically and the `campaign_id` parameter becomes optional. Recommended for single-campaign use. |
 | `STEWARD_TOOLBOX` | `off` | Set to `on` to enable the dynamic toolbox, which hides world-building/rules/import tools behind `steward_open_toolbox` to reduce context. Most MCP clients (including Claude Code and Claude Desktop) don't support dynamic tool list changes, so this is off by default. |
 
