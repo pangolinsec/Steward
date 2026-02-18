@@ -197,6 +197,10 @@ function rollEncounter(campaignId, config, env, hoursAdvanced) {
       const locId = env.current_location_id;
       if (!locId || !conds.location_ids.includes(locId)) return false;
     }
+    if (conds.edge_ids?.length > 0) {
+      const edgeId = env.current_edge_id;
+      if (!edgeId || !conds.edge_ids.includes(edgeId)) return false;
+    }
     if (conds.time_of_day?.length > 0) {
       if (!conds.time_of_day.includes(timeOfDay)) return false;
     }

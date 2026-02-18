@@ -125,6 +125,7 @@ router.post('/import', (req, res) => {
       if (config.postProcess === 'remapEncounterNpcs') {
         const charIdMap = idMaps.charIdMap || {};
         const locationIdMap = idMaps.locationIdMap || {};
+        const edgeIdMap = idMaps.edgeIdMap || {};
         for (const entity of entities) {
           const newId = idMaps[config.idMapKey]?.[entity.id];
           if (newId && entity.npcs) {
@@ -132,13 +133,13 @@ router.post('/import', (req, res) => {
           }
           if (newId && entity.conditions) {
             const conds = typeof entity.conditions === 'string' ? JSON.parse(entity.conditions) : entity.conditions;
-            remapEncounterConditionLocations(db, newCampaignId, newId, conds, locationIdMap);
+            remapEncounterConditionLocations(db, newCampaignId, newId, conds, locationIdMap, edgeIdMap);
           }
         }
       }
       if (config.postProcess === 'remapLocationEdges') {
         const locationIdMap = idMaps.locationIdMap || {};
-        remapLocationEdges(db, newCampaignId, data.edges, locationIdMap, insertionOrder);
+        idMaps.edgeIdMap = remapLocationEdges(db, newCampaignId, data.edges, locationIdMap, insertionOrder);
       }
     }
 

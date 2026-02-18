@@ -108,14 +108,21 @@ function remapEncounterNpcs(db, campaignId, encounterId, npcs, charIdMap) {
 
 // --- Encounter condition location remapping ---
 
-function remapEncounterConditionLocations(db, campaignId, encounterId, conditions, locationIdMap) {
-  if (!conditions || !conditions.location_ids || conditions.location_ids.length === 0) return;
-  const remapped = {
-    ...conditions,
-    location_ids: conditions.location_ids
+function remapEncounterConditionLocations(db, campaignId, encounterId, conditions, locationIdMap, edgeIdMap) {
+  const hasLocIds = conditions?.location_ids?.length > 0;
+  const hasEdgeIds = conditions?.edge_ids?.length > 0;
+  if (!hasLocIds && !hasEdgeIds) return;
+  const remapped = { ...conditions };
+  if (hasLocIds) {
+    remapped.location_ids = conditions.location_ids
       .map(id => locationIdMap[id] != null ? Number(locationIdMap[id]) : id)
-      .filter(id => id != null),
-  };
+      .filter(id => id != null);
+  }
+  if (hasEdgeIds && edgeIdMap) {
+    remapped.edge_ids = conditions.edge_ids
+      .map(id => edgeIdMap[id] != null ? Number(edgeIdMap[id]) : id)
+      .filter(id => id != null);
+  }
   db.prepare(`UPDATE ${ENTITY_CONFIG.encounters.table} SET conditions = ? WHERE id = ?`)
     .run(JSON.stringify(remapped), encounterId);
 }
@@ -127,7 +134,9 @@ function remapLocationEdges(db, campaignId, edges, locationIdMap, locationOrder)
   // Called once for all edges (not per-location).
   // locationOrder: optional array of new DB IDs in insertion order, used to
   // resolve 1-indexed positional references from LLM-generated JSON.
-  if (!edges || !Array.isArray(edges)) return;
+  // Returns edgeIdMap: old edge ID (or 1-indexed position) → new DB ID.
+  const edgeIdMap = {};
+  if (!edges || !Array.isArray(edges)) return edgeIdMap;
 
   // Build a positional (1-indexed) fallback map from the insertion order
   const positionalMap = {};
@@ -135,11 +144,11 @@ function remapLocationEdges(db, campaignId, edges, locationIdMap, locationOrder)
     locationOrder.forEach((dbId, idx) => { positionalMap[idx + 1] = dbId; });
   }
 
-  for (const edge of edges) {
+  edges.forEach((edge, idx) => {
     const newFromId = locationIdMap[edge.from_location_id] || positionalMap[edge.from_location_id];
     const newToId = locationIdMap[edge.to_location_id] || positionalMap[edge.to_location_id];
-    if (!newFromId || !newToId) continue;
-    db.prepare(`
+    if (!newFromId || !newToId) return;
+    const result = db.prepare(`
       INSERT INTO location_edges (campaign_id, from_location_id, to_location_id, label, description, travel_hours, bidirectional, encounter_modifier, properties, weather_override)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
@@ -149,7 +158,11 @@ function remapLocationEdges(db, campaignId, edges, locationIdMap, locationOrder)
       typeof edge.properties === 'string' ? edge.properties : JSON.stringify(edge.properties || '{}'),
       edge.weather_override ? (typeof edge.weather_override === 'string' ? edge.weather_override : JSON.stringify(edge.weather_override)) : null,
     );
-  }
+    const newEdgeId = result.lastInsertRowid;
+    if (edge.id != null) edgeIdMap[edge.id] = newEdgeId;
+    edgeIdMap[idx + 1] = newEdgeId; // 1-indexed positional fallback
+  });
+  return edgeIdMap;
 }
 
 // --- Modifier attribute validation ---
@@ -465,6 +478,7 @@ function executeMergeImport(db, campaignId, importData, decisions, entityTypes) 
     if (config.postProcess === 'remapEncounterNpcs') {
       const charIdMap = idMaps.charIdMap || {};
       const locationIdMap = idMaps.locationIdMap || {};
+      const edgeIdMap = idMaps.edgeIdMap || {};
       for (const entity of entities) {
         const newId = idMaps[config.idMapKey]?.[entity.id];
         if (newId && entity.npcs) {
@@ -472,13 +486,13 @@ function executeMergeImport(db, campaignId, importData, decisions, entityTypes) 
         }
         if (newId && entity.conditions) {
           const conds = typeof entity.conditions === 'string' ? JSON.parse(entity.conditions) : entity.conditions;
-          remapEncounterConditionLocations(db, campaignId, newId, conds, locationIdMap);
+          remapEncounterConditionLocations(db, campaignId, newId, conds, locationIdMap, edgeIdMap);
         }
       }
     }
     if (config.postProcess === 'remapLocationEdges') {
       const locationIdMap = idMaps.locationIdMap || {};
-      remapLocationEdges(db, campaignId, data.edges, locationIdMap, insertionOrder);
+      idMaps.edgeIdMap = remapLocationEdges(db, campaignId, data.edges, locationIdMap, insertionOrder);
     }
   }
 

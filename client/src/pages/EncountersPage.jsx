@@ -71,7 +71,7 @@ export default function EncountersPage({ campaignId, campaign }) {
                   <div className="inline-flex gap-sm mt-sm" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                     <span>{enc.npcs?.length || 0} NPCs</span>
                     <span>{enc.loot_table?.length || 0} loot entries</span>
-                    {enc.conditions && (enc.conditions.location_ids?.length > 0 || enc.conditions.time_of_day?.length > 0 || enc.conditions.weather?.length > 0) && (
+                    {enc.conditions && (enc.conditions.location_ids?.length > 0 || enc.conditions.edge_ids?.length > 0 || enc.conditions.time_of_day?.length > 0 || enc.conditions.weather?.length > 0) && (
                       <span className="tag" style={{ fontSize: 10 }}>Has conditions</span>
                     )}
                   </div>
@@ -91,10 +91,11 @@ export default function EncountersPage({ campaignId, campaign }) {
                       {Object.entries(enc.environment_overrides).map(([k, v]) => `${k}: ${v}`).join(', ')}
                     </div>
                   )}
-                  {enc.conditions && (enc.conditions.location_ids?.length > 0 || enc.conditions.time_of_day?.length > 0 || enc.conditions.weather?.length > 0) && (
+                  {enc.conditions && (enc.conditions.location_ids?.length > 0 || enc.conditions.edge_ids?.length > 0 || enc.conditions.time_of_day?.length > 0 || enc.conditions.weather?.length > 0) && (
                     <div style={{ marginBottom: 8 }}>
                       <strong>Conditions:</strong>{' '}
                       {enc.conditions.location_ids?.length > 0 && <span>Locations: {enc.conditions.location_ids.length} selected. </span>}
+                      {enc.conditions.edge_ids?.length > 0 && <span>Paths: {enc.conditions.edge_ids.length} selected. </span>}
                       {enc.conditions.time_of_day?.length > 0 && <span>Time: {enc.conditions.time_of_day.join(', ')}. </span>}
                       {enc.conditions.weather?.length > 0 && <span>Weather: {enc.conditions.weather.join(', ')}. </span>}
                       {enc.conditions.weight && enc.conditions.weight !== 1 && <span>Weight: {enc.conditions.weight}. </span>}
@@ -153,17 +154,22 @@ function EncounterForm({ campaignId, campaign, encounter, onClose, onSave }) {
 
   // Conditions
   const [condLocationIds, setCondLocationIds] = useState(encounter?.conditions?.location_ids || []);
+  const [condEdgeIds, setCondEdgeIds] = useState(encounter?.conditions?.edge_ids || []);
   const [condTimeOfDay, setCondTimeOfDay] = useState(encounter?.conditions?.time_of_day || []);
   const [condWeather, setCondWeather] = useState(encounter?.conditions?.weather || []);
   const [condWeight, setCondWeight] = useState(encounter?.conditions?.weight || 1.0);
 
-  // Load locations, characters, items for pickers
+  // Load locations, edges, characters, items for pickers
   const [locations, setLocations] = useState([]);
+  const [edges, setEdges] = useState([]);
   const [characters, setCharacters] = useState([]);
   const [items, setItems] = useState([]);
   useEffect(() => {
     if (!campaignId) return;
-    api.getLocations(campaignId).then(data => setLocations(data.locations || [])).catch(() => {});
+    api.getLocations(campaignId).then(data => {
+      setLocations(data.locations || []);
+      setEdges(data.edges || []);
+    }).catch(() => {});
     api.getCharacters(campaignId).then(setCharacters).catch(() => {});
     api.getItems(campaignId).then(setItems).catch(() => {});
   }, [campaignId]);
@@ -220,6 +226,7 @@ function EncounterForm({ campaignId, campaign, encounter, onClose, onSave }) {
     }
     const conditions = {
       location_ids: condLocationIds,
+      edge_ids: condEdgeIds,
       time_of_day: condTimeOfDay,
       weather: condWeather,
       weight: condWeight,
@@ -393,6 +400,26 @@ function EncounterForm({ campaignId, campaign, encounter, onClose, onSave }) {
                         {loc.name}
                       </label>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {edges.length > 0 && (
+                <div className="form-group">
+                  <label style={{ fontSize: 12 }}>Paths</label>
+                  <div className="inline-flex gap-sm flex-wrap">
+                    {edges.map(edge => {
+                      const fromName = locations.find(l => l.id === edge.from_location_id)?.name || '?';
+                      const toName = locations.find(l => l.id === edge.to_location_id)?.name || '?';
+                      const display = edge.label ? `${edge.label} (${fromName} \u2194 ${toName})` : `${fromName} \u2194 ${toName}`;
+                      return (
+                        <label key={edge.id} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, cursor: 'pointer' }}>
+                          <input type="checkbox" checked={condEdgeIds.includes(edge.id)}
+                            onChange={() => toggleArrayItem(condEdgeIds, setCondEdgeIds, edge.id)} />
+                          {display}
+                        </label>
+                      );
+                    })}
                   </div>
                 </div>
               )}

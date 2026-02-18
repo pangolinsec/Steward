@@ -815,6 +815,47 @@ function EdgeDetailPanel({ campaignId, edge, locations, campaign, onSave, onDele
   const [properties, setProperties] = useState(edge.properties || {});
   const [saving, setSaving] = useState(false);
 
+  // Encounters
+  const [encounters, setEncounters] = useState([]);
+  const [showEncounterPicker, setShowEncounterPicker] = useState(false);
+
+  useEffect(() => {
+    if (campaignId) {
+      api.getEncounters(campaignId).then(setEncounters).catch(() => {});
+    }
+  }, [campaignId]);
+
+  const assignedEncounters = encounters.filter(enc =>
+    enc.conditions?.edge_ids?.includes(edge.id)
+  );
+  const unassignedEncounters = encounters.filter(enc =>
+    !enc.conditions?.edge_ids?.includes(edge.id)
+  );
+
+  const assignEncounter = async (encId) => {
+    const enc = encounters.find(e => e.id === encId);
+    if (!enc) return;
+    const edgeIds = [...(enc.conditions?.edge_ids || []), edge.id];
+    await api.updateEncounter(campaignId, encId, {
+      ...enc,
+      conditions: { ...enc.conditions, edge_ids: edgeIds },
+    });
+    const updated = await api.getEncounters(campaignId);
+    setEncounters(updated);
+  };
+
+  const unassignEncounter = async (encId) => {
+    const enc = encounters.find(e => e.id === encId);
+    if (!enc) return;
+    const edgeIds = (enc.conditions?.edge_ids || []).filter(id => id !== edge.id);
+    await api.updateEncounter(campaignId, encId, {
+      ...enc,
+      conditions: { ...enc.conditions, edge_ids: edgeIds },
+    });
+    const updated = await api.getEncounters(campaignId);
+    setEncounters(updated);
+  };
+
   const weatherOptions = campaign?.weather_options || [];
   const fromLoc = locations.find(l => l.id === edge.from_location_id);
   const toLoc = locations.find(l => l.id === edge.to_location_id);
@@ -918,6 +959,51 @@ function EdgeDetailPanel({ campaignId, edge, locations, campaign, onSave, onDele
                 />
               </div>
             ))}
+          </div>
+        )}
+      </div>
+
+      {/* Encounters Section */}
+      <div style={{ marginBottom: 12 }}>
+        <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4, display: 'block' }}>Encounters</label>
+        {assignedEncounters.length === 0 ? (
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', padding: 4 }}>No encounters assigned</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 6 }}>
+            {assignedEncounters.map(enc => (
+              <div key={enc.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: '4px 8px', background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 500 }}>{enc.name}</div>
+                  {enc.description && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{enc.description.slice(0, 60)}{enc.description.length > 60 ? '...' : ''}</div>}
+                </div>
+                <button type="button" className="btn btn-danger btn-sm" style={{ padding: '2px 6px', fontSize: 10 }}
+                  onClick={() => unassignEncounter(enc.id)}>&#x2715;</button>
+              </div>
+            ))}
+          </div>
+        )}
+        <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowEncounterPicker(true)}>
+          Assign Encounter
+        </button>
+        {showEncounterPicker && (
+          <div style={{ marginTop: 8, padding: 8, background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', maxHeight: 180, overflowY: 'auto' }}>
+            {unassignedEncounters.length === 0 ? (
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', padding: 4 }}>No unassigned encounters available</div>
+            ) : (
+              unassignedEncounters.map(enc => (
+                <div key={enc.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid var(--border)' }}>
+                  <div>
+                    <div style={{ fontSize: 12 }}>{enc.name}</div>
+                    {enc.description && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{enc.description.slice(0, 50)}{enc.description.length > 50 ? '...' : ''}</div>}
+                  </div>
+                  <button type="button" className="btn btn-secondary btn-sm" style={{ fontSize: 10 }}
+                    onClick={() => assignEncounter(enc.id)}>Assign</button>
+                </div>
+              ))
+            )}
+            <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 6, fontSize: 10 }}
+              onClick={() => setShowEncounterPicker(false)}>Close</button>
           </div>
         )}
       </div>
