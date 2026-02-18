@@ -33,6 +33,13 @@ router.get('/export', (req, res) => {
       encounter_settings: campaign.encounter_settings ? JSON.parse(campaign.encounter_settings) : null,
       weather_volatility: campaign.weather_volatility,
       weather_transition_table: campaign.weather_transition_table ? JSON.parse(campaign.weather_transition_table) : null,
+      rules_settings: campaign.rules_settings ? JSON.parse(campaign.rules_settings) : null,
+      property_key_registry: campaign.property_key_registry ? JSON.parse(campaign.property_key_registry) : [],
+      season_options: campaign.season_options ? JSON.parse(campaign.season_options) : [],
+      custom_tag_presets: JSON.parse(campaign.custom_tag_presets || '[]'),
+      dice_settings: campaign.dice_settings ? JSON.parse(campaign.dice_settings) : null,
+      time_advance_presets: campaign.time_advance_presets ? JSON.parse(campaign.time_advance_presets) : null,
+      dashboard_time_presets: campaign.dashboard_time_presets ? JSON.parse(campaign.dashboard_time_presets) : null,
     },
   };
 
@@ -70,8 +77,12 @@ router.post('/import', (req, res) => {
   const importTransaction = db.transaction(() => {
     // Create campaign
     const campaignResult = db.prepare(`
-      INSERT INTO campaigns (name, attribute_definitions, time_of_day_thresholds, calendar_config, weather_options, encounter_settings, weather_volatility, weather_transition_table)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO campaigns (
+        name, attribute_definitions, time_of_day_thresholds, calendar_config,
+        weather_options, encounter_settings, weather_volatility, weather_transition_table,
+        rules_settings, property_key_registry, season_options, custom_tag_presets,
+        dice_settings, time_advance_presets, dashboard_time_presets
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       data.campaign.name + ' (Imported)',
       JSON.stringify(data.campaign.attribute_definitions || []),
@@ -81,6 +92,21 @@ router.post('/import', (req, res) => {
       JSON.stringify(data.campaign.encounter_settings || db.CAMPAIGN_DEFAULTS.encounter_settings),
       data.campaign.weather_volatility ?? db.CAMPAIGN_DEFAULTS.weather_volatility,
       data.campaign.weather_transition_table ? JSON.stringify(data.campaign.weather_transition_table) : null,
+      JSON.stringify(data.campaign.rules_settings || { cascade_depth_limit: 3, engine_enabled: true }),
+      JSON.stringify(data.campaign.property_key_registry || []),
+      JSON.stringify(data.campaign.season_options || ['Spring', 'Summer', 'Autumn', 'Winter']),
+      JSON.stringify(data.campaign.custom_tag_presets || []),
+      JSON.stringify(data.campaign.dice_settings || { log_rolls: false }),
+      JSON.stringify(data.campaign.time_advance_presets || [
+        { label: '+10m', hours: 0, minutes: 10 },
+        { label: '+1h', hours: 1, minutes: 0 },
+        { label: '+8h', hours: 8, minutes: 0 },
+      ]),
+      JSON.stringify(data.campaign.dashboard_time_presets || [
+        { label: '+15m', hours: 0, minutes: 15 },
+        { label: '+1h', hours: 1, minutes: 0 },
+        { label: '+4h', hours: 4, minutes: 0 },
+      ]),
     );
     const newCampaignId = campaignResult.lastInsertRowid;
 
@@ -146,13 +172,33 @@ router.post('/import', (req, res) => {
     // Import environment
     if (data.environment) {
       const locationIdMap = idMaps.locationIdMap || {};
+      const edgeIdMap = idMaps.edgeIdMap || {};
       const newLocId = data.environment.current_location_id
         ? (locationIdMap[data.environment.current_location_id] || null)
         : null;
+      const newEdgeId = data.environment.current_edge_id
+        ? (edgeIdMap[data.environment.current_edge_id] || null)
+        : null;
       db.prepare(`
-        INSERT INTO environment_state (campaign_id, current_hour, current_minute, current_day, current_month, current_year, weather, environment_notes, current_location_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(newCampaignId, data.environment.current_hour || 12, data.environment.current_minute || 0, data.environment.current_day || 1, data.environment.current_month || 1, data.environment.current_year || 1, data.environment.weather || 'Clear', data.environment.environment_notes || '', newLocId);
+        INSERT INTO environment_state (
+          campaign_id, current_hour, current_minute, current_day, current_month,
+          current_year, weather, environment_notes, current_location_id,
+          current_edge_id, edge_progress, last_encounter_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        newCampaignId,
+        data.environment.current_hour || 12,
+        data.environment.current_minute || 0,
+        data.environment.current_day || 1,
+        data.environment.current_month || 1,
+        data.environment.current_year || 1,
+        data.environment.weather || 'Clear',
+        data.environment.environment_notes || '',
+        newLocId,
+        newEdgeId,
+        data.environment.edge_progress ?? 0,
+        data.environment.last_encounter_at || null,
+      );
     } else {
       db.prepare('INSERT INTO environment_state (campaign_id) VALUES (?)').run(newCampaignId);
     }

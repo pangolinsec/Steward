@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { get, post, campaignId, handleError } from "../client.js";
+import { get, post, c, campaignId, handleError } from "../client.js";
 
 export function registerImportExportTools(server: McpServer): void {
   server.registerTool(
@@ -17,7 +17,7 @@ export function registerImportExportTools(server: McpServer): void {
     async (params) => {
       try {
         const cId = campaignId(params.campaign_id);
-        const data = await get<Record<string, unknown>>(`/campaigns/${cId}/export-import/export`);
+        const data = await get<Record<string, unknown>>(c(cId, "/export"));
         const name = (data.campaign as Record<string, unknown>)?.name ?? "campaign";
         const json = JSON.stringify(data, null, 2);
         return {
@@ -44,7 +44,7 @@ export function registerImportExportTools(server: McpServer): void {
     },
     async (params) => {
       try {
-        const result = await post<{ id: number; name: string }>("/campaigns/import", params.data);
+        const result = await post<{ id: number; name: string }>("/campaigns/_/import", params.data);
         return { content: [{ type: "text", text: `Campaign **${result.name}** imported (id: ${result.id})` }] };
       } catch (error) {
         return { content: [{ type: "text", text: handleError(error) }], isError: true };

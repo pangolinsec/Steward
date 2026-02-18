@@ -151,7 +151,7 @@ router.post('/edges', (req, res) => {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     req.params.id, from_location_id, to_location_id,
-    label || '', description || '', travel_hours ?? 1.0, bidirectional ?? 1,
+    label || '', description || '', travel_hours ?? 1.0, bidirectional === false ? 0 : 1,
     encounter_modifier ?? 1.0, JSON.stringify(properties || {}),
     weather_override ? JSON.stringify(weather_override) : null,
   );

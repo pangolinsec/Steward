@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { get, put, campaignId, handleError } from "../client.js";
+import { get, post, put, campaignId, handleError } from "../client.js";
 
 interface CampaignSummary {
   id: number;
@@ -37,6 +37,54 @@ export function registerCampaignTools(server: McpServer): void {
           lines.push(`- **${c.name}** (id: ${c.id})`);
         }
         return { content: [{ type: "text", text: lines.join("\n") }] };
+      } catch (error) {
+        return { content: [{ type: "text", text: handleError(error) }], isError: true };
+      }
+    },
+  );
+
+  server.registerTool(
+    "steward_create_campaign",
+    {
+      title: "Create Campaign",
+      description:
+        "Create a new campaign with initial settings. Returns the new campaign ID. Use steward_update_campaign to set additional fields like encounter_settings, weather_volatility, and season_options.",
+      inputSchema: {
+        name: z.string().min(1).describe("Campaign name"),
+        attribute_definitions: z
+          .array(z.object({
+            key: z.string(),
+            label: z.string(),
+            type: z.string().optional(),
+            options: z.array(z.string()).optional(),
+          }))
+          .optional()
+          .describe("Attribute definitions"),
+        time_of_day_thresholds: z
+          .array(z.object({ label: z.string(), start: z.number() }))
+          .optional()
+          .describe("Time of day labels with start hours"),
+        calendar_config: z
+          .object({
+            months: z.array(z.object({ name: z.string(), days: z.number() })),
+            weekdays: z.array(z.string()),
+          })
+          .optional()
+          .describe("Calendar configuration"),
+        weather_options: z.array(z.string()).optional().describe("Available weather types"),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+    },
+    async (params) => {
+      try {
+        const campaign = await post<Campaign>("/campaigns", {
+          name: params.name,
+          attribute_definitions: params.attribute_definitions,
+          time_of_day_thresholds: params.time_of_day_thresholds,
+          calendar_config: params.calendar_config,
+          weather_options: params.weather_options,
+        });
+        return { content: [{ type: "text", text: `Campaign **${campaign.name}** created (id: ${campaign.id})` }] };
       } catch (error) {
         return { content: [{ type: "text", text: handleError(error) }], isError: true };
       }

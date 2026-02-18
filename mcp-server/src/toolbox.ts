@@ -9,8 +9,9 @@ interface ToolControl {
 export const TOOLSETS: Record<string, { description: string; tools: string[] }> = {
   world_building: {
     description:
-      "Campaign settings, character/effect/item/location/path/encounter/journal/random-table/session-prep CRUD (28 tools)",
+      "Campaign settings, character/effect/item/location/path/encounter/journal/random-table/session-prep CRUD (29 tools)",
     tools: [
+      "steward_create_campaign",
       "steward_update_campaign",
       "steward_create_character",
       "steward_update_character",
