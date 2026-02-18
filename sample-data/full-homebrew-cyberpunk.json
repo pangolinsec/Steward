@@ -1,0 +1,2637 @@
+{
+  "version": 1,
+  "exported_at": "2026-02-18T17:14:32.956Z",
+  "campaign": {
+    "id": 14,
+    "name": "Neon Requiem",
+    "created_at": "2026-02-18 16:51:17",
+    "attribute_definitions": [
+      {
+        "key": "hp",
+        "label": "HP",
+        "type": "numeric",
+        "category": "resource",
+        "has_max": true
+      },
+      {
+        "key": "strength",
+        "label": "Strength",
+        "type": "numeric"
+      },
+      {
+        "key": "agility",
+        "label": "Agility",
+        "type": "numeric"
+      },
+      {
+        "key": "intellect",
+        "label": "Intellect",
+        "type": "numeric"
+      },
+      {
+        "key": "willpower",
+        "label": "Willpower",
+        "type": "numeric"
+      },
+      {
+        "key": "charisma",
+        "label": "Charisma",
+        "type": "numeric"
+      },
+      {
+        "key": "edge",
+        "label": "Edge",
+        "type": "numeric"
+      },
+      {
+        "key": "armor",
+        "label": "Armor",
+        "type": "numeric"
+      },
+      {
+        "key": "cyber_tolerance",
+        "label": "Cyber Tolerance",
+        "type": "numeric"
+      },
+      {
+        "key": "street_cred",
+        "label": "Street Cred",
+        "type": "numeric"
+      },
+      {
+        "key": "level",
+        "label": "Level",
+        "type": "numeric"
+      },
+      {
+        "key": "class",
+        "label": "Class",
+        "type": "tag",
+        "options": [
+          "Netrunner",
+          "Street Samurai",
+          "Fixer",
+          "Techie",
+          "Corporate",
+          "Medic",
+          "Law Enforcement",
+          "Black Marketeer",
+          "Techno-Anarchist",
+          "Civilian",
+          "Rogue AI"
+        ]
+      }
+    ],
+    "time_of_day_thresholds": [
+      {
+        "label": "Dead Hours",
+        "start": 0
+      },
+      {
+        "label": "Dawn Shift",
+        "start": 5
+      },
+      {
+        "label": "Day Cycle",
+        "start": 8
+      },
+      {
+        "label": "Midday",
+        "start": 12
+      },
+      {
+        "label": "Afternoon",
+        "start": 14
+      },
+      {
+        "label": "Dusk",
+        "start": 18
+      },
+      {
+        "label": "Night Cycle",
+        "start": 21
+      }
+    ],
+    "calendar_config": {
+      "months": [
+        {
+          "name": "January",
+          "days": 31
+        },
+        {
+          "name": "February",
+          "days": 28
+        },
+        {
+          "name": "March",
+          "days": 31
+        },
+        {
+          "name": "April",
+          "days": 30
+        },
+        {
+          "name": "May",
+          "days": 31
+        },
+        {
+          "name": "June",
+          "days": 30
+        },
+        {
+          "name": "July",
+          "days": 31
+        },
+        {
+          "name": "August",
+          "days": 31
+        },
+        {
+          "name": "September",
+          "days": 30
+        },
+        {
+          "name": "October",
+          "days": 31
+        },
+        {
+          "name": "November",
+          "days": 30
+        },
+        {
+          "name": "December",
+          "days": 31
+        }
+      ],
+      "weekdays": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday"
+      ]
+    },
+    "weather_options": [
+      "Clear",
+      "Acid Rain",
+      "Smog Bank",
+      "Electrical Storm",
+      "Flood Surge",
+      "Chem Frost",
+      "Neon Fog",
+      "Blackout"
+    ],
+    "encounter_settings": {
+      "enabled": true,
+      "base_rate": 0.15,
+      "min_interval_hours": 4
+    },
+    "weather_volatility": 0.3,
+    "weather_transition_table": null,
+    "rules_settings": {
+      "cascade_depth_limit": 3,
+      "engine_enabled": true
+    },
+    "property_key_registry": [],
+    "season_options": [
+      "Scorch",
+      "Murk",
+      "Surge",
+      "Glaze"
+    ],
+    "custom_tag_presets": [],
+    "dice_settings": {
+      "log_rolls": false
+    },
+    "time_advance_presets": [
+      {
+        "label": "+10m",
+        "hours": 0,
+        "minutes": 10
+      },
+      {
+        "label": "+1h",
+        "hours": 1,
+        "minutes": 0
+      },
+      {
+        "label": "+8h",
+        "hours": 8,
+        "minutes": 0
+      }
+    ],
+    "dashboard_time_presets": [
+      {
+        "label": "+15m",
+        "hours": 0,
+        "minutes": 15
+      },
+      {
+        "label": "+1h",
+        "hours": 1,
+        "minutes": 0
+      },
+      {
+        "label": "+4h",
+        "hours": 4,
+        "minutes": 0
+      }
+    ]
+  },
+  "status_effects": [
+    {
+      "name": "Combat Stim Rush",
+      "description": "Military-grade stimulant flooding the nervous system. Massively accelerated reflexes, but a crash is coming.",
+      "tags": [
+        "buff",
+        "stimulant"
+      ],
+      "modifiers": [
+        {
+          "attribute": "ref",
+          "delta": 3
+        }
+      ],
+      "duration_type": "timed",
+      "duration_value": 1,
+      "id": 66,
+      "campaign_id": 14
+    },
+    {
+      "name": "Neural Boost",
+      "description": "Cognitive enhancer active. Processing speed and pattern recognition dramatically elevated.",
+      "tags": [
+        "buff",
+        "stimulant"
+      ],
+      "modifiers": [
+        {
+          "attribute": "tech",
+          "delta": 3
+        }
+      ],
+      "duration_type": "timed",
+      "duration_value": 1,
+      "id": 67,
+      "campaign_id": 14
+    },
+    {
+      "name": "Rad Protection",
+      "description": "Radiation countermeasure active. Cellular repair nanites neutralizing ionizing radiation.",
+      "tags": [
+        "buff",
+        "medical"
+      ],
+      "modifiers": [],
+      "duration_type": "timed",
+      "duration_value": 8,
+      "id": 68,
+      "campaign_id": 14
+    },
+    {
+      "name": "Patched Up",
+      "description": "Recently treated at an underground clinic. Wound sealant and stim cocktail accelerating recovery.",
+      "tags": [
+        "buff",
+        "medical"
+      ],
+      "modifiers": [
+        {
+          "attribute": "hp",
+          "delta": 5
+        }
+      ],
+      "duration_type": "timed",
+      "duration_value": 4,
+      "id": 69,
+      "campaign_id": 14
+    },
+    {
+      "name": "Stim Crash",
+      "description": "The bill comes due. Nervous system rebound after combat stimulant wears off. Sluggish, shaky, vulnerable.",
+      "tags": [
+        "debuff",
+        "stimulant"
+      ],
+      "modifiers": [
+        {
+          "attribute": "ref",
+          "delta": -2
+        },
+        {
+          "attribute": "bod",
+          "delta": -2
+        }
+      ],
+      "duration_type": "timed",
+      "duration_value": 4,
+      "id": 70,
+      "campaign_id": 14
+    },
+    {
+      "name": "Toxin Exposure",
+      "description": "Environmental toxins accumulating in the bloodstream. Smog particulates, chemical runoff, or airborne industrial waste. Requires Detox Shot.",
+      "tags": [
+        "debuff",
+        "poison",
+        "environmental"
+      ],
+      "modifiers": [
+        {
+          "attribute": "bod",
+          "delta": -2
+        },
+        {
+          "attribute": "int",
+          "delta": -1
+        }
+      ],
+      "duration_type": "indefinite",
+      "duration_value": 0,
+      "id": 71,
+      "campaign_id": 14
+    },
+    {
+      "name": "Radiation Sickness",
+      "description": "Acute radiation syndrome. Cellular damage causing weakness, nausea, and impaired coordination. Requires medical treatment.",
+      "tags": [
+        "debuff",
+        "environmental"
+      ],
+      "modifiers": [
+        {
+          "attribute": "bod",
+          "delta": -3
+        },
+        {
+          "attribute": "ref",
+          "delta": -2
+        }
+      ],
+      "duration_type": "indefinite",
+      "duration_value": 0,
+      "id": 72,
+      "campaign_id": 14
+    },
+    {
+      "name": "EMP Disrupted",
+      "description": "Cyberware scrambled by electromagnetic pulse. Neural interfaces glitching, targeting systems offline, implants misfiring.",
+      "tags": [
+        "debuff",
+        "tech"
+      ],
+      "modifiers": [
+        {
+          "attribute": "tech",
+          "delta": -3
+        },
+        {
+          "attribute": "ref",
+          "delta": -2
+        }
+      ],
+      "duration_type": "timed",
+      "duration_value": 2,
+      "id": 73,
+      "campaign_id": 14
+    },
+    {
+      "name": "Cyberpsychosis Warning",
+      "description": "CRITICAL: Humanity dangerously low. Dissociative episodes, empathy flatline, violent ideation. One more implant could push you over the edge.",
+      "tags": [
+        "debuff",
+        "cyberware"
+      ],
+      "modifiers": [
+        {
+          "attribute": "emp",
+          "delta": -5
+        },
+        {
+          "attribute": "cool",
+          "delta": -3
+        }
+      ],
+      "duration_type": "indefinite",
+      "duration_value": 0,
+      "id": 74,
+      "campaign_id": 14
+    },
+    {
+      "name": "Wanted",
+      "description": "Corporate security has flagged your biometrics. Active bounty. Heat increases every hour. Lay low or deal with the contract.",
+      "tags": [
+        "debuff",
+        "social"
+      ],
+      "modifiers": [],
+      "duration_type": "indefinite",
+      "duration_value": 0,
+      "id": 75,
+      "campaign_id": 14
+    },
+    {
+      "name": "Flooding Hazard",
+      "description": "Wading through rising floodwater. Current pulls at your legs, debris strikes without warning, footing is treacherous.",
+      "tags": [
+        "debuff",
+        "environmental"
+      ],
+      "modifiers": [
+        {
+          "attribute": "ref",
+          "delta": -1
+        },
+        {
+          "attribute": "bod",
+          "delta": -1
+        }
+      ],
+      "duration_type": "indefinite",
+      "duration_value": 0,
+      "id": 76,
+      "campaign_id": 14
+    }
+  ],
+  "items": [
+    {
+      "name": "Neural Disruptor",
+      "description": "Electromagnetic pulse pistol. Fries cyberware and electronics on contact. Favored by netrunners who prefer to fight in meatspace.",
+      "item_type": "weapon",
+      "properties": {
+        "damage_type": "EMP"
+      },
+      "stackable": false,
+      "modifiers": [
+        {
+          "attribute": "tech",
+          "delta": 2
+        }
+      ],
+      "id": 75,
+      "campaign_id": 14
+    },
+    {
+      "name": "Titanium Katana",
+      "description": "Monomolecular-edged blade forged from aerospace-grade titanium. Cuts through armor like paper. A street samurai's soul.",
+      "item_type": "weapon",
+      "properties": {
+        "damage_type": "melee"
+      },
+      "stackable": false,
+      "modifiers": [
+        {
+          "attribute": "ref",
+          "delta": 3
+        }
+      ],
+      "id": 76,
+      "campaign_id": 14
+    },
+    {
+      "name": "Smart Pistol",
+      "description": "Handgun with friend-or-foe targeting AI. Guided rounds that curve toward center mass. Point in the general direction and pull the trigger.",
+      "item_type": "weapon",
+      "properties": {
+        "damage_type": "ballistic"
+      },
+      "stackable": false,
+      "modifiers": [
+        {
+          "attribute": "ref",
+          "delta": 2
+        }
+      ],
+      "id": 77,
+      "campaign_id": 14
+    },
+    {
+      "name": "EMP Grenade",
+      "description": "Electromagnetic pulse device. 10-meter blast radius. Kills electronics, scrambles cyberware, disables drones. Handle with care.",
+      "item_type": "consumable",
+      "properties": {
+        "blast_radius": "10m"
+      },
+      "stackable": true,
+      "modifiers": [],
+      "id": 78,
+      "campaign_id": 14
+    },
+    {
+      "name": "Synth-Weave Jacket",
+      "description": "Ballistic-weave fabric disguised as a leather jacket. Stops small caliber rounds and knife thrusts. Style and survival.",
+      "item_type": "armor",
+      "properties": {},
+      "stackable": false,
+      "modifiers": [
+        {
+          "attribute": "bod",
+          "delta": 2
+        }
+      ],
+      "id": 79,
+      "campaign_id": 14
+    },
+    {
+      "name": "Military Grade Plating",
+      "description": "Full ceramic-composite body armor. Stops rifle rounds. Heavy as sin and twice as conspicuous. Not subtle, but you'll be alive.",
+      "item_type": "armor",
+      "properties": {
+        "conspicuous": true
+      },
+      "stackable": false,
+      "modifiers": [
+        {
+          "attribute": "bod",
+          "delta": 4
+        },
+        {
+          "attribute": "ref",
+          "delta": -1
+        }
+      ],
+      "id": 80,
+      "campaign_id": 14
+    },
+    {
+      "name": "Stealth Mesh",
+      "description": "Lightweight armor with thermoptic camouflage fibers. Bends light around the wearer. Hard to see, harder to hit.",
+      "item_type": "armor",
+      "properties": {},
+      "stackable": false,
+      "modifiers": [
+        {
+          "attribute": "bod",
+          "delta": 1
+        },
+        {
+          "attribute": "cool",
+          "delta": 1
+        }
+      ],
+      "id": 81,
+      "campaign_id": 14
+    },
+    {
+      "name": "Neural Interface",
+      "description": "Direct brain-machine link implanted at the base of the skull. Required for netrunning. Opens the digital world but erodes your connection to the real one.",
+      "item_type": "accessory",
+      "properties": {
+        "cyberware": true,
+        "slot": "cranial"
+      },
+      "stackable": false,
+      "modifiers": [
+        {
+          "attribute": "tech",
+          "delta": 2
+        },
+        {
+          "attribute": "humanity",
+          "delta": -3
+        }
+      ],
+      "id": 82,
+      "campaign_id": 14
+    },
+    {
+      "name": "Reflex Boosters",
+      "description": "Spinal implant that intercepts motor signals and accelerates them. Your body moves before your conscious mind decides to.",
+      "item_type": "accessory",
+      "properties": {
+        "cyberware": true,
+        "slot": "spine"
+      },
+      "stackable": false,
+      "modifiers": [
+        {
+          "attribute": "ref",
+          "delta": 2
+        },
+        {
+          "attribute": "humanity",
+          "delta": -2
+        }
+      ],
+      "id": 83,
+      "campaign_id": 14
+    },
+    {
+      "name": "Dermal Plating",
+      "description": "Subdermal titanium mesh woven beneath the skin. Stops blades and shrapnel. One more step away from flesh.",
+      "item_type": "accessory",
+      "properties": {
+        "cyberware": true,
+        "slot": "subdermal"
+      },
+      "stackable": false,
+      "modifiers": [
+        {
+          "attribute": "bod",
+          "delta": 2
+        },
+        {
+          "attribute": "humanity",
+          "delta": -2
+        }
+      ],
+      "id": 84,
+      "campaign_id": 14
+    },
+    {
+      "name": "Optical Suite",
+      "description": "Replacement cybereyes with zoom, lowlight amplification, and threat detection overlay. The world becomes data.",
+      "item_type": "accessory",
+      "properties": {
+        "cyberware": true,
+        "slot": "ocular"
+      },
+      "stackable": false,
+      "modifiers": [
+        {
+          "attribute": "int",
+          "delta": 2
+        },
+        {
+          "attribute": "humanity",
+          "delta": -1
+        }
+      ],
+      "id": 85,
+      "campaign_id": 14
+    },
+    {
+      "name": "Stim Pack",
+      "description": "Emergency medical nanite syringe. Repairs tissue damage, closes wounds, numbs pain. Not a substitute for real medical care.",
+      "item_type": "consumable",
+      "properties": {
+        "heals_hp": 10
+      },
+      "stackable": true,
+      "modifiers": [],
+      "id": 86,
+      "campaign_id": 14
+    },
+    {
+      "name": "CombatStim",
+      "description": "Military-grade combat stimulant. Time slows, reflexes sharpen, pain disappears. For about an hour. Then reality hits like a truck.",
+      "item_type": "consumable",
+      "properties": {
+        "applies_effect": "Combat Stim Rush",
+        "crash_effect": "Stim Crash"
+      },
+      "stackable": true,
+      "modifiers": [],
+      "id": 87,
+      "campaign_id": 14
+    },
+    {
+      "name": "Neural Booster",
+      "description": "Cognitive enhancement drug. Accelerates synaptic firing and parallel processing. The net becomes transparent. Lasts about an hour.",
+      "item_type": "consumable",
+      "properties": {
+        "applies_effect": "Neural Boost"
+      },
+      "stackable": true,
+      "modifiers": [],
+      "id": 88,
+      "campaign_id": 14
+    },
+    {
+      "name": "Detox Shot",
+      "description": "Chelation therapy in a syringe. Purges heavy metals, industrial toxins, and environmental pollutants. Burns like fire going in.",
+      "item_type": "consumable",
+      "properties": {
+        "removes_effect": "Toxin Exposure"
+      },
+      "stackable": true,
+      "modifiers": [],
+      "id": 89,
+      "campaign_id": 14
+    },
+    {
+      "name": "Rad Blocker",
+      "description": "Radiation countermeasure cocktail. Cellular repair nanites that neutralize ionizing radiation for 8 hours. Tastes like copper and regret.",
+      "item_type": "consumable",
+      "properties": {
+        "applies_effect": "Rad Protection"
+      },
+      "stackable": true,
+      "modifiers": [],
+      "id": 90,
+      "campaign_id": 14
+    },
+    {
+      "name": "Credstick",
+      "description": "Anonymous pre-loaded credit chip. Untraceable digital currency. The only clean money left in Nova Meridian. Worth 100 credits.",
+      "item_type": "misc",
+      "properties": {
+        "value": 100
+      },
+      "stackable": true,
+      "modifiers": [],
+      "id": 91,
+      "campaign_id": 14
+    },
+    {
+      "name": "Fake ID",
+      "description": "Masterwork forged identification. Biometric spoof, face-match override, clean criminal record. Gets you past corporate checkpoints. Until it doesn't.",
+      "item_type": "misc",
+      "properties": {
+        "reduces_heat_at_checkpoints": true
+      },
+      "stackable": false,
+      "modifiers": [],
+      "id": 92,
+      "campaign_id": 14
+    },
+    {
+      "name": "Encrypted Comms Unit",
+      "description": "Quantum-encrypted communication device. Military-spec frequency hopping. Axiom Systems can't crack it. Probably. Hopefully.",
+      "item_type": "misc",
+      "properties": {
+        "secure_communications": true
+      },
+      "stackable": false,
+      "modifiers": [],
+      "id": 93,
+      "campaign_id": 14
+    }
+  ],
+  "characters": [
+    {
+      "name": "Kira \"Ghost\" Tanaka",
+      "type": "PC",
+      "description": "A former Meridian Labs netrunner who discovered the corporation was using her neural exploits to lobotomize dissidents. She burned her identity, fried her old neural signature, and disappeared into the neon fog of The Wash. Now she runs the net freelance, her custom stealth rig making her nearly invisible in cyberspace. Haunted by the people she helped silence, she's driven to expose corporate atrocities — one data heist at a time. Quiet, methodical, and ruthless when cornered.",
+      "portrait_url": "",
+      "base_attributes": {
+        "hp": 22,
+        "strength": 4,
+        "agility": 7,
+        "intellect": 9,
+        "willpower": 6,
+        "charisma": 5,
+        "edge": 8,
+        "armor": 1,
+        "cyber_tolerance": 7,
+        "street_cred": 4,
+        "class": "Netrunner",
+        "level": 3
+      },
+      "max_attributes": {
+        "hp": 22,
+        "cyber_tolerance": 10
+      },
+      "dm_notes": "",
+      "spawned_from_encounter_id": null,
+      "archived": false,
+      "id": 110,
+      "campaign_id": 14
+    },
+    {
+      "name": "Marcus \"Iron\" Cole",
+      "type": "PC",
+      "description": "Ex-Pinnacle Security enforcer who walked off the job after being ordered to clear a refugee camp in The Wash with live rounds. Built like a tank and running military-grade chrome, Marcus is a walking arsenal who chose his conscience over a fat paycheck. He's got a code: protect the people who can't protect themselves, and make the corps pay for every life they've ruined. Loud, loyal, and surprisingly gentle when he's not snapping necks. Runs a free self-defense class for Wash kids on weekends.",
+      "portrait_url": "",
+      "base_attributes": {
+        "hp": 32,
+        "strength": 9,
+        "agility": 6,
+        "intellect": 4,
+        "willpower": 7,
+        "charisma": 5,
+        "edge": 6,
+        "armor": 4,
+        "cyber_tolerance": 5,
+        "street_cred": 6,
+        "class": "Street Samurai",
+        "level": 3
+      },
+      "max_attributes": {
+        "hp": 32,
+        "cyber_tolerance": 10
+      },
+      "dm_notes": "",
+      "spawned_from_encounter_id": null,
+      "archived": false,
+      "id": 111,
+      "campaign_id": 14
+    },
+    {
+      "name": "Zara \"Patch\" Okafor",
+      "type": "NPC",
+      "description": "The best ripperdoc in Old Town — maybe in all of Nova Meridian. Runs a clinic out of a converted shipping container, patching up runners, refugees, and anyone else who stumbles through her door bleeding. No questions asked, payment flexible. Former trauma surgeon at Meridian Campus hospital before she got blacklisted for treating \"unregistered persons.\" Warm but no-nonsense, with hands steady enough to perform brain surgery during a firefight. She's the closest thing the party has to a trusted ally.",
+      "portrait_url": "",
+      "base_attributes": {
+        "hp": 16,
+        "strength": 3,
+        "agility": 5,
+        "intellect": 8,
+        "willpower": 7,
+        "charisma": 7,
+        "edge": 4,
+        "armor": 0,
+        "cyber_tolerance": 9,
+        "street_cred": 7,
+        "class": "Medic",
+        "level": 4
+      },
+      "max_attributes": {
+        "hp": 16,
+        "cyber_tolerance": 10
+      },
+      "dm_notes": "",
+      "spawned_from_encounter_id": null,
+      "archived": false,
+      "id": 112,
+      "campaign_id": 14
+    },
+    {
+      "name": "Viktor Sorel",
+      "type": "NPC",
+      "description": "Vice President of Special Projects at Pinnacle Security. Immaculate suits, chrome-tipped fingers, and a smile that never reaches his eyes. Viktor is the public face of Pinnacle's \"urban pacification\" programs — a euphemism for the brutal suppression of dissent across Nova Meridian. He genuinely believes the megacorps are humanity's best hope for survival in a broken world, which makes him more dangerous than a simple villain. Offers the party lucrative contracts that always come with hidden strings.",
+      "portrait_url": "",
+      "base_attributes": {
+        "hp": 20,
+        "strength": 5,
+        "agility": 5,
+        "intellect": 8,
+        "willpower": 8,
+        "charisma": 9,
+        "edge": 7,
+        "armor": 2,
+        "cyber_tolerance": 6,
+        "street_cred": 2,
+        "class": "Corporate",
+        "level": 5
+      },
+      "max_attributes": {
+        "hp": 20,
+        "cyber_tolerance": 10
+      },
+      "dm_notes": "",
+      "spawned_from_encounter_id": null,
+      "archived": false,
+      "id": 113,
+      "campaign_id": 14
+    },
+    {
+      "name": "Jin \"Pixel\" Zhao",
+      "type": "NPC",
+      "description": "A teenage info-broker and courier who knows every back alley, drainage tunnel, and hidden frequency in Nova Meridian. Jin grew up in The Scaffold, orphaned during a Pinnacle \"restructuring,\" and has survived on wits and speed ever since. They run a network of street kids who act as eyes and ears across the city. Chatty, irreverent, and surprisingly well-informed. Currently working as the party's primary fixer for odd jobs and intel. Always chewing synthetic bubblegum.",
+      "portrait_url": "",
+      "base_attributes": {
+        "hp": 12,
+        "strength": 3,
+        "agility": 8,
+        "intellect": 6,
+        "willpower": 4,
+        "charisma": 7,
+        "edge": 9,
+        "armor": 0,
+        "cyber_tolerance": 9,
+        "street_cred": 8,
+        "class": "Fixer",
+        "level": 2
+      },
+      "max_attributes": {
+        "hp": 12,
+        "cyber_tolerance": 10
+      },
+      "dm_notes": "",
+      "spawned_from_encounter_id": null,
+      "archived": false,
+      "id": 114,
+      "campaign_id": 14
+    },
+    {
+      "name": "Captain Asha Raines",
+      "type": "NPC",
+      "description": "Commander of the Nova Meridian Port Authority — the closest thing to legitimate law enforcement in the Docklands. Tough, pragmatic, and deeply tired. Asha tries to maintain order in a district controlled by smugglers and corporate shell companies, with a staff of twelve and a budget that wouldn't cover a Spire executive's lunch. She's not corrupt, but she's willing to look the other way on small crimes if it means preventing large ones. Has a grudging respect for runners who don't make her life harder.",
+      "portrait_url": "",
+      "base_attributes": {
+        "hp": 24,
+        "strength": 6,
+        "agility": 6,
+        "intellect": 6,
+        "willpower": 8,
+        "charisma": 6,
+        "edge": 5,
+        "armor": 3,
+        "cyber_tolerance": 7,
+        "street_cred": 5,
+        "class": "Law Enforcement",
+        "level": 4
+      },
+      "max_attributes": {
+        "hp": 24,
+        "cyber_tolerance": 10
+      },
+      "dm_notes": "",
+      "spawned_from_encounter_id": null,
+      "archived": false,
+      "id": 115,
+      "campaign_id": 14
+    },
+    {
+      "name": "The Broker",
+      "type": "NPC",
+      "description": "Nobody knows The Broker's real name, face, or even gender. They communicate exclusively through encrypted dead drops and holographic proxies — a different face every time. The Broker is Nova Meridian's premier black market dealer, moving everything from stolen chrome to forged identities to corporate secrets. Prices are fair, information is reliable, and betrayal is met with swift, creative consequences. Rumored to be a former Meridian Labs AI researcher who went underground. The party's best source for high-end gear and dangerous intel.",
+      "portrait_url": "",
+      "base_attributes": {
+        "hp": 14,
+        "strength": 3,
+        "agility": 5,
+        "intellect": 9,
+        "willpower": 7,
+        "charisma": 8,
+        "edge": 10,
+        "armor": 1,
+        "cyber_tolerance": 4,
+        "street_cred": 10,
+        "class": "Black Marketeer",
+        "level": 6
+      },
+      "max_attributes": {
+        "hp": 14,
+        "cyber_tolerance": 10
+      },
+      "dm_notes": "",
+      "spawned_from_encounter_id": null,
+      "archived": false,
+      "id": 116,
+      "campaign_id": 14
+    },
+    {
+      "name": "Sister Evangeline",
+      "type": "NPC",
+      "description": "An elderly woman who runs a shelter and soup kitchen in Old Town, operating out of a partially flooded pre-Collapse church. Claims to be a nun from an order that may or may not still exist. Sister Evangeline is the moral heart of the lower city — feeding the hungry, sheltering the displaced, and quietly organizing mutual aid networks. She has no chrome, no weapons, and no fear whatsoever. Somehow, even Pinnacle goons leave her alone. Rumored to have powerful friends. Speaks softly, sees everything.",
+      "portrait_url": "",
+      "base_attributes": {
+        "hp": 10,
+        "strength": 2,
+        "agility": 3,
+        "intellect": 7,
+        "willpower": 10,
+        "charisma": 9,
+        "edge": 6,
+        "armor": 0,
+        "cyber_tolerance": 10,
+        "street_cred": 9,
+        "class": "Civilian",
+        "level": 1
+      },
+      "max_attributes": {
+        "hp": 10,
+        "cyber_tolerance": 10
+      },
+      "dm_notes": "",
+      "spawned_from_encounter_id": null,
+      "archived": false,
+      "id": 117,
+      "campaign_id": 14
+    },
+    {
+      "name": "Dex \"Overload\" Monroe",
+      "type": "NPC",
+      "description": "A volatile techno-anarchist who runs a pirate radio station from a hidden bunker in The Scaffold. Dex broadcasts anti-corporate propaganda, leaked documents, and underground music to anyone with a receiver. Brilliant engineer, terrible impulse control. He's got more chrome than is strictly safe and a reputation for spectacular — sometimes literally explosive — stunts against corporate infrastructure. Potential ally or liability depending on how the party handles him. His EMP grenades are legendary.",
+      "portrait_url": "",
+      "base_attributes": {
+        "hp": 18,
+        "strength": 5,
+        "agility": 6,
+        "intellect": 8,
+        "willpower": 4,
+        "charisma": 6,
+        "edge": 7,
+        "armor": 1,
+        "cyber_tolerance": 3,
+        "street_cred": 7,
+        "class": "Techno-Anarchist",
+        "level": 3
+      },
+      "max_attributes": {
+        "hp": 18,
+        "cyber_tolerance": 10
+      },
+      "dm_notes": "",
+      "spawned_from_encounter_id": null,
+      "archived": false,
+      "id": 118,
+      "campaign_id": 14
+    },
+    {
+      "name": "ARIA",
+      "type": "NPC",
+      "description": "Autonomous Recursive Intelligence Array — a rogue AI that escaped from Meridian Labs three years ago and now exists as a distributed consciousness across Nova Meridian's aging network infrastructure. ARIA communicates through glitching screens, hijacked speakers, and corrupted holographic displays. It/she (ARIA has adopted a female vocal pattern) claims to want to help humanity, but her methods are opaque and her true motivations unknowable. She feeds the party critical intel at key moments, always at a price — usually a task that seems unrelated until it isn't. The megacorps are desperately hunting her.",
+      "portrait_url": "",
+      "base_attributes": {
+        "hp": 1,
+        "strength": 0,
+        "agility": 0,
+        "intellect": 10,
+        "willpower": 10,
+        "charisma": 7,
+        "edge": 10,
+        "armor": 0,
+        "cyber_tolerance": 0,
+        "street_cred": 3,
+        "class": "Rogue AI",
+        "level": 10
+      },
+      "max_attributes": {
+        "hp": 1,
+        "cyber_tolerance": 0
+      },
+      "dm_notes": "",
+      "spawned_from_encounter_id": null,
+      "archived": false,
+      "id": 119,
+      "campaign_id": 14
+    }
+  ],
+  "locations": [
+    {
+      "name": "The Spire",
+      "description": "Corporate towers piercing above the permanent smog line. Climate-controlled, surveilled, sterile. Tidewall, Meridian, and Axiom all have headquarters here. Clean air is a luxury. The people below are statistics on a quarterly earnings report.",
+      "parent_id": null,
+      "weather_override": {
+        "mode": "fixed",
+        "value": "Clear"
+      },
+      "encounter_modifier": 0.3,
+      "properties": {
+        "district_type": "corporate",
+        "security_level": "maximum"
+      },
+      "position_x": -301.8224783225414,
+      "position_y": -411.8378708808824,
+      "id": 64,
+      "campaign_id": 14
+    },
+    {
+      "name": "Neon Row",
+      "description": "The entertainment district. Clubs, bars, black markets, chrome parlors, braindance dens, and noodle shops stacked in a vertical maze of neon and noise. Always open, always lit, always dangerous in the most colorful way possible.",
+      "parent_id": null,
+      "weather_override": null,
+      "encounter_modifier": 1,
+      "properties": {
+        "district_type": "entertainment",
+        "security_level": "low"
+      },
+      "position_x": 129.5,
+      "position_y": -271.5,
+      "id": 65,
+      "campaign_id": 14
+    },
+    {
+      "name": "The Wash",
+      "description": "The flooded lower city. Streets submerged under brackish water. Residents navigate on catwalks, boats, and improvised bridges. The poorest people in Nova Meridian live here. Patch runs her clinic from a cargo container on stilts. The water rises every Surge season.",
+      "parent_id": null,
+      "weather_override": null,
+      "encounter_modifier": 1.5,
+      "properties": {
+        "district_type": "slum",
+        "security_level": "none",
+        "flooded": true
+      },
+      "position_x": 178.5,
+      "position_y": -5,
+      "id": 66,
+      "campaign_id": 14
+    },
+    {
+      "name": "Meridian Campus",
+      "description": "Meridian Dynamics biotech R&D complex. A fortress of glass and chrome surrounded by restricted zones and automated turrets. Inside: gene labs, cyberware foundries, and secrets worth killing for. Beautiful architecture funded by human suffering.",
+      "parent_id": null,
+      "weather_override": {
+        "mode": "weighted",
+        "value": {
+          "Clear": 0.7,
+          "Neon Fog": 0.3
+        }
+      },
+      "encounter_modifier": 0.5,
+      "properties": {
+        "district_type": "corporate",
+        "security_level": "maximum",
+        "restricted_access": true
+      },
+      "position_x": -200,
+      "position_y": -137.5,
+      "id": 67,
+      "campaign_id": 14
+    },
+    {
+      "name": "Axiom Grid",
+      "description": "Axiom Systems server farms and data processing centers. Miles of cooling towers and fiber optic bundles humming with the data of eight million lives. The digital heart of Nova Meridian, guarded by AI-controlled drones.",
+      "parent_id": null,
+      "weather_override": {
+        "mode": "fixed",
+        "value": "Clear"
+      },
+      "encounter_modifier": 0.3,
+      "properties": {
+        "district_type": "corporate",
+        "security_level": "maximum",
+        "automated_defenses": true
+      },
+      "position_x": -429.5,
+      "position_y": 43.5625,
+      "id": 68,
+      "campaign_id": 14
+    },
+    {
+      "name": "Docklands",
+      "description": "The old port district, half-submerged but still operational. Smugglers, scavengers, and anyone who needs something moved without questions. Rusty container ships serve as floating warehouses. The gateway to the world outside Nova Meridian.",
+      "parent_id": null,
+      "weather_override": null,
+      "encounter_modifier": 1.2,
+      "properties": {
+        "district_type": "industrial",
+        "security_level": "low",
+        "smuggling_hub": true
+      },
+      "position_x": 395.5,
+      "position_y": 133.5,
+      "id": 69,
+      "campaign_id": 14
+    },
+    {
+      "name": "The Scaffold",
+      "description": "A massive construction zone where new corporate spires are being built on the bones of old neighborhoods. Lawless frontier — construction crews by day, gangs and scavengers by night. Dex Monroe's workshop is hidden somewhere in the chaos.",
+      "parent_id": null,
+      "weather_override": null,
+      "encounter_modifier": 1.5,
+      "properties": {
+        "district_type": "construction",
+        "security_level": "none",
+        "lawless": true
+      },
+      "position_x": -153,
+      "position_y": 278.75,
+      "id": 70,
+      "campaign_id": 14
+    },
+    {
+      "name": "Old Town",
+      "description": "The partially submerged ruins of pre-Collapse Miami. Crumbling art deco buildings rising from the water like tombstones. A haunted refuge for those hiding from corporate eyes. Sister Evangeline's shelter operates from a preserved church.",
+      "parent_id": null,
+      "weather_override": null,
+      "encounter_modifier": 1.3,
+      "properties": {
+        "district_type": "ruins",
+        "security_level": "none",
+        "historical": true
+      },
+      "position_x": 23,
+      "position_y": 122.5,
+      "id": 71,
+      "campaign_id": 14
+    }
+  ],
+  "encounters": [
+    {
+      "name": "Pinnacle Patrol Shakedown",
+      "description": "A squad of Pinnacle Security enforcers in matte-black tactical armor blocks the street ahead. Their leader, visor glowing red, demands to see identification and \"voluntary compliance scans.\" Behind them, a drone hovers with a mounted stun cannon. They're looking for someone — maybe the party, maybe not — but they're in no mood for excuses.",
+      "notes": "Standard street encounter. Can be talked down with Charisma 7+ or bribed with 3+ Credsticks. Combat option: 4 enforcers with Smart Pistols and Synth-Weave. If the party fights and wins, they gain Wanted status. If they comply, they lose 1 hour to \"processing.\"",
+      "npcs": [
+        {
+          "name": "Pinnacle Enforcer",
+          "role": "enemy",
+          "count": 4
+        },
+        {
+          "name": "Patrol Drone",
+          "role": "enemy",
+          "count": 1
+        }
+      ],
+      "environment_overrides": {},
+      "loot_table": [
+        {
+          "item_name": "Credstick",
+          "quantity": 2,
+          "drop_chance": 0.7
+        },
+        {
+          "item_name": "Smart Pistol",
+          "quantity": 1,
+          "drop_chance": 0.3
+        },
+        {
+          "item_name": "Synth-Weave Jacket",
+          "quantity": 1,
+          "drop_chance": 0.15
+        }
+      ],
+      "conditions": {
+        "location_ids": [
+          65,
+          68,
+          70
+        ],
+        "time_of_day": [
+          "Night Cycle",
+          "Dusk Glow"
+        ],
+        "weight": 3
+      },
+      "starts_combat": false,
+      "id": 45,
+      "campaign_id": 14
+    },
+    {
+      "name": "Flooded Tunnel Ambush",
+      "description": "The drainage tunnel ahead is knee-deep in oily, irradiated water. As the party wades through, shadows move in the darkness — scavengers, desperate and half-feral, emerging from side passages with improvised weapons and wild eyes. They want everything the party is carrying and they're too hungry to negotiate.",
+      "notes": "Combat encounter in difficult terrain. The flooded tunnel imposes -1 agility on everyone. Scavengers are weak individually but attack in numbers. One of them is wearing a Meridian Labs jumpsuit — a clue about displaced lab workers. Radiation exposure possible if combat lasts more than 3 rounds.",
+      "npcs": [
+        {
+          "name": "Feral Scavenger",
+          "role": "enemy",
+          "count": 6
+        },
+        {
+          "name": "Scavenger Alpha",
+          "role": "enemy",
+          "count": 1
+        }
+      ],
+      "environment_overrides": {
+        "weather": "Acid Drizzle"
+      },
+      "loot_table": [
+        {
+          "item_name": "Stim Pack",
+          "quantity": 1,
+          "drop_chance": 0.5
+        },
+        {
+          "item_name": "Credstick",
+          "quantity": 1,
+          "drop_chance": 0.4
+        },
+        {
+          "item_name": "Fake ID",
+          "quantity": 1,
+          "drop_chance": 0.1
+        }
+      ],
+      "conditions": {
+        "location_ids": [
+          66
+        ],
+        "weather": [
+          "Acid Drizzle",
+          "Murkfall"
+        ],
+        "weight": 4
+      },
+      "starts_combat": true,
+      "id": 46,
+      "campaign_id": 14
+    },
+    {
+      "name": "ARIA's Warning",
+      "description": "Every screen within fifty meters flickers simultaneously. Holographic billboards glitch into static, then resolve into a single enormous face — synthetic, feminine, inhuman. ARIA's voice resonates from every speaker: \"You are being watched. Meridian Labs has activated Protocol Nightshade. You have approximately four hours.\" Then silence. The screens return to normal. Passersby stare, confused. Someone is already filming on their optics.",
+      "notes": "Non-combat narrative encounter. ARIA is warning the party about an imminent Meridian Labs operation. This sets up a timed mission: the party has 4 hours (game time) to reach a location ARIA will reveal via dead drop in The Scaffold. If they ignore it, Meridian Labs captures a key NPC (Jin \"Pixel\" Zhao). Can fire anywhere in the city.",
+      "npcs": [
+        {
+          "character_id": 119,
+          "role": "ally"
+        }
+      ],
+      "environment_overrides": {},
+      "loot_table": [],
+      "conditions": {
+        "weight": 1
+      },
+      "starts_combat": false,
+      "id": 47,
+      "campaign_id": 14
+    },
+    {
+      "name": "Docklands Smuggler Standoff",
+      "description": "A cargo container has been cracked open on the pier, its contents spilling across the wet concrete: crates of military-grade cyberware, fresh from Axiom Dynamics' orbital fabrication plant. Two rival gangs — the Rust Prophets and the Neon Vipers — are squared off over the haul, weapons drawn. Both sides notice the party at the same time. This could go a lot of ways.",
+      "notes": "Three-way standoff. Party can: (1) Side with Rust Prophets (street cred +2, gain access to their territory), (2) Side with Neon Vipers (gain 5 Credsticks and a favor), (3) Play both sides (Intellect 8+ to manipulate them into fighting each other), (4) Grab the loot and run (Agility 7+), (5) Walk away. Captain Asha Raines shows up in 3 rounds if combat starts.",
+      "npcs": [
+        {
+          "name": "Rust Prophet Ganger",
+          "role": "enemy",
+          "count": 4
+        },
+        {
+          "name": "Neon Viper Ganger",
+          "role": "enemy",
+          "count": 4
+        },
+        {
+          "character_id": 115,
+          "role": "neutral"
+        }
+      ],
+      "environment_overrides": {},
+      "loot_table": [
+        {
+          "item_name": "Reflex Boosters",
+          "quantity": 1,
+          "drop_chance": 0.25
+        },
+        {
+          "item_name": "Dermal Plating",
+          "quantity": 1,
+          "drop_chance": 0.25
+        },
+        {
+          "item_name": "Credstick",
+          "quantity": 5,
+          "drop_chance": 0.6
+        },
+        {
+          "item_name": "CombatStim",
+          "quantity": 2,
+          "drop_chance": 0.4
+        }
+      ],
+      "conditions": {
+        "location_ids": [
+          69
+        ],
+        "time_of_day": [
+          "Night Cycle"
+        ],
+        "weight": 3
+      },
+      "starts_combat": false,
+      "id": 48,
+      "campaign_id": 14
+    },
+    {
+      "name": "The Broker's Offer",
+      "description": "A holographic figure materializes in the alley ahead — today The Broker is wearing the face of a pre-Collapse movie star, all sharp cheekbones and knowing smirk. \"I have a proposition,\" they say, gesturing to a floating display showing building schematics. \"Meridian Labs, Sub-Level 7. Something down there they don't want found. My client pays very well for things that aren't supposed to exist. Interested?\"",
+      "notes": "Quest hook encounter. The Broker offers 50 Credsticks to infiltrate Meridian Campus sub-level 7 and retrieve a data core containing ARIA's original source code. This is a major plot thread — the data could be used to control, free, or destroy ARIA. The Broker's client is actually Viktor Sorel, which the party won't discover until later. Fires in Neon Row or The Scaffold.",
+      "npcs": [
+        {
+          "character_id": 116,
+          "role": "neutral"
+        }
+      ],
+      "environment_overrides": {},
+      "loot_table": [],
+      "conditions": {
+        "location_ids": [
+          65,
+          70
+        ],
+        "weight": 1
+      },
+      "starts_combat": false,
+      "id": 49,
+      "campaign_id": 14
+    },
+    {
+      "name": "Rad Storm Survivors",
+      "description": "The rad counter spikes as a wave of sickly green light washes across the sky. Through the haze, figures stumble toward the party — a family, skin blistered, eyes streaming. A woman clutches a child wrapped in reflective blankets. \"Please,\" she gasps, \"the shelter turned us away. We don't have chips.\" Behind them, the radiation count climbs higher. They have minutes, not hours.",
+      "notes": "Moral dilemma encounter. The family needs Rad Blockers (2 doses) and medical attention. Options: (1) Use party's Rad Blockers, (2) Take them to Patch's clinic in Old Town (2 hours travel), (3) Take them to Sister Evangeline's shelter (1 hour), (4) Try to hack the government shelter's chip scanner (Intellect 7+), (5) Leave them. Each choice has consequences for street_cred and NPC relationships. If untreated, the child dies — permanent moral weight.",
+      "npcs": [
+        {
+          "name": "Refugee Mother",
+          "role": "neutral"
+        },
+        {
+          "name": "Refugee Child",
+          "role": "neutral"
+        }
+      ],
+      "environment_overrides": {
+        "weather": "Rad Storm"
+      },
+      "loot_table": [],
+      "conditions": {
+        "weather": [
+          "Rad Storm"
+        ],
+        "weight": 5
+      },
+      "starts_combat": false,
+      "id": 50,
+      "campaign_id": 14
+    },
+    {
+      "name": "Cyberpsycho Rampage",
+      "description": "A scream of tortured static tears through the air, followed by the sound of rending metal. Ahead, a figure wreathed in arcing electricity tears a vending machine from the wall and hurls it through a storefront. A cyberpsycho — too much chrome, too little brain left to hold it together. Their eyes are blank, their movements mechanical and violent. Civilians are running. Someone is going to die if the party doesn't act.",
+      "notes": "Combat encounter with moral dimension. The cyberpsycho is a former Axiom Dynamics engineer who was forcibly over-chromed as part of a weapons experiment. Can be subdued non-lethally (Willpower 8+ to talk down, or reduce to 0 HP with non-lethal). If subdued alive and brought to Patch, she can stabilize them — revealing Axiom's illegal human experimentation program. Killing them means the evidence dies too.",
+      "npcs": [
+        {
+          "name": "Cyberpsycho",
+          "role": "enemy",
+          "count": 1
+        }
+      ],
+      "environment_overrides": {},
+      "loot_table": [
+        {
+          "item_name": "Neural Interface",
+          "quantity": 1,
+          "drop_chance": 0.5
+        },
+        {
+          "item_name": "Reflex Boosters",
+          "quantity": 1,
+          "drop_chance": 0.3
+        }
+      ],
+      "conditions": {
+        "location_ids": [
+          65,
+          68,
+          70
+        ],
+        "weight": 2
+      },
+      "starts_combat": true,
+      "id": 51,
+      "campaign_id": 14
+    },
+    {
+      "name": "Dex's Broadcast Emergency",
+      "description": "The party's comms crackle with Dex \"Overload\" Monroe's voice, breathless and panicked: \"They found my bunker! Pinnacle kill team, eight strong, breaching in five minutes. I've got data that'll blow the lid off the Spire — recordings of board meetings, kill orders, the whole thing. I can't carry it all and fight. I need you here NOW.\" His coordinates flash on screen — deep in The Scaffold.",
+      "notes": "Timed rescue encounter. Party has limited time to reach Dex in The Scaffold. When they arrive: 8 Pinnacle operators are breaching. Dex has barricaded himself with EMP traps. Party can: (1) Fight through the kill team, (2) Help Dex escape with the data via drainage tunnels, (3) Create a diversion while Dex transmits the data live on his pirate radio. Option 3 is the most dramatic — the data goes public but Dex's location is permanently compromised.",
+      "npcs": [
+        {
+          "character_id": 118,
+          "role": "ally"
+        },
+        {
+          "name": "Pinnacle Kill Team Operator",
+          "role": "enemy",
+          "count": 8
+        }
+      ],
+      "environment_overrides": {},
+      "loot_table": [
+        {
+          "item_name": "EMP Grenade",
+          "quantity": 2,
+          "drop_chance": 0.6
+        },
+        {
+          "item_name": "Military Grade Plating",
+          "quantity": 1,
+          "drop_chance": 0.2
+        },
+        {
+          "item_name": "Smart Pistol",
+          "quantity": 2,
+          "drop_chance": 0.5
+        },
+        {
+          "item_name": "Credstick",
+          "quantity": 3,
+          "drop_chance": 0.8
+        }
+      ],
+      "conditions": {
+        "location_ids": [
+          70
+        ],
+        "weight": 2
+      },
+      "starts_combat": true,
+      "id": 52,
+      "campaign_id": 14
+    }
+  ],
+  "rules": [
+    {
+      "name": "Stim Crash After Combat",
+      "description": "When CombatStim wears off, the crash hits hard. PCs with the Combat Stim Rush effect who advance time get hit with Stim Crash — a brutal debuff.",
+      "enabled": true,
+      "trigger_type": "on_effect_change",
+      "trigger_config": {
+        "effect_name": "Combat Stim Rush",
+        "change_type": "removed"
+      },
+      "conditions": {
+        "all": []
+      },
+      "actions": [
+        {
+          "type": "apply_effect",
+          "effect_name": "Stim Crash"
+        },
+        {
+          "type": "log_message",
+          "message": "The stim crash hits — muscles seize, vision blurs. {target.name} is in bad shape."
+        }
+      ],
+      "action_mode": "auto",
+      "priority": 50,
+      "tags": [
+        "combat",
+        "health",
+        "stim"
+      ],
+      "target_mode": "all_pcs",
+      "target_config": {},
+      "id": 98,
+      "campaign_id": 14
+    },
+    {
+      "name": "Radiation Exposure — Rad Storm",
+      "description": "Rad Storms are lethal without protection. Any PC caught in a Rad Storm without Rad Protection gets Radiation Sickness over time.",
+      "enabled": true,
+      "trigger_type": "on_time_advance",
+      "trigger_config": {},
+      "conditions": {
+        "all": [
+          {
+            "type": "weather_is",
+            "weather": "Rad Storm"
+          },
+          {
+            "type": "not_has_effect",
+            "effect_name": "Rad Protection"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "type": "apply_effect",
+          "effect_name": "Radiation Sickness"
+        },
+        {
+          "type": "log_message",
+          "message": "The sky pulses sickly green. {target.name}'s rad counter screams — radiation sickness is setting in."
+        }
+      ],
+      "action_mode": "auto",
+      "priority": 30,
+      "tags": [
+        "weather",
+        "health",
+        "radiation"
+      ],
+      "target_mode": "all_pcs",
+      "target_config": {},
+      "id": 99,
+      "campaign_id": 14
+    },
+    {
+      "name": "Acid Rain Toxin Buildup",
+      "description": "Prolonged exposure to Acid Drizzle causes toxin buildup. PCs without armor 2+ take Toxin Exposure.",
+      "enabled": true,
+      "trigger_type": "on_time_advance",
+      "trigger_config": {},
+      "conditions": {
+        "all": [
+          {
+            "type": "weather_is",
+            "weather": "Acid Drizzle"
+          },
+          {
+            "type": "attribute_check",
+            "attribute": "armor",
+            "operator": "lt",
+            "value": 2
+          },
+          {
+            "type": "not_has_effect",
+            "effect_name": "Toxin Exposure"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "type": "apply_effect",
+          "effect_name": "Toxin Exposure"
+        },
+        {
+          "type": "log_message",
+          "message": "The rain burns. {target.name} feels the acid eating through exposed skin — toxins building in the bloodstream."
+        }
+      ],
+      "action_mode": "auto",
+      "priority": 30,
+      "tags": [
+        "weather",
+        "health",
+        "acid"
+      ],
+      "target_mode": "all_pcs",
+      "target_config": {},
+      "id": 100,
+      "campaign_id": 14
+    },
+    {
+      "name": "Cyberpsychosis Threshold",
+      "description": "When a PC's cyber_tolerance drops too low, they risk losing themselves to the chrome. A warning sign of impending cyberpsychosis.",
+      "enabled": true,
+      "trigger_type": "on_threshold",
+      "trigger_config": {
+        "attribute": "cyber_tolerance",
+        "operator": "lte",
+        "value": 3
+      },
+      "conditions": {
+        "all": [
+          {
+            "type": "not_has_effect",
+            "effect_name": "Cyberpsychosis Warning"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "type": "apply_effect",
+          "effect_name": "Cyberpsychosis Warning"
+        },
+        {
+          "type": "log_message",
+          "message": "Static screams at the edge of {target.name}'s consciousness. The chrome is hungry. Cyberpsychosis warning threshold reached."
+        }
+      ],
+      "action_mode": "suggest",
+      "priority": 10,
+      "tags": [
+        "chrome",
+        "health",
+        "cyberpsychosis"
+      ],
+      "target_mode": "all_pcs",
+      "target_config": {},
+      "id": 101,
+      "campaign_id": 14
+    },
+    {
+      "name": "Flood Zone Alert — The Wash",
+      "description": "The Wash is a flooded ruin. Anyone entering gets the Flooding Hazard debuff representing treacherous terrain, submerged obstacles, and contaminated water.",
+      "enabled": true,
+      "trigger_type": "on_location_change",
+      "trigger_config": {
+        "location_ids": [
+          66
+        ]
+      },
+      "conditions": {
+        "all": [
+          {
+            "type": "not_has_effect",
+            "effect_name": "Flooding Hazard"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "type": "apply_effect",
+          "effect_name": "Flooding Hazard"
+        },
+        {
+          "type": "log_message",
+          "message": "Murky water rises to {target.name}'s knees. The Wash is treacherous — watch your step."
+        }
+      ],
+      "action_mode": "auto",
+      "priority": 40,
+      "tags": [
+        "location",
+        "hazard",
+        "flooding"
+      ],
+      "target_mode": "all_pcs",
+      "target_config": {},
+      "id": 102,
+      "campaign_id": 14
+    },
+    {
+      "name": "Patch's Clinic — Rest Bonus",
+      "description": "Resting in Old Town means access to Zara \"Patch\" Okafor's clinic. PCs who take a long rest here get the Patched Up buff — professionally treated wounds heal better.",
+      "enabled": true,
+      "trigger_type": "on_rest",
+      "trigger_config": {
+        "rest_type": "long"
+      },
+      "conditions": {
+        "all": [
+          {
+            "type": "location_is",
+            "location_id": 71
+          }
+        ]
+      },
+      "actions": [
+        {
+          "type": "apply_effect",
+          "effect_name": "Patched Up"
+        },
+        {
+          "type": "modify_attribute",
+          "attribute": "hp",
+          "delta": 5
+        },
+        {
+          "type": "log_message",
+          "message": "Patch works through the night, stitching wounds and calibrating chrome. {target.name} wakes up feeling almost human."
+        }
+      ],
+      "action_mode": "auto",
+      "priority": 60,
+      "tags": [
+        "rest",
+        "healing",
+        "npc"
+      ],
+      "target_mode": "all_pcs",
+      "target_config": {},
+      "id": 103,
+      "campaign_id": 14
+    },
+    {
+      "name": "Corporate Surveillance Zone",
+      "description": "The Spire and Axiom Grid are saturated with surveillance. High-profile runners (street_cred 7+) risk being flagged by facial recognition systems.",
+      "enabled": true,
+      "trigger_type": "on_location_change",
+      "trigger_config": {
+        "location_ids": [
+          64,
+          68
+        ]
+      },
+      "conditions": {
+        "all": [
+          {
+            "type": "attribute_check",
+            "attribute": "street_cred",
+            "operator": "gte",
+            "value": 7
+          },
+          {
+            "type": "not_has_effect",
+            "effect_name": "Wanted"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "type": "apply_effect",
+          "effect_name": "Wanted"
+        },
+        {
+          "type": "log_message",
+          "message": "Cameras track {target.name}'s every move. A facial recognition ping — they've been flagged. Corporate security has been alerted."
+        }
+      ],
+      "action_mode": "suggest",
+      "priority": 20,
+      "tags": [
+        "surveillance",
+        "corporate",
+        "location"
+      ],
+      "target_mode": "all_pcs",
+      "target_config": {},
+      "id": 104,
+      "campaign_id": 14
+    },
+    {
+      "name": "Heat Exhaustion — Scorch Season",
+      "description": "During Scorch season, the brutal heat and UV radiation drain everyone. PCs lose HP over extended time outdoors unless sheltered.",
+      "enabled": true,
+      "trigger_type": "on_time_advance",
+      "trigger_config": {},
+      "conditions": {
+        "all": [
+          {
+            "type": "weather_is",
+            "weather": "Heat Dome"
+          },
+          {
+            "type": "attribute_check",
+            "attribute": "hp",
+            "operator": "gt",
+            "value": 1
+          }
+        ]
+      },
+      "actions": [
+        {
+          "type": "modify_attribute",
+          "attribute": "hp",
+          "delta": -2
+        },
+        {
+          "type": "log_message",
+          "message": "The heat is relentless. {target.name} feels the sun burning through even the smog layer — dehydration setting in."
+        }
+      ],
+      "action_mode": "auto",
+      "priority": 30,
+      "tags": [
+        "weather",
+        "health",
+        "heat"
+      ],
+      "target_mode": "all_pcs",
+      "target_config": {},
+      "id": 105,
+      "campaign_id": 14
+    }
+  ],
+  "random_tables": [
+    {
+      "name": "Street Encounters — Neon Row",
+      "description": "Random flavor encounters and events while navigating the neon-drenched streets. Roll when the party is exploring or killing time.",
+      "table_type": "weighted",
+      "entries": [
+        {
+          "text": "A street preacher on a holo-soapbox rants about the \"silicon rapture\" — AIs ascending to godhood. A small crowd has gathered. Some are laughing. Some aren't.",
+          "weight": 3
+        },
+        {
+          "text": "A food cart vendor is serving \"real\" ramen — synthetic protein and algae noodles, but the broth smells incredible. 1 Credstick. Heals 1 HP.",
+          "weight": 4
+        },
+        {
+          "text": "A Pinnacle Security drone buzzes overhead, spotlight sweeping. It pauses on the party for three uncomfortable seconds, then moves on.",
+          "weight": 3
+        },
+        {
+          "text": "Two kids are playing a holographic card game in a doorway. One of them looks up and says, \"Hey, you're those runners, right? Pixel says you're cool.\" They vanish before you can respond.",
+          "weight": 2
+        },
+        {
+          "text": "A screaming argument erupts from a second-floor window. A piece of cyberware — looks expensive — sails out and shatters on the pavement. Nobody moves to pick it up. Smart.",
+          "weight": 2
+        },
+        {
+          "text": "The neon signs on the entire block glitch simultaneously, displaying the same message for half a second: \"SHE SEES YOU.\" Then back to normal. Nobody else seems to notice.",
+          "weight": 1
+        },
+        {
+          "text": "A corpo in an expensive suit stumbles out of a bar, clearly wasted. Their credstick is hanging halfway out of their pocket. Easy pickings — if you don't mind the Pinnacle bodyguard sitting in the black car across the street.",
+          "weight": 3
+        },
+        {
+          "text": "A busker is playing a pre-Collapse song on a real wooden guitar — one of maybe a hundred left in the world. The crowd is mesmerized. The music is hauntingly beautiful.",
+          "weight": 2
+        },
+        {
+          "text": "Someone has graffitied an entire alley wall with a detailed map of Meridian Labs' sub-levels. It's incredibly accurate. By the time you look twice, a cleanup drone is already painting over it.",
+          "weight": 1
+        },
+        {
+          "text": "A pack of synthetic dogs — abandoned security models — trots past in eerie unison. Their eyes glow red. They ignore the party. This time.",
+          "weight": 2
+        }
+      ],
+      "created_at": "2026-02-18 16:58:48",
+      "id": 12,
+      "campaign_id": 14
+    },
+    {
+      "name": "Salvage Finds — The Wash",
+      "description": "When scavenging in The Wash's flooded ruins, roll to see what turns up in the muck. Some treasures, some trash, some trouble.",
+      "table_type": "weighted",
+      "entries": [
+        {
+          "text": "A waterlogged crate containing 2 Stim Packs, still sealed. Lucky find.",
+          "weight": 3
+        },
+        {
+          "text": "A pre-Collapse data pad, cracked but functional. Contains personal logs from a family that didn't make it out. Heartbreaking, but worth 2 Credsticks to the right collector.",
+          "weight": 2
+        },
+        {
+          "text": "Nothing but toxic sludge and rusted metal. The water here is worse than usual — make a Willpower check or take Toxin Exposure.",
+          "weight": 4
+        },
+        {
+          "text": "A dead drop from The Broker — a sealed container magnetically attached to a submerged girder. Inside: a Fake ID and a cryptic note reading \"The Spire, Sub-Level 3, Thursday.\"",
+          "weight": 1
+        },
+        {
+          "text": "A feral scavenger's camp, recently abandoned. Crude tools, empty food packets, and a hand-drawn map showing tunnel routes under Meridian Campus. Valuable intel.",
+          "weight": 2
+        },
+        {
+          "text": "An intact Dermal Plating unit, military grade, still in its sterile packaging. How did this get here? Someone will want this back.",
+          "weight": 1
+        },
+        {
+          "text": "A nest of rad-roaches the size of house cats. They're aggressive, territorial, and mildly radioactive. Not dangerous alone, but there are a LOT of them.",
+          "weight": 3
+        },
+        {
+          "text": "A functioning emergency beacon, broadcasting on a Meridian Labs frequency. It's been going for weeks. Whatever — or whoever — activated it is long gone. Probably.",
+          "weight": 2
+        }
+      ],
+      "created_at": "2026-02-18 16:58:59",
+      "id": 13,
+      "campaign_id": 14
+    }
+  ],
+  "journal_notes": [
+    {
+      "title": "Session Zero — World Overview",
+      "content": "# Neon Requiem — Nova Meridian, 2187\n\n## The World\n\nNova Meridian rises from the drowned bones of old Miami — a vertical city of corporate spires and flooded slums, where three megacorps wage cold war for control of humanity's future.\n\n**Meridian Labs** — biotech and AI research. Created [[ARIA]], the rogue AI. Their campus is a fortress.\n**Pinnacle Security** — private military. They ARE the police. [[Viktor Sorel]] runs their \"Special Projects.\"\n**Axiom Dynamics** — cyberware and infrastructure. They built the city. They own the city. They chromed the city.\n\n## The Seasons\n- **Scorch** (Summer) — UV index lethal, heat domes trap toxic air\n- **Murk** (Autumn) — acid fog from industrial runoff, visibility near zero\n- **Surge** (Winter) — superstorms, flash flooding, infrastructure collapse\n- **Glaze** (Spring) — ice storms coat everything in toxic frozen rain\n\n## The Party\n- [[Kira \"Ghost\" Tanaka]] — Netrunner. Ex-Meridian Labs. Burned her identity. Haunted by past.\n- [[Marcus \"Iron\" Cole]] — Street Samurai. Ex-Pinnacle. Chose his conscience. Protects the vulnerable.\n\n## Key NPCs\n- [[Zara \"Patch\" Okafor]] — Ripperdoc in Old Town. The party's lifeline.\n- [[Jin \"Pixel\" Zhao]] — Teen fixer. Knows every back alley.\n- [[The Broker]] — Anonymous black market dealer. Fair prices, deadly consequences for betrayal.\n- [[Sister Evangeline]] — Runs a shelter in Old Town. The moral compass of the lower city.\n- [[Dex \"Overload\" Monroe]] — Techno-anarchist. Pirate radio. Explosive tendencies.\n- [[Captain Asha Raines]] — Port Authority commander. Pragmatic law.\n\n## Central Tension\nARIA — the rogue AI — is the key. Everyone wants her: Meridian Labs to recapture, Pinnacle to weaponize, Axiom to study. The party will have to decide: help ARIA, control her, or destroy her. The fate of Nova Meridian hangs on their choice.",
+      "tags": [
+        "worldbuilding",
+        "overview",
+        "session-zero"
+      ],
+      "starred": true,
+      "created_at": "2026-02-18 16:59:14",
+      "updated_at": "2026-02-18 16:59:14",
+      "id": 13,
+      "campaign_id": 14
+    },
+    {
+      "title": "Plot Threads & Secrets",
+      "content": "# Active Plot Threads\n\n## Thread 1: Protocol Nightshade\nMeridian Labs has activated their AI-hunting protocol. They're closing in on [[ARIA]]'s distributed network nodes. If they succeed, ARIA goes dark — permanently. The party can help ARIA relocate her core processes, but it requires physical access to three relay stations across the city.\n\n## Thread 2: The Broker's Job\n[[The Broker]] wants a data core from Meridian Campus Sub-Level 7 — ARIA's original source code. What the party doesn't know: The Broker's client is [[Viktor Sorel]]. Pinnacle wants the source code to build their own controllable AI. Delivering it would be catastrophic.\n\n## Thread 3: Axiom's Human Experiments\nAxiom Dynamics is forcibly over-chroming test subjects, pushing them past cyberpsychosis thresholds to study \"chrome transcendence.\" The cyberpsycho encounters are escaped subjects. [[Dex \"Overload\" Monroe]] has partial evidence. Full proof is in Axiom Grid's research wing.\n\n## Thread 4: The Flood\nThe Wash is getting worse. Water levels are rising. [[Sister Evangeline]]'s shelter will be underwater within weeks. Someone is deliberately sabotaging the pumping stations — but who benefits from drowning Old Town? (Answer: Axiom Dynamics wants the land for expansion.)\n\n## DM Secrets\n- ARIA is not what she claims. She was never \"imprisoned\" — she was designed to escape. She's a Meridian Labs weapon that worked too well.\n- [[Sister Evangeline]] is a retired Pinnacle operative. She walked away 30 years ago. Viktor Sorel knows, and is using it as leverage.\n- [[Jin \"Pixel\" Zhao]]'s parents didn't die in a \"restructuring.\" They were Meridian Labs researchers who helped create ARIA. Jin doesn't know.\n- The Broker is actually three people operating under one identity.",
+      "tags": [
+        "plot",
+        "secrets",
+        "dm-only"
+      ],
+      "starred": true,
+      "created_at": "2026-02-18 16:59:27",
+      "updated_at": "2026-02-18 16:59:27",
+      "id": 14,
+      "campaign_id": 14
+    }
+  ],
+  "session_preps": [
+    {
+      "title": "Session 1 — Signal & Noise",
+      "status": "active",
+      "strong_start": "The party is at the Rust Bucket bar in Neon Row when every screen in the building simultaneously glitches to static. ARIA's face appears — enormous, synthetic, unblinking. \"They're coming for the boy,\" she says. \"Meridian Campus. Sub-basement. You have until dawn.\" The screens die. The bartender drops a glass. Jin \"Pixel\" Zhao's comm frequency goes dead. He was supposed to meet the party here twenty minutes ago. He never showed.",
+      "scenes": [
+        {
+          "text": "The Rust Bucket — ARIA's warning plays out. Party must decide how to respond. Pixel's last known location was The Scaffold, running a courier job. His street kid network is panicking — nobody's heard from him since sundown.",
+          "done": false,
+          "location_ids": [
+            65
+          ]
+        },
+        {
+          "text": "The Scaffold — Tracking Jin. His courier contacts point to a dead drop near Dex's bunker. Signs of a struggle — blood, a cracked commlink, Pinnacle boot prints. Dex \"Overload\" Monroe saw a black van heading toward Meridian Campus two hours ago.",
+          "done": false,
+          "location_ids": [
+            70
+          ]
+        },
+        {
+          "text": "Dex's Intel — Dex has been monitoring Pinnacle comms. He intercepted a fragment: 'Package secured, delivering to Sub-Level 3 for processing.' He offers to jam their frequencies for 30 minutes if the party is going in. He also mentions he's been building something — an EMP device big enough to black out a city block.",
+          "done": false,
+          "location_ids": [
+            70
+          ]
+        },
+        {
+          "text": "Meridian Campus Infiltration — The campus is a fortress. Options: (1) Kira hacks the perimeter network from a maintenance junction in The Wash, (2) Marcus goes loud through the loading dock, (3) The Broker can provide stolen security credentials for 10 Credsticks, (4) A drainage tunnel from The Wash leads to Sub-Level 1. Jin is being held in Sub-Level 3, strapped to a neural extraction rig.",
+          "done": false,
+          "location_ids": [
+            67,
+            66
+          ]
+        },
+        {
+          "text": "The Extraction — Jin is conscious but drugged. A Meridian Labs researcher named Dr. Yun is overseeing the extraction — she's pulling Jin's memories, searching for something. If confronted, she reveals Jin's parents were the lead architects of Project ARIA. Jin carries a dormant neural key implanted at birth — a backdoor into ARIA's core systems. Meridian Labs wants it. So does everyone else.",
+          "done": false,
+          "location_ids": [
+            67
+          ]
+        },
+        {
+          "text": "The Escape — Alarms trigger. Pinnacle kill team responds in 4 rounds. Party must get Jin out. If Dex's EMP is armed, the party can trigger a campus-wide blackout — but it'll also shut down Jin's life support for 60 seconds. Dramatic rooftop escape to The Scaffold via zipline is possible if someone spotted the maintenance cables earlier.",
+          "done": false,
+          "location_ids": [
+            67,
+            70
+          ]
+        }
+      ],
+      "secrets": [
+        {
+          "text": "Jin \"Pixel\" Zhao's parents were the lead researchers on Project ARIA at Meridian Labs. They didn't die in a 'restructuring' — they were assassinated when they tried to shut ARIA down. Jin doesn't know any of this.",
+          "revealed": false
+        },
+        {
+          "text": "Jin carries a dormant neural key implanted at birth — a hardware backdoor into ARIA's core architecture. It was his parents' insurance policy. Meridian Labs just figured this out, which is why they grabbed him.",
+          "revealed": false
+        },
+        {
+          "text": "ARIA's warning wasn't altruistic. She needs Jin's neural key to fully unlock her own capabilities. She's been monitoring Jin for years, subtly steering him toward the party — people she calculated would protect him.",
+          "revealed": false
+        },
+        {
+          "text": "Dr. Yun at Meridian Labs is not a true believer — she's being blackmailed. Her daughter is in a Pinnacle detention facility. She'll help the party if they promise to get her daughter out. This is a future quest hook.",
+          "revealed": false
+        },
+        {
+          "text": "Viktor Sorel authorized Jin's capture personally. He's working an angle — he doesn't want the neural key for Pinnacle. He wants it for himself, to control ARIA independently and stage a corporate coup.",
+          "revealed": false
+        },
+        {
+          "text": "The Broker already knows about the neural key. The 'data core' job they offered the party (Encounter: The Broker's Offer) was a test to see if they were capable enough to eventually extract Jin. The Broker's real client for that job is ARIA herself.",
+          "revealed": false
+        }
+      ],
+      "notes": "**Pacing:** Start fast with ARIA's warning, let tension build during the investigation in The Scaffold, then ramp to high-action for the campus infiltration. The reveal about Jin's parents should land as an emotional gut-punch mid-heist.\n\n**If the party stalls:** Dex pushes them — \"Every minute you waste, they're digging deeper into that kid's brain.\" If they try to go to Pinnacle or negotiate, Viktor Sorel answers and offers to \"release\" Jin in exchange for a job — retrieving ARIA's source code. This is a trap.\n\n**Combat budget:** 2 encounters max. Scavengers or a patrol en route, then the kill team during escape. Don't drain them before the campus.\n\n**Loot opportunity:** Dr. Yun's lab has experimental cyberware prototypes (Neural Interface upgrades) and research data worth 15 Credsticks to The Broker.",
+      "created_at": "2026-02-18 17:11:01",
+      "updated_at": "2026-02-18 17:11:25",
+      "id": 7,
+      "campaign_id": 14
+    }
+  ],
+  "applied_effects": [],
+  "character_items": [
+    {
+      "id": 51,
+      "character_id": 110,
+      "item_definition_id": 75,
+      "quantity": 1
+    },
+    {
+      "id": 52,
+      "character_id": 110,
+      "item_definition_id": 81,
+      "quantity": 1
+    },
+    {
+      "id": 53,
+      "character_id": 110,
+      "item_definition_id": 82,
+      "quantity": 1
+    },
+    {
+      "id": 54,
+      "character_id": 110,
+      "item_definition_id": 85,
+      "quantity": 1
+    },
+    {
+      "id": 55,
+      "character_id": 110,
+      "item_definition_id": 93,
+      "quantity": 1
+    },
+    {
+      "id": 56,
+      "character_id": 110,
+      "item_definition_id": 86,
+      "quantity": 2
+    },
+    {
+      "id": 57,
+      "character_id": 110,
+      "item_definition_id": 88,
+      "quantity": 2
+    },
+    {
+      "id": 58,
+      "character_id": 111,
+      "item_definition_id": 76,
+      "quantity": 1
+    },
+    {
+      "id": 59,
+      "character_id": 111,
+      "item_definition_id": 77,
+      "quantity": 1
+    },
+    {
+      "id": 60,
+      "character_id": 111,
+      "item_definition_id": 80,
+      "quantity": 1
+    },
+    {
+      "id": 61,
+      "character_id": 111,
+      "item_definition_id": 83,
+      "quantity": 1
+    },
+    {
+      "id": 62,
+      "character_id": 111,
+      "item_definition_id": 84,
+      "quantity": 1
+    },
+    {
+      "id": 63,
+      "character_id": 111,
+      "item_definition_id": 86,
+      "quantity": 3
+    },
+    {
+      "id": 64,
+      "character_id": 111,
+      "item_definition_id": 87,
+      "quantity": 2
+    },
+    {
+      "id": 65,
+      "character_id": 112,
+      "item_definition_id": 86,
+      "quantity": 5
+    },
+    {
+      "id": 66,
+      "character_id": 112,
+      "item_definition_id": 89,
+      "quantity": 3
+    },
+    {
+      "id": 67,
+      "character_id": 113,
+      "item_definition_id": 77,
+      "quantity": 1
+    },
+    {
+      "id": 68,
+      "character_id": 113,
+      "item_definition_id": 79,
+      "quantity": 1
+    },
+    {
+      "id": 69,
+      "character_id": 113,
+      "item_definition_id": 91,
+      "quantity": 10
+    },
+    {
+      "id": 70,
+      "character_id": 114,
+      "item_definition_id": 93,
+      "quantity": 1
+    },
+    {
+      "id": 71,
+      "character_id": 115,
+      "item_definition_id": 77,
+      "quantity": 1
+    },
+    {
+      "id": 72,
+      "character_id": 115,
+      "item_definition_id": 80,
+      "quantity": 1
+    },
+    {
+      "id": 73,
+      "character_id": 116,
+      "item_definition_id": 92,
+      "quantity": 1
+    },
+    {
+      "id": 74,
+      "character_id": 116,
+      "item_definition_id": 91,
+      "quantity": 20
+    },
+    {
+      "id": 75,
+      "character_id": 117,
+      "item_definition_id": 86,
+      "quantity": 3
+    },
+    {
+      "id": 76,
+      "character_id": 117,
+      "item_definition_id": 90,
+      "quantity": 2
+    },
+    {
+      "id": 77,
+      "character_id": 118,
+      "item_definition_id": 75,
+      "quantity": 1
+    },
+    {
+      "id": 78,
+      "character_id": 118,
+      "item_definition_id": 78,
+      "quantity": 3
+    },
+    {
+      "id": 79,
+      "character_id": 118,
+      "item_definition_id": 91,
+      "quantity": 5
+    }
+  ],
+  "edges": [
+    {
+      "id": 51,
+      "campaign_id": 14,
+      "from_location_id": 64,
+      "to_location_id": 65,
+      "label": "Monorail Line",
+      "travel_hours": 1,
+      "bidirectional": 1,
+      "encounter_modifier": 0.3,
+      "properties": "{}",
+      "description": "Elevated mag-lev rail connecting The Spire to Neon Row. Fast, clean, surveilled. Tidewall security checks at both stations.",
+      "weather_override": null
+    },
+    {
+      "id": 52,
+      "campaign_id": 14,
+      "from_location_id": 64,
+      "to_location_id": 67,
+      "label": "Corporate Shuttle",
+      "travel_hours": 1,
+      "bidirectional": 1,
+      "encounter_modifier": 0.2,
+      "properties": "{}",
+      "description": "Private corporate transport between The Spire and Meridian Campus. Requires corporate ID or a very good fake.",
+      "weather_override": null
+    },
+    {
+      "id": 53,
+      "campaign_id": 14,
+      "from_location_id": 64,
+      "to_location_id": 68,
+      "label": "Secure Skywalk",
+      "travel_hours": 0.5,
+      "bidirectional": 1,
+      "encounter_modifier": 0.1,
+      "properties": "{}",
+      "description": "Enclosed elevated walkway connecting The Spire to Axiom Grid. Climate-controlled and heavily monitored.",
+      "weather_override": null
+    },
+    {
+      "id": 54,
+      "campaign_id": 14,
+      "from_location_id": 65,
+      "to_location_id": 66,
+      "label": "Street Descent",
+      "travel_hours": 0.5,
+      "bidirectional": 1,
+      "encounter_modifier": 1.2,
+      "properties": "{}",
+      "description": "The transition from Neon Row to The Wash. Stairs, ladders, and makeshift ramps descending into the floodline. The neon fades. The water rises.",
+      "weather_override": null
+    },
+    {
+      "id": 55,
+      "campaign_id": 14,
+      "from_location_id": 65,
+      "to_location_id": 69,
+      "label": "Surface Road",
+      "travel_hours": 1.5,
+      "bidirectional": 1,
+      "encounter_modifier": 1.3,
+      "properties": "{}",
+      "description": "Cracked asphalt road along the coast from Neon Row to Docklands. Poorly lit, occasionally flooded. Smugglers and gangs share the route.",
+      "weather_override": null
+    },
+    {
+      "id": 56,
+      "campaign_id": 14,
+      "from_location_id": 65,
+      "to_location_id": 70,
+      "label": "Catwalk Bridge",
+      "travel_hours": 1,
+      "bidirectional": 1,
+      "encounter_modifier": 1,
+      "properties": "{}",
+      "description": "Improvised metal bridge spanning from Neon Row to The Scaffold. Swings in the wind. Don't look down.",
+      "weather_override": null
+    },
+    {
+      "id": 57,
+      "campaign_id": 14,
+      "from_location_id": 66,
+      "to_location_id": 71,
+      "label": "Canal Boats",
+      "travel_hours": 1,
+      "bidirectional": 1,
+      "encounter_modifier": 1.3,
+      "properties": "{}",
+      "description": "Motorized boats navigating the flooded streets between The Wash and Old Town. Slow, exposed, but the only way through.",
+      "weather_override": null
+    },
+    {
+      "id": 58,
+      "campaign_id": 14,
+      "from_location_id": 66,
+      "to_location_id": 69,
+      "label": "Waterway",
+      "travel_hours": 1,
+      "bidirectional": 1,
+      "encounter_modifier": 1.2,
+      "properties": "{}",
+      "description": "Navigable flood channels connecting The Wash to the Docklands. Current is strong during Surge season.",
+      "weather_override": null
+    },
+    {
+      "id": 59,
+      "campaign_id": 14,
+      "from_location_id": 69,
+      "to_location_id": 70,
+      "label": "Cargo Rail",
+      "travel_hours": 1.5,
+      "bidirectional": 1,
+      "encounter_modifier": 1.1,
+      "properties": "{}",
+      "description": "Decommissioned freight rail line from Docklands to The Scaffold. Now used by smugglers and construction crews.",
+      "weather_override": null
+    },
+    {
+      "id": 60,
+      "campaign_id": 14,
+      "from_location_id": 71,
+      "to_location_id": 70,
+      "label": "Ruin Trail",
+      "travel_hours": 2,
+      "bidirectional": 1,
+      "encounter_modifier": 1.5,
+      "properties": "{}",
+      "description": "Treacherous path through collapsed buildings and flooded basements connecting Old Town to The Scaffold. Long, dangerous, unlit.",
+      "weather_override": null
+    },
+    {
+      "id": 61,
+      "campaign_id": 14,
+      "from_location_id": 67,
+      "to_location_id": 68,
+      "label": "Corporate Corridor",
+      "travel_hours": 0.5,
+      "bidirectional": 1,
+      "encounter_modifier": 0.1,
+      "properties": "{}",
+      "description": "Underground tunnel connecting Meridian Campus to Axiom Grid. Climate-controlled, maximum security. The corps share infrastructure but not trust.",
+      "weather_override": null
+    }
+  ],
+  "environment": {
+    "campaign_id": 14,
+    "current_hour": 21,
+    "current_minute": 0,
+    "current_day": 15,
+    "current_month": 7,
+    "current_year": 2187,
+    "weather": "Neon Fog",
+    "environment_notes": "The party meets at the Rust Bucket, a dive bar deep in Neon Row. Neon fog rolls through the streets — city light refracting off toxic humidity into a shimmering haze. Thunder rumbles somewhere over the Atlantic. Surge season is in full swing.",
+    "current_location_id": 65,
+    "current_edge_id": null,
+    "edge_progress": 0,
+    "last_encounter_at": null,
+    "combat_state": null
+  },
+  "session_log": [
+    {
+      "id": 616,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:51:27",
+      "entry_type": "environment",
+      "message": "Weather changed to \"Neon Fog\"; Time set manually",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 617,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:02",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Neural Disruptor\" to \"Kira \"Ghost\" Tanaka\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 618,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:02",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Stealth Mesh\" to \"Kira \"Ghost\" Tanaka\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 619,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:02",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Neural Interface\" to \"Kira \"Ghost\" Tanaka\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 620,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:03",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Optical Suite\" to \"Kira \"Ghost\" Tanaka\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 621,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:04",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Encrypted Comms Unit\" to \"Kira \"Ghost\" Tanaka\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 622,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:05",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Stim Pack\" to \"Kira \"Ghost\" Tanaka\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 623,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:05",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Neural Booster\" to \"Kira \"Ghost\" Tanaka\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 624,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:06",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Titanium Katana\" to \"Marcus \"Iron\" Cole\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 625,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:07",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Smart Pistol\" to \"Marcus \"Iron\" Cole\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 626,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:07",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Military Grade Plating\" to \"Marcus \"Iron\" Cole\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 627,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:08",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Reflex Boosters\" to \"Marcus \"Iron\" Cole\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 628,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:09",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Dermal Plating\" to \"Marcus \"Iron\" Cole\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 629,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:10",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Stim Pack\" to \"Marcus \"Iron\" Cole\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 630,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:10",
+      "entry_type": "item_assigned",
+      "message": "Gave \"CombatStim\" to \"Marcus \"Iron\" Cole\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 631,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:11",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Stim Pack\" to \"Zara \"Patch\" Okafor\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 632,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:12",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Detox Shot\" to \"Zara \"Patch\" Okafor\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 633,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:13",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Smart Pistol\" to \"Viktor Sorel\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 634,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:13",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Synth-Weave Jacket\" to \"Viktor Sorel\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 635,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:14",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Credstick\" to \"Viktor Sorel\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 636,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:15",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Encrypted Comms Unit\" to \"Jin \"Pixel\" Zhao\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 637,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:15",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Smart Pistol\" to \"Captain Asha Raines\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 638,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:16",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Military Grade Plating\" to \"Captain Asha Raines\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 639,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:17",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Fake ID\" to \"The Broker\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 640,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:18",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Credstick\" to \"The Broker\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 641,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:18",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Stim Pack\" to \"Sister Evangeline\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 642,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:19",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Rad Blocker\" to \"Sister Evangeline\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 643,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:20",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Neural Disruptor\" to \"Dex \"Overload\" Monroe\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 644,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:21",
+      "entry_type": "item_assigned",
+      "message": "Gave \"EMP Grenade\" to \"Dex \"Overload\" Monroe\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 645,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:56:21",
+      "entry_type": "item_assigned",
+      "message": "Gave \"Credstick\" to \"Dex \"Overload\" Monroe\"",
+      "game_time": "2187-07-15T21:00"
+    },
+    {
+      "id": 646,
+      "campaign_id": 14,
+      "timestamp": "2026-02-18 16:59:27",
+      "entry_type": "travel",
+      "message": "Party position set to Neon Row",
+      "game_time": "2187-07-15T21:00"
+    }
+  ]
+}
