@@ -106,18 +106,17 @@ export default function LocationsPage({ campaignId, campaign, environment, onUpd
     load();
   }, [campaignId, load]);
 
-  const onPaneClick = useCallback(async (event) => {
-    if (!reactFlowInstance) return;
+  const onPaneClick = useCallback(() => {
     setSelected(null);
-    // Double-click creates a new location
-  }, [reactFlowInstance]);
+  }, []);
 
-  const onPaneDoubleClick = useCallback(async (event) => {
-    if (!reactFlowInstance || !reactFlowWrapper.current) return;
-    const bounds = reactFlowWrapper.current.getBoundingClientRect();
+  const onWrapperDoubleClick = useCallback(async (event) => {
+    // Only handle double-clicks on the pane background (not nodes/edges/controls)
+    if (!event.target.classList.contains('react-flow__pane')) return;
+    if (!reactFlowInstance) return;
     const position = reactFlowInstance.screenToFlowPosition({
-      x: event.clientX - bounds.left,
-      y: event.clientY - bounds.top,
+      x: event.clientX,
+      y: event.clientY,
     });
     const name = prompt('Location name:');
     if (!name) return;
@@ -157,7 +156,7 @@ export default function LocationsPage({ campaignId, campaign, environment, onUpd
 
   return (
     <div className="page" style={{ display: 'flex', gap: 0, padding: 0, height: 'calc(100vh - 80px)' }}>
-      <div ref={reactFlowWrapper} style={{ flex: 1, minWidth: 0 }}>
+      <div ref={reactFlowWrapper} style={{ flex: 1, minWidth: 0 }} onDoubleClick={onWrapperDoubleClick}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -168,7 +167,6 @@ export default function LocationsPage({ campaignId, campaign, environment, onUpd
           onNodeClick={onNodeClick}
           onEdgeClick={onEdgeClick}
           onPaneClick={onPaneClick}
-          onPaneDoubleClick={onPaneDoubleClick}
           onInit={setReactFlowInstance}
           nodeTypes={nodeTypes}
           fitView
