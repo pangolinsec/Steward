@@ -62,3 +62,7 @@ PORT=8080 docker compose up -d
 | [Using LLMs](docs/using-llms.md) | AI Dungeon Master, world-building assistant, and content generation |
 | [LLM Content Generation](docs/llm-generation.md) | Ready-to-use prompts for generating importable JSON |
 | [MCP Server Guide](MCP-server-usage.md) | Installation and tool reference for the Steward MCP server |
+
+## License
+
+All rights reserved. This software is provided for **personal, non-commercial use only**. You may use, copy, and modify it for your own tabletop RPG sessions. You may not sell it, host it as a paid service, or use it in any commercial product. For commercial licensing inquiries, contact the author.
