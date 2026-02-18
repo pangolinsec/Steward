@@ -25,7 +25,7 @@ export default function StatusEffectsPage({ campaignId, campaign }) {
     load();
   };
 
-  const attrs = campaign?.attribute_definitions || [];
+  const attrs = (campaign?.attribute_definitions || []).filter(a => a.type !== 'tag');
 
   const handleExport = async () => {
     const data = await api.getStatusEffects(campaignId);

@@ -1,9 +1,7 @@
 import React, { useState, useRef } from 'react';
 
 const CONDITION_TYPES = [
-  { value: 'attribute_gte', label: 'Attribute >=', fields: ['attribute', 'value'] },
-  { value: 'attribute_lte', label: 'Attribute <=', fields: ['attribute', 'value'] },
-  { value: 'attribute_eq', label: 'Attribute ==', fields: ['attribute', 'value'] },
+  { value: 'attribute', label: 'Attribute', fields: [] },
   { value: 'has_effect', label: 'Has Effect', fields: ['effect_name'] },
   { value: 'lacks_effect', label: 'Lacks Effect', fields: ['effect_name'] },
   { value: 'has_item', label: 'Has Item', fields: ['item_name'] },
@@ -19,9 +17,21 @@ const CONDITION_TYPES = [
   { value: 'random_chance', label: 'Random Chance', fields: ['probability'] },
   { value: 'hours_since_last_rest', label: 'Hours Since Rest', fields: ['operator', 'hours'] },
   { value: 'season_is', label: 'Season Is', fields: ['value'] },
-  { value: 'trait_equals', label: 'Trait Equals', fields: ['trait', 'value'] },
-  { value: 'trait_in', label: 'Trait In', fields: ['trait', 'values'] },
 ];
+
+const ATTRIBUTE_CONDITION_TYPES = new Set([
+  'attribute_gte', 'attribute_lte', 'attribute_eq', 'trait_equals', 'trait_in'
+]);
+
+function getAttrType(key, campaign) {
+  const def = (campaign?.attribute_definitions || []).find(a => a.key === key);
+  return def?.type === 'tag' ? 'tag' : 'numeric';
+}
+
+function getAttrOptions(key, campaign) {
+  const def = (campaign?.attribute_definitions || []).find(a => a.key === key);
+  return def?.options || [];
+}
 
 const ACTION_TYPES = [
   { value: 'apply_effect', label: 'Apply Effect', fields: ['effect_name'] },
@@ -244,9 +254,23 @@ export function ConditionBuilder({ value, onChange, entityLists, campaign }) {
 }
 
 function ConditionRow({ condition, onChange, onRemove, entityLists, campaign }) {
-  const typeDef = CONDITION_TYPES.find(t => t.value === condition.type);
+  const displayType = ATTRIBUTE_CONDITION_TYPES.has(condition.type) ? 'attribute' : condition.type;
+  const typeDef = CONDITION_TYPES.find(t => t.value === displayType);
   const registry = (campaign?.property_key_registry || []).map(r => typeof r === 'string' ? { key: r, values: [] } : r);
   const registryKeys = registry.map(r => r.key);
+
+  const handleTypeChange = (newType) => {
+    if (newType === 'attribute') {
+      const firstAttr = (campaign?.attribute_definitions || [])[0];
+      if (firstAttr && firstAttr.type === 'tag') {
+        onChange({ type: 'trait_equals', trait: firstAttr.key, value: '' });
+      } else {
+        onChange({ type: 'attribute_gte', attribute: firstAttr?.key || '', value: '' });
+      }
+    } else {
+      onChange({ type: newType });
+    }
+  };
 
   const getWarning = (field) => {
     if (!entityLists) return null;
@@ -259,6 +283,114 @@ function ConditionRow({ condition, onChange, onRemove, entityLists, campaign }) 
       return 'This item does not exist in the campaign';
     }
     return null;
+  };
+
+  const renderAttributeFields = () => {
+    const allAttrs = (campaign?.attribute_definitions || []).map(a => ({ value: a.key, label: a.label }));
+    const attrKey = condition.attribute || condition.trait || '';
+    const attrType = getAttrType(attrKey, campaign);
+
+    let currentOp;
+    if (attrType === 'numeric') {
+      if (condition.type === 'attribute_lte') currentOp = 'lte';
+      else if (condition.type === 'attribute_eq') currentOp = 'eq';
+      else currentOp = 'gte';
+    } else {
+      currentOp = condition.type === 'trait_in' ? 'in' : 'equals';
+    }
+
+    const handleAttrChange = (newKey) => {
+      const newType = getAttrType(newKey, campaign);
+      if (newType === 'tag') {
+        onChange({ type: 'trait_equals', trait: newKey, value: '' });
+      } else {
+        onChange({ type: 'attribute_gte', attribute: newKey, value: '' });
+      }
+    };
+
+    const handleOpChange = (op) => {
+      if (attrType === 'numeric') {
+        const typeMap = { gte: 'attribute_gte', lte: 'attribute_lte', eq: 'attribute_eq' };
+        onChange({ ...condition, type: typeMap[op] });
+      } else if (op === 'in' && condition.type !== 'trait_in') {
+        const { value, ...rest } = condition;
+        onChange({ ...rest, type: 'trait_in', values: value ? [value] : [] });
+      } else if (op === 'equals' && condition.type !== 'trait_equals') {
+        const { values, ...rest } = condition;
+        onChange({ ...rest, type: 'trait_equals', value: (values || [])[0] || '' });
+      }
+    };
+
+    let valueElement;
+    if (attrType === 'numeric') {
+      valueElement = (
+        <input
+          type="number"
+          value={condition.value ?? ''}
+          onChange={e => onChange({ ...condition, value: Number(e.target.value) })}
+          placeholder="value"
+          style={{ flex: 1, minWidth: 60, fontSize: 11, padding: '4px 6px' }}
+        />
+      );
+    } else if (condition.type === 'trait_in') {
+      valueElement = (
+        <MultiCheckboxSelect
+          values={condition.values}
+          onChange={v => onChange({ ...condition, values: v })}
+          options={getAttrOptions(attrKey, campaign)}
+          allowCustom
+        />
+      );
+    } else {
+      valueElement = (
+        <FieldSelect
+          value={condition.value}
+          onChange={v => onChange({ ...condition, value: v })}
+          options={getAttrOptions(attrKey, campaign)}
+          allowCustom
+          placeholder="value"
+        />
+      );
+    }
+
+    return (
+      <>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 60 }}>
+          <FieldSelect
+            value={attrKey}
+            onChange={handleAttrChange}
+            options={allAttrs}
+            allowCustom
+            placeholder="attribute"
+          />
+        </span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, minWidth: 50 }}>
+          {attrType === 'numeric' ? (
+            <select
+              value={currentOp}
+              onChange={e => handleOpChange(e.target.value)}
+              style={{ fontSize: 11, padding: '4px 28px 4px 6px' }}
+            >
+              <option value="gte">&gt;=</option>
+              <option value="lte">&lt;=</option>
+              <option value="eq">==</option>
+            </select>
+          ) : (
+            <select
+              value={currentOp}
+              onChange={e => handleOpChange(e.target.value)}
+              style={{ fontSize: 11, padding: '4px 28px 4px 6px' }}
+            >
+              <option value="equals">equals</option>
+              <option value="in">in</option>
+            </select>
+          )}
+        </span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 60 }}>
+          {valueElement}
+        </span>
+      </>
+    );
   };
 
   const renderField = (field) => {
@@ -288,61 +420,6 @@ function ConditionRow({ condition, onChange, onRemove, entityLists, campaign }) 
           options={entityLists?.items || []}
           allowCustom
           placeholder="item_name"
-        />
-      );
-    }
-    // attribute field
-    else if (field === 'attribute') {
-      const attrOptions = (campaign?.attribute_definitions || []).map(a => ({ value: a.key, label: a.label }));
-      fieldElement = (
-        <FieldSelect
-          value={condition[field]}
-          onChange={v => onChange({ ...condition, [field]: v })}
-          options={attrOptions}
-          allowCustom
-          placeholder="attribute"
-        />
-      );
-    }
-    // trait field for trait_equals / trait_in
-    else if (field === 'trait') {
-      const tagAttrs = (campaign?.attribute_definitions || [])
-        .filter(a => a.type === 'tag')
-        .map(a => ({ value: a.key, label: a.label }));
-      fieldElement = (
-        <FieldSelect
-          value={condition[field]}
-          onChange={v => onChange({ ...condition, [field]: v })}
-          options={tagAttrs}
-          allowCustom
-          placeholder="trait"
-        />
-      );
-    }
-    // trait_equals value — populate from trait's options
-    else if (field === 'value' && condType === 'trait_equals') {
-      const traitDef = (campaign?.attribute_definitions || []).find(a => a.key === condition.trait);
-      const opts = traitDef?.options || [];
-      fieldElement = (
-        <FieldSelect
-          value={condition[field]}
-          onChange={v => onChange({ ...condition, [field]: v })}
-          options={opts}
-          allowCustom
-          placeholder="value"
-        />
-      );
-    }
-    // trait_in values — multi-select from trait's options
-    else if (field === 'values' && condType === 'trait_in') {
-      const traitDef = (campaign?.attribute_definitions || []).find(a => a.key === condition.trait);
-      const opts = traitDef?.options || [];
-      fieldElement = (
-        <MultiCheckboxSelect
-          values={condition[field]}
-          onChange={v => onChange({ ...condition, [field]: v })}
-          options={opts}
-          allowCustom
         />
       );
     }
@@ -512,12 +589,12 @@ function ConditionRow({ condition, onChange, onRemove, entityLists, campaign }) 
 
   return (
     <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 6, padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
-      <select value={condition.type} onChange={e => onChange({ type: e.target.value })}
+      <select value={displayType} onChange={e => handleTypeChange(e.target.value)}
         style={{ width: 140, fontSize: 11, padding: '4px 28px 4px 6px' }}>
         {CONDITION_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
       </select>
       <div style={{ display: 'flex', gap: 4, flex: 1, flexWrap: 'wrap', alignItems: 'center' }}>
-        {(typeDef?.fields || []).map(renderField)}
+        {displayType === 'attribute' ? renderAttributeFields() : (typeDef?.fields || []).map(renderField)}
       </div>
       <button type="button" className="btn btn-danger btn-sm" style={{ padding: '2px 6px', fontSize: 10 }} onClick={onRemove}>&#x2715;</button>
     </div>
