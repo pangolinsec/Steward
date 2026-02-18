@@ -69,12 +69,12 @@ Use Claude Code with the Steward MCP server to run a full tabletop RPG session. 
 
 ### DM system prompts
 
-Two DM system prompts are included in the repository root:
+Two full DM system prompts are included in `LLM-prompts/`:
 
 | File | Description |
 |------|-------------|
-| `DM_SYSTEM_PROMPT.md` | Standard DM prompt. The AI controls all NPCs directly. Best for most sessions. |
-| `DM_SYSTEM_PROMPT_SUBAGENTS.md` | Advanced DM prompt with a hybrid NPC system. Key NPC companions get spawned as independent subagents for high-stakes decisions, giving them genuine autonomy. Best when you want NPC companions to surprise you. |
+| `LLM-prompts/DM_SYSTEM_PROMPT.md` | Standard DM prompt. The AI controls all NPCs directly. Best for most sessions. |
+| `LLM-prompts/DM_SYSTEM_PROMPT_SUBAGENTS.md` | Advanced DM prompt with a hybrid NPC system. Key NPC companions get spawned as independent subagents for high-stakes decisions, giving them genuine autonomy. Best when you want NPC companions to surprise you. |
 
 Both prompts cover:
 
@@ -105,6 +105,22 @@ From there, play naturally:
 > "We set up camp for the night — I take first watch."
 
 The DM handles all the mechanics: rolling dice, updating HP, applying effects, advancing time, triggering encounters, and logging events.
+
+### Modular prompts
+
+If you don't need the full monolithic prompt, `LLM-prompts/` also contains modular files you can mix and match. Start with `dm-core.md` and add only what you need:
+
+| File | Content |
+|------|---------|
+| `dm-core.md` | Role, tone, player expectations, golden rules. **Use this with any combination of the others.** |
+| `dm-dice-and-mechanics.md` | Dice rolling, ability modifiers, checks, saves, contested checks |
+| `dm-combat.md` | Initiative, combat tracker, turns, attacks, damage, death & dying, presentation |
+| `dm-npc-companions.md` | Companion decision-making, autonomy, party conflict |
+| `dm-characters-and-inventory.md` | Character, effect, and inventory tool reference |
+| `dm-travel-and-environment.md` | Time, weather, location, and travel tool reference |
+| `dm-encounters.md` | Predefined encounters, ad-hoc encounters, random checks |
+| `dm-session-management.md` | Session start/end flow, logging guidelines, session prep and journal tools |
+| `dm-rules-and-notifications.md` | Rules engine notification tools |
 
 ### Customizing the DM prompt
 
