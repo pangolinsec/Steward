@@ -1,13 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as api from '../api';
 import { useToast } from './ToastContext';
+import NotificationDrawer from './NotificationDrawer';
 
 export default function EnvironmentBar({ environment, campaignId, onUpdate, campaign }) {
   const [showAdvance, setShowAdvance] = useState(false);
   const [advHours, setAdvHours] = useState(0);
   const [advMinutes, setAdvMinutes] = useState(0);
   const [encounterEvent, setEncounterEvent] = useState(null);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifPinned, setNotifPinned] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const { addToast } = useToast();
+
+  const refreshNotifCount = async () => {
+    if (!campaignId) return;
+    try {
+      const data = await api.getNotificationCount(campaignId);
+      setUnreadCount(data.count);
+    } catch { /* ignore */ }
+  };
+
+  useEffect(() => { refreshNotifCount(); }, [campaignId]);
 
   const pad = (n) => String(n).padStart(2, '0');
 
@@ -20,6 +34,12 @@ export default function EnvironmentBar({ environment, campaignId, onUpdate, camp
         setEncounterEvent(event);
       } else if (event.type === 'travel') {
         addToast(`Traveled: ${event.from} \u2192 ${event.to} (${event.hours}h)`, 'success');
+      } else if (event.type === 'rest') {
+        addToast(`${event.rest_type === 'short' ? 'Short' : 'Long'} rest (${event.hours}h)`, 'success');
+      } else if (event.type === 'effect_expired') {
+        addToast(`Effect expired: ${event.effect_name} on ${event.character_name}`, 'info');
+      } else if (event.type === 'rule_notification') {
+        addToast(event.message || `Rule fired: ${event.rule_name}`, event.severity || 'info');
       }
     }
   };
@@ -28,6 +48,7 @@ export default function EnvironmentBar({ environment, campaignId, onUpdate, camp
     const result = await api.advanceTime(campaignId, { hours, minutes });
     processEvents(result.events);
     onUpdate();
+    refreshNotifCount();
     setShowAdvance(false);
     setAdvHours(0);
     setAdvMinutes(0);
@@ -90,6 +111,22 @@ export default function EnvironmentBar({ environment, campaignId, onUpdate, camp
           <button className="btn btn-sm btn-secondary" onClick={() => handleAdvance(1, 0)}>+1h</button>
           <button className="btn btn-sm btn-secondary" onClick={() => handleAdvance(8, 0)}>+8h</button>
           <button className="btn btn-sm btn-ghost" onClick={() => setShowAdvance(!showAdvance)}>Custom</button>
+          <span style={{ width: 1, height: 16, background: 'var(--border)', margin: '0 2px' }} />
+          <button className="btn btn-sm btn-secondary" onClick={async () => {
+            const result = await api.rest(campaignId, 'short');
+            processEvents(result.events); onUpdate(); refreshNotifCount();
+          }}>Short Rest</button>
+          <button className="btn btn-sm btn-secondary" onClick={async () => {
+            const result = await api.rest(campaignId, 'long');
+            processEvents(result.events); onUpdate(); refreshNotifCount();
+          }}>Long Rest</button>
+          <button className="btn btn-sm btn-ghost notification-bell" onClick={() => setShowNotifications(!showNotifications)}
+            title="Notifications">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
+            </svg>
+            {unreadCount > 0 && <span className="notification-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
+          </button>
         </div>
         {showAdvance && (
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%', paddingTop: 4 }}>
@@ -108,6 +145,14 @@ export default function EnvironmentBar({ environment, campaignId, onUpdate, camp
           event={encounterEvent}
           onStart={() => handleStartEncounter(encounterEvent.encounter)}
           onDismiss={() => { setEncounterEvent(null); addToast('Encounter dismissed', 'info'); }}
+        />
+      )}
+      {showNotifications && (
+        <NotificationDrawer
+          campaignId={campaignId}
+          onClose={() => { if (!notifPinned) setShowNotifications(false); }}
+          pinned={notifPinned}
+          onTogglePin={() => setNotifPinned(!notifPinned)}
         />
       )}
     </>

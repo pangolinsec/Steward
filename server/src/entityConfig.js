@@ -114,11 +114,35 @@ const ENTITY_CONFIG = {
     relations: [],
     postProcess: 'remapLocationEdges',
   },
+  rules: {
+    table: 'rule_definitions',
+    exportKey: 'rules',
+    displayName: 'Rules',
+    nameField: 'name',
+    columns: [
+      { name: 'name',           type: 'text',    default: '' },
+      { name: 'description',    type: 'text',    default: '' },
+      { name: 'enabled',        type: 'bool_int', default: true },
+      { name: 'trigger_type',   type: 'text',    default: 'on_time_advance' },
+      { name: 'trigger_config', type: 'json',    default: {} },
+      { name: 'conditions',     type: 'json',    default: { all: [] } },
+      { name: 'actions',        type: 'json',    default: [] },
+      { name: 'action_mode',    type: 'text',    default: 'auto' },
+      { name: 'priority',       type: 'integer', default: 100 },
+      { name: 'tags',           type: 'json',    default: [] },
+      { name: 'target_mode',    type: 'text',    default: 'environment' },
+      { name: 'target_config',  type: 'json',    default: {} },
+    ],
+    modifierColumns: [],
+    idMapKey: 'ruleIdMap',
+    relations: [],
+  },
 };
 
 // Order matters: effects and items before characters (for relation ID mapping),
 // locations before encounters (encounter conditions reference location IDs),
 // encounters last (needs charIdMap for NPC remapping).
-const IMPORT_ORDER = ['status_effects', 'items', 'characters', 'locations', 'encounters'];
+// rules last — they're standalone, no cross-references.
+const IMPORT_ORDER = ['status_effects', 'items', 'characters', 'locations', 'encounters', 'rules'];
 
 module.exports = { ENTITY_CONFIG, IMPORT_ORDER };

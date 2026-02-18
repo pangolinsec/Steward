@@ -1,6 +1,17 @@
 const express = require('express');
 const router = express.Router({ mergeParams: true });
 const db = require('../db');
+const { getComputedStats } = require('../computedStats');
+
+function fireRules(campaignId, triggerType, triggerContext) {
+  try {
+    const { evaluateRules, checkThresholds } = require('../rulesEngine/engine');
+    return evaluateRules(campaignId, triggerType, triggerContext);
+  } catch (e) {
+    console.error(`Rules engine error (${triggerType}):`, e.message);
+    return { fired: [], notifications: [], events: [] };
+  }
+}
 
 // GET all characters for a campaign
 router.get('/', (req, res) => {
@@ -41,76 +52,9 @@ router.get('/:charId/computed', (req, res) => {
     .get(req.params.charId, req.params.id);
   if (!char) return res.status(404).json({ error: 'Character not found' });
 
-  const base = JSON.parse(char.base_attributes);
-
-  // Get applied effects with their definitions
-  const appliedEffects = db.prepare(`
-    SELECT ae.*, sed.name, sed.modifiers, sed.tags, sed.duration_type, sed.duration_value, sed.description
-    FROM applied_effects ae
-    JOIN status_effect_definitions sed ON ae.status_effect_definition_id = sed.id
-    WHERE ae.character_id = ?
-  `).all(req.params.charId);
-
-  const effectsBreakdown = appliedEffects.map(e => ({
-    id: e.id,
-    definition_id: e.status_effect_definition_id,
-    name: e.name,
-    description: e.description,
-    tags: JSON.parse(e.tags),
-    modifiers: JSON.parse(e.modifiers),
-    applied_at: e.applied_at,
-    remaining_rounds: e.remaining_rounds,
-    remaining_hours: e.remaining_hours,
-    duration_type: e.duration_type,
-    duration_value: e.duration_value,
-  }));
-
-  // Get character items with their definitions
-  const charItems = db.prepare(`
-    SELECT ci.*, id.name, id.modifiers, id.item_type, id.description, id.properties, id.stackable
-    FROM character_items ci
-    JOIN item_definitions id ON ci.item_definition_id = id.id
-    WHERE ci.character_id = ?
-  `).all(req.params.charId);
-
-  const itemsBreakdown = charItems.map(i => ({
-    id: i.id,
-    definition_id: i.item_definition_id,
-    name: i.name,
-    description: i.description,
-    item_type: i.item_type,
-    properties: JSON.parse(i.properties),
-    stackable: !!i.stackable,
-    quantity: i.quantity,
-    modifiers: JSON.parse(i.modifiers),
-  }));
-
-  // Compute effective stats
-  const effective = { ...base };
-
-  for (const effect of effectsBreakdown) {
-    for (const mod of effect.modifiers) {
-      if (effective[mod.attribute] !== undefined) {
-        effective[mod.attribute] += mod.delta;
-      }
-    }
-  }
-
-  for (const item of itemsBreakdown) {
-    for (const mod of item.modifiers) {
-      if (effective[mod.attribute] !== undefined) {
-        effective[mod.attribute] += mod.delta;
-      }
-    }
-  }
-
-  res.json({
-    character: { ...char, base_attributes: base },
-    base,
-    effects_breakdown: effectsBreakdown,
-    items_breakdown: itemsBreakdown,
-    effective,
-  });
+  const stats = getComputedStats(req.params.charId);
+  if (!stats) return res.status(404).json({ error: 'Character not found' });
+  res.json(stats);
 });
 
 // POST create character
@@ -197,6 +141,19 @@ router.post('/:charId/effects', (req, res) => {
   db.prepare(`INSERT INTO session_log (campaign_id, entry_type, message) VALUES (?, 'effect_applied', ?)`)
     .run(req.params.id, `Applied "${effect.name}" to "${char.name}"`);
 
+  // Fire on_effect_change rules
+  const beforeStats = getComputedStats(req.params.charId);
+  fireRules(req.params.id, 'on_effect_change', {
+    change_type: 'applied', effect_name: effect.name, character_id: Number(req.params.charId),
+  });
+  const afterStats = getComputedStats(req.params.charId);
+  if (beforeStats && afterStats) {
+    try {
+      const { checkThresholds } = require('../rulesEngine/engine');
+      checkThresholds(req.params.id, Number(req.params.charId), beforeStats.effective, afterStats.effective);
+    } catch {}
+  }
+
   const applied = db.prepare('SELECT * FROM applied_effects WHERE id = ?').get(result.lastInsertRowid);
   res.status(201).json(applied);
 });
@@ -212,10 +169,23 @@ router.delete('/:charId/effects/:effectId', (req, res) => {
   `).get(req.params.effectId, req.params.charId);
   if (!applied) return res.status(404).json({ error: 'Applied effect not found' });
 
+  const beforeStats = getComputedStats(req.params.charId);
   db.prepare('DELETE FROM applied_effects WHERE id = ?').run(req.params.effectId);
 
   db.prepare(`INSERT INTO session_log (campaign_id, entry_type, message) VALUES (?, 'effect_removed', ?)`)
     .run(req.params.id, `Removed "${applied.effect_name}" from "${applied.char_name}"`);
+
+  // Fire on_effect_change rules
+  fireRules(req.params.id, 'on_effect_change', {
+    change_type: 'removed', effect_name: applied.effect_name, character_id: Number(req.params.charId),
+  });
+  const afterStats = getComputedStats(req.params.charId);
+  if (beforeStats && afterStats) {
+    try {
+      const { checkThresholds } = require('../rulesEngine/engine');
+      checkThresholds(req.params.id, Number(req.params.charId), beforeStats.effective, afterStats.effective);
+    } catch {}
+  }
 
   res.json({ success: true });
 });
@@ -255,6 +225,10 @@ router.post('/:charId/items', (req, res) => {
   db.prepare(`INSERT INTO session_log (campaign_id, entry_type, message) VALUES (?, 'item_assigned', ?)`)
     .run(req.params.id, `Gave "${item.name}" to "${char.name}"`);
 
+  fireRules(req.params.id, 'on_item_change', {
+    change_type: 'assigned', item_name: item.name, character_id: Number(req.params.charId),
+  });
+
   const charItem = db.prepare('SELECT * FROM character_items WHERE id = ?').get(result.lastInsertRowid);
   res.status(201).json(charItem);
 });
@@ -293,6 +267,10 @@ router.delete('/:charId/items/:itemId', (req, res) => {
 
   db.prepare(`INSERT INTO session_log (campaign_id, entry_type, message) VALUES (?, 'item_removed', ?)`)
     .run(req.params.id, `Removed "${charItem.item_name}" from "${charItem.char_name}"`);
+
+  fireRules(req.params.id, 'on_item_change', {
+    change_type: 'removed', item_name: charItem.item_name, character_id: Number(req.params.charId),
+  });
 
   res.json({ success: true });
 });

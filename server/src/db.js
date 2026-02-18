@@ -162,6 +162,73 @@ function initialize() {
     CREATE INDEX IF NOT EXISTS idx_session_log_campaign ON session_log(campaign_id);
     CREATE INDEX IF NOT EXISTS idx_locations_campaign ON locations(campaign_id);
     CREATE INDEX IF NOT EXISTS idx_location_edges_campaign ON location_edges(campaign_id);
+
+    CREATE TABLE IF NOT EXISTS rule_definitions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      description TEXT DEFAULT '',
+      enabled INTEGER DEFAULT 1,
+      trigger_type TEXT NOT NULL,
+      trigger_config TEXT DEFAULT '{}',
+      conditions TEXT DEFAULT '{"all":[]}',
+      actions TEXT DEFAULT '[]',
+      action_mode TEXT DEFAULT 'auto',
+      priority INTEGER DEFAULT 100,
+      tags TEXT DEFAULT '[]',
+      target_mode TEXT DEFAULT 'environment',
+      target_config TEXT DEFAULT '{}',
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS rule_state (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      rule_id INTEGER REFERENCES rule_definitions(id) ON DELETE CASCADE,
+      character_id INTEGER REFERENCES characters(id) ON DELETE CASCADE,
+      state_key TEXT NOT NULL,
+      state_value TEXT,
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS rule_action_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+      rule_id INTEGER REFERENCES rule_definitions(id) ON DELETE SET NULL,
+      rule_name TEXT NOT NULL,
+      batch_id TEXT NOT NULL,
+      action_index INTEGER DEFAULT 0,
+      action_type TEXT NOT NULL,
+      action_params TEXT DEFAULT '{}',
+      target_character_id INTEGER REFERENCES characters(id) ON DELETE SET NULL,
+      target_character_name TEXT DEFAULT '',
+      undo_data TEXT DEFAULT '{}',
+      applied_at TEXT DEFAULT (datetime('now')),
+      undone INTEGER DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS notifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+      batch_id TEXT,
+      rule_id INTEGER REFERENCES rule_definitions(id) ON DELETE SET NULL,
+      rule_name TEXT DEFAULT '',
+      notification_type TEXT NOT NULL,
+      message TEXT NOT NULL,
+      severity TEXT DEFAULT 'info',
+      target_character_id INTEGER REFERENCES characters(id) ON DELETE SET NULL,
+      target_character_name TEXT DEFAULT '',
+      actions_data TEXT DEFAULT '[]',
+      read INTEGER DEFAULT 0,
+      dismissed INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_rules_campaign ON rule_definitions(campaign_id);
+    CREATE INDEX IF NOT EXISTS idx_rules_trigger ON rule_definitions(trigger_type);
+    CREATE INDEX IF NOT EXISTS idx_rule_state_rule ON rule_state(rule_id);
+    CREATE INDEX IF NOT EXISTS idx_rule_action_log_campaign ON rule_action_log(campaign_id);
+    CREATE INDEX IF NOT EXISTS idx_rule_action_log_batch ON rule_action_log(batch_id);
+    CREATE INDEX IF NOT EXISTS idx_notifications_campaign ON notifications(campaign_id);
   `);
 }
 
@@ -179,6 +246,7 @@ const migrations = [
   `ALTER TABLE encounter_definitions ADD COLUMN conditions TEXT DEFAULT '{}'`,
   `ALTER TABLE location_edges ADD COLUMN description TEXT DEFAULT ''`,
   `ALTER TABLE location_edges ADD COLUMN weather_override TEXT DEFAULT NULL`,
+  `ALTER TABLE campaigns ADD COLUMN rules_settings TEXT DEFAULT '{"cascade_depth_limit":3,"engine_enabled":true}'`,
 ];
 
 for (const sql of migrations) {
@@ -186,6 +254,28 @@ for (const sql of migrations) {
     if (!e.message.includes('duplicate column')) throw e;
   }
 }
+
+// Fix rule_state.rule_id to be nullable (for general state like last_rest_time)
+try {
+  const info = db.pragma('table_info(rule_state)');
+  const ruleIdCol = info.find(c => c.name === 'rule_id');
+  if (ruleIdCol && ruleIdCol.notnull === 1) {
+    db.exec(`
+      CREATE TABLE rule_state_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        rule_id INTEGER REFERENCES rule_definitions(id) ON DELETE CASCADE,
+        character_id INTEGER REFERENCES characters(id) ON DELETE CASCADE,
+        state_key TEXT NOT NULL,
+        state_value TEXT,
+        updated_at TEXT DEFAULT (datetime('now'))
+      );
+      INSERT INTO rule_state_new SELECT * FROM rule_state;
+      DROP TABLE rule_state;
+      ALTER TABLE rule_state_new RENAME TO rule_state;
+      CREATE INDEX IF NOT EXISTS idx_rule_state_rule ON rule_state(rule_id);
+    `);
+  }
+} catch (e) { /* table doesn't exist yet, will be created by initialize */ }
 
 db.CAMPAIGN_DEFAULTS = {
   time_of_day_thresholds: [

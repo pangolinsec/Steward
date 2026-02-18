@@ -20,6 +20,9 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
   // Encounter settings
   const [encounterSettings, setEncounterSettings] = useState({ enabled: false, base_rate: 0.1, min_interval_hours: 1 });
 
+  // Rules engine settings
+  const [rulesSettings, setRulesSettings] = useState({ engine_enabled: true, cascade_depth_limit: 3 });
+
   useEffect(() => {
     if (!campaignId || !campaign) return;
     setAttrs(campaign.attribute_definitions || []);
@@ -29,6 +32,7 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
     setWeatherVolatility(campaign.weather_volatility ?? 0.3);
     setTransitionTable(campaign.weather_transition_table || null);
     setEncounterSettings(campaign.encounter_settings || { enabled: false, base_rate: 0.1, min_interval_hours: 1 });
+    setRulesSettings(campaign.rules_settings || { engine_enabled: true, cascade_depth_limit: 3 });
     api.getEnvironment(campaignId).then(setEnv).catch(() => {});
   }, [campaignId, campaign]);
 
@@ -43,6 +47,7 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
         weather_volatility: weatherVolatility,
         weather_transition_table: transitionTable,
         encounter_settings: encounterSettings,
+        rules_settings: rulesSettings,
       });
       onUpdate();
     } finally {
@@ -312,6 +317,31 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
                   onChange={e => setEncounterSettings({ ...encounterSettings, min_interval_hours: Number(e.target.value) })} />
               </div>
             </>
+          )}
+        </div>
+
+        {/* Rules Engine */}
+        <div className="card">
+          <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 12 }}>Rules Engine</h3>
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
+            The rules engine evaluates conditions and auto-applies or suggests game-world changes.
+          </p>
+          <div className="form-group">
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input type="checkbox" checked={rulesSettings.engine_enabled}
+                onChange={e => setRulesSettings({ ...rulesSettings, engine_enabled: e.target.checked })} />
+              Enable rules engine
+            </label>
+          </div>
+          {rulesSettings.engine_enabled && (
+            <div className="form-group">
+              <label>Cascade depth limit: {rulesSettings.cascade_depth_limit}</label>
+              <input type="range" min="1" max="10" step="1" value={rulesSettings.cascade_depth_limit}
+                onChange={e => setRulesSettings({ ...rulesSettings, cascade_depth_limit: Number(e.target.value) })} />
+              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                After {rulesSettings.cascade_depth_limit} cascading rule fires, auto actions become suggestions.
+              </span>
+            </div>
           )}
         </div>
 

@@ -79,6 +79,29 @@ export const getSessionLog = (cId, params = '') => request(`/campaigns/${cId}/se
 export const addLogEntry = (cId, data) => request(`/campaigns/${cId}/session-log`, { method: 'POST', body: JSON.stringify(data) });
 export const clearSessionLog = (cId) => request(`/campaigns/${cId}/session-log`, { method: 'DELETE' });
 
+// Rules
+export const getRules = (cId, params = '') => request(`/campaigns/${cId}/rules${params ? '?' + params : ''}`);
+export const getRule = (cId, id) => request(`/campaigns/${cId}/rules/${id}`);
+export const createRule = (cId, data) => request(`/campaigns/${cId}/rules`, { method: 'POST', body: JSON.stringify(data) });
+export const updateRule = (cId, id, data) => request(`/campaigns/${cId}/rules/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+export const deleteRule = (cId, id) => request(`/campaigns/${cId}/rules/${id}`, { method: 'DELETE' });
+export const toggleRule = (cId, id) => request(`/campaigns/${cId}/rules/${id}/toggle`, { method: 'PATCH' });
+export const getRuleTemplates = (cId) => request(`/campaigns/${cId}/rules/templates`);
+export const importRuleTemplate = (cId, templateName) => request(`/campaigns/${cId}/rules/templates/${templateName}`, { method: 'POST' });
+export const testRule = (cId, ruleId, characterId) => request(`/campaigns/${cId}/rules/${ruleId}/test`, { method: 'POST', body: JSON.stringify({ character_id: characterId || null }) });
+
+// Rest
+export const rest = (cId, restType) => request(`/campaigns/${cId}/rest`, { method: 'POST', body: JSON.stringify({ rest_type: restType }) });
+
+// Notifications
+export const getNotifications = (cId, params = '') => request(`/campaigns/${cId}/notifications${params ? '?' + params : ''}`);
+export const getNotificationCount = (cId) => request(`/campaigns/${cId}/notifications/count`);
+export const markNotificationRead = (cId, nId) => request(`/campaigns/${cId}/notifications/${nId}/read`, { method: 'PATCH' });
+export const dismissNotification = (cId, nId) => request(`/campaigns/${cId}/notifications/${nId}/dismiss`, { method: 'PATCH' });
+export const applyNotification = (cId, nId) => request(`/campaigns/${cId}/notifications/${nId}/apply`, { method: 'POST' });
+export const undoNotification = (cId, nId) => request(`/campaigns/${cId}/notifications/${nId}/undo`, { method: 'POST' });
+export const clearNotifications = (cId) => request(`/campaigns/${cId}/notifications`, { method: 'DELETE' });
+
 // Export / Import
 export const exportCampaign = (cId) => request(`/campaigns/${cId}/export`);
 export const importCampaign = (cId, data) => request(`/campaigns/${cId}/import`, { method: 'POST', body: JSON.stringify(data) });

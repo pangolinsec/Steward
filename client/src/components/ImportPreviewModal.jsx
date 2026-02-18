@@ -6,9 +6,10 @@ const ENTITY_DISPLAY = {
   items: 'Items',
   characters: 'Characters',
   encounters: 'Encounters',
+  rules: 'Rules',
 };
 
-const ALL_ENTITY_TYPES = ['status_effects', 'items', 'characters', 'encounters'];
+const ALL_ENTITY_TYPES = ['status_effects', 'items', 'characters', 'encounters', 'rules'];
 
 export default function ImportPreviewModal({ campaignId, onClose, onComplete, initialEntityTypes, lockEntityTypes }) {
   const [step, setStep] = useState('select');  // select | resolve | result

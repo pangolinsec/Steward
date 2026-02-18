@@ -3,6 +3,16 @@ const router = express.Router({ mergeParams: true });
 const db = require('../db');
 const { advanceTime } = require('../advanceTimeEngine');
 
+function fireRules(campaignId, triggerType, triggerContext) {
+  try {
+    const { evaluateRules } = require('../rulesEngine/engine');
+    return evaluateRules(campaignId, triggerType, triggerContext);
+  } catch (e) {
+    console.error(`Rules engine error (${triggerType}):`, e.message);
+    return { fired: [], notifications: [], events: [] };
+  }
+}
+
 function parseLocation(loc) {
   return {
     ...loc,
@@ -223,6 +233,13 @@ router.post('/travel', (req, res) => {
     hours,
   });
 
+  // Fire on_location_change rules
+  const locResult = fireRules(req.params.id, 'on_location_change', {
+    direction: 'arriving', location_id: destinationId, location_name: toLoc?.name,
+    from_location_id: currentLocId, from_location_name: fromLoc?.name,
+  });
+  result.events.push(...locResult.events);
+
   // Update response with final location
   result.current_location_id = destinationId;
   result.current_location_name = toLoc?.name || null;
@@ -245,6 +262,10 @@ router.patch('/position', (req, res) => {
   if (location_id && locationName) {
     db.prepare('INSERT INTO session_log (campaign_id, entry_type, message) VALUES (?, ?, ?)')
       .run(req.params.id, 'travel', `Party position set to ${locationName}`);
+
+    fireRules(req.params.id, 'on_location_change', {
+      direction: 'arriving', location_id, location_name: locationName,
+    });
   }
 
   res.json({ success: true, current_location_id: location_id, current_location_name: locationName });

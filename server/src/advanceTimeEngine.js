@@ -299,6 +299,49 @@ function advanceTime(campaignId, { hours = 0, minutes = 0 }) {
     WHERE campaign_id = ?
   `).run(newHour, newMinute, day, month, year, currentWeather, campaignId);
 
+  // Effect duration expiry
+  const timedEffects = db.prepare(`
+    SELECT ae.id, ae.character_id, ae.remaining_hours, sed.name as effect_name, c.name as char_name
+    FROM applied_effects ae
+    JOIN status_effect_definitions sed ON ae.status_effect_definition_id = sed.id
+    JOIN characters c ON ae.character_id = c.id
+    WHERE c.campaign_id = ? AND ae.remaining_hours IS NOT NULL
+  `).all(campaignId);
+
+  for (const eff of timedEffects) {
+    const newRemaining = eff.remaining_hours - totalHours;
+    if (newRemaining <= 0) {
+      db.prepare('DELETE FROM applied_effects WHERE id = ?').run(eff.id);
+      events.push({ type: 'effect_expired', character_name: eff.char_name, effect_name: eff.effect_name });
+      db.prepare('INSERT INTO session_log (campaign_id, entry_type, message) VALUES (?, ?, ?)')
+        .run(campaignId, 'effect_expired', `"${eff.effect_name}" expired on "${eff.char_name}"`);
+    } else {
+      db.prepare('UPDATE applied_effects SET remaining_hours = ? WHERE id = ?').run(newRemaining, eff.id);
+    }
+  }
+
+  // Rules engine: on_time_advance + on_schedule
+  try {
+    const { evaluateRules } = require('./rulesEngine/engine');
+    const rulesResult = evaluateRules(campaignId, 'on_time_advance', {
+      hoursAdvanced: totalHours,
+      minutesAdvanced: minutes,
+      oldTime: { hour: env.current_hour, minute: env.current_minute, day: env.current_day, month: env.current_month, year: env.current_year },
+      newTime: { hour: newHour, minute: newMinute, day, month, year },
+    });
+    events.push(...rulesResult.events);
+
+    // Check scheduled rules
+    const schedResult = evaluateRules(campaignId, 'on_schedule', {
+      oldTime: { hour: env.current_hour, minute: env.current_minute, day: env.current_day, month: env.current_month },
+      newTime: { hour: newHour, minute: newMinute, day, month },
+    });
+    events.push(...schedResult.events);
+  } catch (e) {
+    // Rules engine failure shouldn't break time advance
+    console.error('Rules engine error during time advance:', e.message);
+  }
+
   // Encounter roll
   const updatedEnv = db.prepare('SELECT * FROM environment_state WHERE campaign_id = ?').get(campaignId);
   const encounterResult = rollEncounter(campaignId, config, updatedEnv, totalHours);

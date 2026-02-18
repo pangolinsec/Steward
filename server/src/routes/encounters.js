@@ -2,6 +2,16 @@ const express = require('express');
 const router = express.Router({ mergeParams: true });
 const db = require('../db');
 
+function fireRules(campaignId, triggerType, triggerContext) {
+  try {
+    const { evaluateRules } = require('../rulesEngine/engine');
+    return evaluateRules(campaignId, triggerType, triggerContext);
+  } catch (e) {
+    console.error(`Rules engine error (${triggerType}):`, e.message);
+    return { fired: [], notifications: [], events: [] };
+  }
+}
+
 // GET all encounters for campaign
 router.get('/', (req, res) => {
   const { search } = req.query;
@@ -109,6 +119,38 @@ router.delete('/:encId', (req, res) => {
   if (!enc) return res.status(404).json({ error: 'Encounter not found' });
   db.prepare('DELETE FROM encounter_definitions WHERE id = ?').run(req.params.encId);
   res.json({ success: true });
+});
+
+// POST start encounter
+router.post('/:encId/start', (req, res) => {
+  const enc = db.prepare('SELECT * FROM encounter_definitions WHERE id = ? AND campaign_id = ?')
+    .get(req.params.encId, req.params.id);
+  if (!enc) return res.status(404).json({ error: 'Encounter not found' });
+
+  db.prepare("INSERT INTO session_log (campaign_id, entry_type, message) VALUES (?, 'encounter_start', ?)")
+    .run(req.params.id, `Encounter started: ${enc.name}`);
+
+  const rulesResult = fireRules(req.params.id, 'on_encounter', {
+    phase: 'start', encounter_id: enc.id, encounter_name: enc.name,
+  });
+
+  res.json({ success: true, encounter_name: enc.name, events: rulesResult.events });
+});
+
+// POST end encounter
+router.post('/:encId/end', (req, res) => {
+  const enc = db.prepare('SELECT * FROM encounter_definitions WHERE id = ? AND campaign_id = ?')
+    .get(req.params.encId, req.params.id);
+  if (!enc) return res.status(404).json({ error: 'Encounter not found' });
+
+  db.prepare("INSERT INTO session_log (campaign_id, entry_type, message) VALUES (?, 'encounter_end', ?)")
+    .run(req.params.id, `Encounter ended: ${enc.name}`);
+
+  const rulesResult = fireRules(req.params.id, 'on_encounter', {
+    phase: 'end', encounter_id: enc.id, encounter_name: enc.name,
+  });
+
+  res.json({ success: true, encounter_name: enc.name, events: rulesResult.events });
 });
 
 module.exports = router;

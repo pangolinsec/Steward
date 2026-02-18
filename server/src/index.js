@@ -17,6 +17,9 @@ const encountersRouter = require('./routes/encounters');
 const environmentRouter = require('./routes/environment');
 const locationsRouter = require('./routes/locations');
 const sessionLogRouter = require('./routes/sessionLog');
+const rulesRouter = require('./routes/rules');
+const notificationsRouter = require('./routes/notifications');
+const restRouter = require('./routes/rest');
 const exportImportRouter = require('./routes/exportImport');
 
 app.use('/api/campaigns', campaignsRouter);
@@ -27,6 +30,9 @@ app.use('/api/campaigns/:id/encounters', encountersRouter);
 app.use('/api/campaigns/:id/environment', environmentRouter);
 app.use('/api/campaigns/:id/locations', locationsRouter);
 app.use('/api/campaigns/:id/session-log', sessionLogRouter);
+app.use('/api/campaigns/:id/rules', rulesRouter);
+app.use('/api/campaigns/:id/notifications', notificationsRouter);
+app.use('/api/campaigns/:id/rest', restRouter);
 app.use('/api/campaigns/:id', exportImportRouter);
 
 // Serve static frontend in production
