@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   ReactFlow,
   Controls,
@@ -12,6 +12,8 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import * as api from '../api';
+import { dijkstra } from '../utils/pathfinding';
+import { useToast } from '../components/ToastContext';
 
 function LocationNode({ data, selected }) {
   const isParty = data.isPartyHere;
@@ -31,6 +33,7 @@ function LocationNode({ data, selected }) {
         )}
       </div>
       {isParty && <div className="location-party-marker">Party</div>}
+      {data.routeOrder != null && <div className="location-route-badge">{data.routeOrder}</div>}
       <Handle type="source" position={Position.Bottom} className="location-handle" />
     </div>
   );
@@ -46,6 +49,13 @@ export default function LocationsPage({ campaignId, campaign, environment, onUpd
   const [selected, setSelected] = useState(null); // { type: 'node'|'edge', id, data }
   const reactFlowWrapper = useRef(null);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
+  const { addToast } = useToast();
+
+  // Travel route state — legs array is the source of truth
+  const [routeLegs, setRouteLegs] = useState([]);
+  const [traveling, setTraveling] = useState(false);
+  const [travelProgress, setTravelProgress] = useState(0);
+  const [encounterEvent, setEncounterEvent] = useState(null);
 
   const load = useCallback(async () => {
     if (!campaignId) return;
@@ -55,6 +65,72 @@ export default function LocationsPage({ campaignId, campaign, environment, onUpd
   }, [campaignId]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Derived route object
+  const route = useMemo(() => {
+    if (!routeLegs.length) return null;
+    return {
+      legs: routeLegs,
+      totalHours: routeLegs.reduce((s, l) => s + l.hours, 0),
+      valid: true,
+    };
+  }, [routeLegs]);
+
+  // Where the next appended leg must connect from
+  const routeEndpoint = useMemo(() => {
+    if (routeLegs.length) return routeLegs[routeLegs.length - 1].toId;
+    return environment?.current_location_id ?? null;
+  }, [routeLegs, environment?.current_location_id]);
+
+  const clearRoute = useCallback(() => {
+    setRouteLegs([]);
+    setTraveling(false);
+    setTravelProgress(0);
+  }, []);
+
+  const handleRemoveLegFrom = useCallback((index) => {
+    setRouteLegs(prev => prev.slice(0, index));
+  }, []);
+
+  // Helper: convert dijkstra edge IDs into leg objects
+  const edgeIdsToLegs = useCallback((edgeIds, startId) => {
+    const locMap = new Map(locations.map(l => [l.id, l]));
+    const edgeMap = new Map(edgesData.map(e => [e.id, e]));
+    const legs = [];
+    let cursor = startId;
+    for (const edgeId of edgeIds) {
+      const edge = edgeMap.get(edgeId);
+      const isForward = edge.from_location_id === cursor;
+      const legFrom = isForward ? edge.from_location_id : edge.to_location_id;
+      const legTo = isForward ? edge.to_location_id : edge.from_location_id;
+      legs.push({
+        edgeId: edge.id,
+        fromId: legFrom,
+        toId: legTo,
+        fromName: locMap.get(legFrom)?.name || '?',
+        toName: locMap.get(legTo)?.name || '?',
+        hours: edge.travel_hours,
+      });
+      cursor = legTo;
+    }
+    return legs;
+  }, [locations, edgesData]);
+
+  // Build a set of route edge IDs and waypoint orders for highlighting
+  const routeEdgeIds = useMemo(() => {
+    if (!routeLegs.length) return new Set();
+    return new Set(routeLegs.map(l => l.edgeId));
+  }, [routeLegs]);
+
+  const waypointOrders = useMemo(() => {
+    if (!routeLegs.length) return new Map();
+    const map = new Map();
+    let order = 1;
+    for (const leg of routeLegs) {
+      if (!map.has(leg.toId)) map.set(leg.toId, order++);
+    }
+    return map;
+  }, [routeLegs]);
 
   // Sync locations/edges data to React Flow nodes/edges
   useEffect(() => {
@@ -70,26 +146,33 @@ export default function LocationsPage({ campaignId, campaign, environment, onUpd
         weather_override: loc.weather_override,
         isPartyHere: loc.id === partyLocId,
         locationId: loc.id,
+        routeOrder: waypointOrders.get(loc.id) ?? null,
       },
     }));
 
-    const rfEdges = edgesData.map(edge => ({
-      id: `edge-${edge.id}`,
-      source: String(edge.from_location_id),
-      target: String(edge.to_location_id),
-      label: edge.label ? `${edge.label} (${edge.travel_hours}h)` : `${edge.travel_hours}h`,
-      type: 'default',
-      animated: false,
-      markerEnd: edge.bidirectional ? undefined : { type: MarkerType.ArrowClosed },
-      data: { edgeId: edge.id },
-      style: { stroke: 'var(--border-light)' },
-      labelStyle: { fill: 'var(--text-secondary)', fontSize: 11 },
-      labelBgStyle: { fill: 'var(--bg-card)', fillOpacity: 0.9 },
-    }));
+    const rfEdges = edgesData.map(edge => {
+      const isRouteEdge = routeEdgeIds.has(edge.id);
+      return {
+        id: `edge-${edge.id}`,
+        source: String(edge.from_location_id),
+        target: String(edge.to_location_id),
+        label: edge.label ? `${edge.label} (${edge.travel_hours}h)` : `${edge.travel_hours}h`,
+        type: 'default',
+        animated: isRouteEdge,
+        markerEnd: edge.bidirectional ? undefined : { type: MarkerType.ArrowClosed },
+        data: { edgeId: edge.id },
+        style: {
+          stroke: isRouteEdge ? 'var(--accent)' : 'var(--border-light)',
+          strokeWidth: isRouteEdge ? 3 : undefined,
+        },
+        labelStyle: { fill: 'var(--text-secondary)', fontSize: 11 },
+        labelBgStyle: { fill: 'var(--bg-card)', fillOpacity: 0.9 },
+      };
+    });
 
     setNodes(rfNodes);
     setEdges(rfEdges);
-  }, [locations, edgesData, environment?.current_location_id]);
+  }, [locations, edgesData, environment?.current_location_id, routeEdgeIds, waypointOrders]);
 
   const onNodeDragStop = useCallback(async (event, node) => {
     await api.updateLocation(campaignId, Number(node.id), {
@@ -110,7 +193,6 @@ export default function LocationsPage({ campaignId, campaign, environment, onUpd
   }, []);
 
   const onWrapperDoubleClick = useCallback(async (event) => {
-    // Only handle double-clicks on the pane background (not nodes/edges/controls)
     if (!event.target.classList.contains('react-flow__pane')) return;
     if (!reactFlowInstance) return;
     const position = reactFlowInstance.screenToFlowPosition({
@@ -130,14 +212,76 @@ export default function LocationsPage({ campaignId, campaign, environment, onUpd
   }, [campaignId, reactFlowInstance]);
 
   const onNodeClick = useCallback((event, node) => {
-    const loc = locations.find(l => l.id === Number(node.id));
-    if (loc) setSelected({ type: 'node', id: loc.id, data: loc });
-  }, [locations]);
+    const clickedId = Number(node.id);
+    const isRouteClick = event.ctrlKey || event.metaKey;
+
+    if (!isRouteClick) {
+      // Normal click — show detail panel
+      const loc = locations.find(l => l.id === clickedId);
+      if (loc) setSelected({ type: 'node', id: loc.id, data: loc });
+      return;
+    }
+
+    // Ctrl+click — route building
+    if (traveling) return;
+    if (!routeEndpoint) {
+      addToast('Place the party on the map first', 'warning');
+      return;
+    }
+    if (clickedId === routeEndpoint) return;
+
+    const path = dijkstra(locations, edgesData, routeEndpoint, clickedId);
+    if (path === null) {
+      addToast('No path to that location', 'warning');
+      return;
+    }
+
+    const newLegs = edgeIdsToLegs(path, routeEndpoint);
+    setRouteLegs(prev => [...prev, ...newLegs]);
+    setSelected(null);
+  }, [locations, edgesData, routeEndpoint, traveling, edgeIdsToLegs, addToast]);
 
   const onEdgeClick = useCallback((event, edge) => {
     const edgeData = edgesData.find(e => `edge-${e.id}` === edge.id);
-    if (edgeData) setSelected({ type: 'edge', id: edgeData.id, data: edgeData });
-  }, [edgesData]);
+    if (!edgeData) return;
+    const isRouteClick = event.ctrlKey || event.metaKey;
+
+    if (!isRouteClick) {
+      // Normal click — show edge detail panel
+      setSelected({ type: 'edge', id: edgeData.id, data: edgeData });
+      return;
+    }
+
+    // Ctrl+click — add this specific edge to the route
+    if (traveling) return;
+    if (!routeEndpoint) {
+      addToast('Place the party on the map first', 'warning');
+      return;
+    }
+
+    const locMap = new Map(locations.map(l => [l.id, l]));
+    let legFrom, legTo;
+    if (edgeData.from_location_id === routeEndpoint) {
+      legFrom = edgeData.from_location_id;
+      legTo = edgeData.to_location_id;
+    } else if (edgeData.bidirectional && edgeData.to_location_id === routeEndpoint) {
+      legFrom = edgeData.to_location_id;
+      legTo = edgeData.from_location_id;
+    } else {
+      addToast('Edge does not connect to route endpoint', 'warning');
+      return;
+    }
+
+    setRouteLegs(prev => [...prev, {
+      edgeId: edgeData.id,
+      fromId: legFrom,
+      toId: legTo,
+      fromName: locMap.get(legFrom)?.name || '?',
+      toName: locMap.get(legTo)?.name || '?',
+      hours: edgeData.travel_hours,
+    }]);
+    setSelected(null);
+  }, [edgesData, locations, routeEndpoint, traveling, addToast]);
 
   const handleDeleteLocation = async (id) => {
     if (!confirm('Delete this location and all its edges?')) return;
@@ -158,6 +302,71 @@ export default function LocationsPage({ campaignId, campaign, environment, onUpd
     onUpdate();
     load();
   };
+
+  const processEvents = (events) => {
+    if (!events) return;
+    for (const event of events) {
+      if (event.type === 'weather_change') {
+        addToast(`Weather: ${event.from} \u2192 ${event.to}`, 'info');
+      } else if (event.type === 'travel') {
+        addToast(`Traveled: ${event.from} \u2192 ${event.to} (${event.hours}h)`, 'success');
+      } else if (event.type === 'effect_expired') {
+        addToast(`Effect expired: ${event.effect_name} on ${event.character_name}`, 'info');
+      } else if (event.type === 'rule_notification') {
+        addToast(event.message || `Rule fired: ${event.rule_name}`, event.severity || 'info');
+      }
+    }
+  };
+
+  const handleTravel = async () => {
+    if (!routeLegs.length) return;
+    setTraveling(true);
+    for (let i = 0; i < routeLegs.length; i++) {
+      setTravelProgress(i);
+      try {
+        const result = await api.travel(campaignId, routeLegs[i].edgeId);
+        onUpdate();
+        await load();
+
+        // Check for encounter interruption
+        const encEvent = result.events?.find(e => e.type === 'encounter_triggered');
+        if (encEvent) {
+          setEncounterEvent(encEvent);
+          // Keep remaining legs in the route for resumption
+          const remaining = routeLegs.slice(i + 1);
+          if (remaining.length > 0) {
+            setRouteLegs(remaining);
+          } else {
+            clearRoute();
+          }
+          setTraveling(false);
+          processEvents(result.events?.filter(e => e.type !== 'encounter_triggered'));
+          return;
+        }
+
+        processEvents(result.events);
+      } catch (err) {
+        addToast(`Travel failed: ${err.message}`, 'error');
+        setTraveling(false);
+        return;
+      }
+    }
+    clearRoute();
+  };
+
+  const handleStartEncounter = async (enc) => {
+    const overrides = enc.environment_overrides || {};
+    const patch = {};
+    if (overrides.weather) patch.weather = overrides.weather;
+    if (Object.keys(patch).length > 0) {
+      await api.updateEnvironment(campaignId, patch);
+    }
+    addToast(`Encounter "${enc.name}" started!`, 'warning');
+    setEncounterEvent(null);
+    onUpdate();
+  };
+
+  const showRoutePanel = routeLegs.length > 0 || traveling;
 
   return (
     <div className="page" style={{ display: 'flex', gap: 0, padding: 0, height: 'calc(100vh - 80px)' }}>
@@ -189,7 +398,20 @@ export default function LocationsPage({ campaignId, campaign, environment, onUpd
         </ReactFlow>
       </div>
 
-      {selected && (
+      {showRoutePanel && (
+        <div className="location-detail-panel">
+          <TravelRoutePanel
+            route={route}
+            traveling={traveling}
+            travelProgress={travelProgress}
+            onTravel={handleTravel}
+            onClear={clearRoute}
+            onRemoveLegFrom={handleRemoveLegFrom}
+          />
+        </div>
+      )}
+
+      {!showRoutePanel && selected && (
         <div className="location-detail-panel">
           {selected.type === 'node' ? (
             <LocationDetailPanel
@@ -220,15 +442,136 @@ export default function LocationsPage({ campaignId, campaign, environment, onUpd
         </div>
       )}
 
-      {!selected && (
+      {!showRoutePanel && !selected && (
         <div className="location-detail-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
             <p style={{ fontSize: 13, marginBottom: 8 }}>Double-click the canvas to create a location.</p>
             <p style={{ fontSize: 13 }}>Drag between nodes to create paths.</p>
             <p style={{ fontSize: 13 }}>Click a node or edge to edit.</p>
+            {environment?.current_location_id && (
+              <p style={{ fontSize: 13, marginTop: 12, color: 'var(--accent)' }}>Ctrl+click nodes or edges to plan a travel route.</p>
+            )}
           </div>
         </div>
       )}
+
+      {encounterEvent && (
+        <EncounterTriggerModal
+          event={encounterEvent}
+          onStart={() => handleStartEncounter(encounterEvent.encounter)}
+          onDismiss={() => { setEncounterEvent(null); addToast('Encounter dismissed', 'info'); }}
+        />
+      )}
+    </div>
+  );
+}
+
+function TravelRoutePanel({ route, traveling, travelProgress, onTravel, onClear, onRemoveLegFrom }) {
+  const legs = route?.legs || [];
+  const totalHours = route?.totalHours || 0;
+
+  return (
+    <div className="travel-route-panel" style={{ padding: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <h3 style={{ fontSize: 15, fontWeight: 600 }}>Travel Route</h3>
+        <button className="btn btn-ghost btn-sm" onClick={onClear} disabled={traveling}>&#x2715;</button>
+      </div>
+
+      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 10 }}>
+        Ctrl+click nodes (auto-path) or edges (manual) to build route.
+      </div>
+
+      {legs.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginBottom: 12 }}>
+          {legs.map((leg, i) => {
+            let cls = 'travel-leg';
+            if (traveling && i < travelProgress) cls += ' completed';
+            if (traveling && i === travelProgress) cls += ' active';
+            return (
+              <div key={i} className={cls}>
+                <span className="travel-leg-label">{leg.fromName} &rarr; {leg.toName}</span>
+                <span className="travel-leg-hours">{leg.hours}h</span>
+                {!traveling && (
+                  <button
+                    className="btn btn-ghost btn-sm travel-leg-remove"
+                    onClick={() => onRemoveLegFrom(i)}
+                    title="Remove this leg and all after it"
+                  >&#x2715;</button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {legs.length > 0 && (
+        <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 12 }}>
+          Total: <strong style={{ color: 'var(--text-primary)' }}>{totalHours}h</strong>
+          {legs.length > 1 && <span> ({legs.length} legs)</span>}
+        </div>
+      )}
+
+      <div className="inline-flex gap-sm">
+        <button
+          className="btn btn-primary btn-sm"
+          onClick={onTravel}
+          disabled={traveling || legs.length === 0}
+        >
+          {traveling ? `Traveling leg ${travelProgress + 1}/${legs.length}...` : 'Travel'}
+        </button>
+        <button className="btn btn-secondary btn-sm" onClick={onClear} disabled={traveling}>
+          Clear Route
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function EncounterTriggerModal({ event, onStart, onDismiss }) {
+  const enc = event.encounter;
+  return (
+    <div className="modal-overlay" onClick={onDismiss}>
+      <div className="modal" style={{ maxWidth: 520 }} onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3 style={{ color: 'var(--yellow)' }}>Random Encounter!</h3>
+          <button className="btn btn-ghost btn-sm" onClick={onDismiss}>&#x2715;</button>
+        </div>
+        <div className="modal-body">
+          <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}>{enc.name}</div>
+          {enc.description && <p style={{ color: 'var(--text-secondary)', marginBottom: 8 }}>{enc.description}</p>}
+          {enc.notes && <div style={{ marginBottom: 8, padding: 8, background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', fontSize: 13 }}>{enc.notes}</div>}
+          {enc.npcs?.length > 0 && (
+            <div style={{ marginBottom: 8 }}>
+              <strong style={{ fontSize: 12 }}>NPCs:</strong>
+              <ul style={{ marginLeft: 16, marginTop: 2, fontSize: 13 }}>
+                {enc.npcs.map((n, i) => <li key={i}>Character #{n.character_id} ({n.role || 'member'})</li>)}
+              </ul>
+            </div>
+          )}
+          {enc.loot_table?.length > 0 && (
+            <div style={{ marginBottom: 8 }}>
+              <strong style={{ fontSize: 12 }}>Loot:</strong>
+              <ul style={{ marginLeft: 16, marginTop: 2, fontSize: 13 }}>
+                {enc.loot_table.map((l, i) => (
+                  <li key={i}>{l.item_name || `Item #${l.item_id}`} x{l.quantity} ({Math.round((l.drop_chance || 1) * 100)}%)</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {enc.environment_overrides && Object.keys(enc.environment_overrides).length > 0 && (
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+              Environment overrides: {Object.entries(enc.environment_overrides).map(([k, v]) => `${k}: ${v}`).join(', ')}
+            </div>
+          )}
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
+            Roll probability: {Math.round((event.probability || 0) * 100)}%
+          </div>
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-secondary" onClick={onDismiss}>Dismiss</button>
+          <button className="btn btn-primary" onClick={onStart}>Start Encounter</button>
+        </div>
+      </div>
     </div>
   );
 }

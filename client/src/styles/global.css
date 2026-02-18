@@ -982,3 +982,59 @@ textarea {
   background: var(--accent) !important;
   color: white !important;
 }
+
+/* Travel Route */
+.location-route-badge {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.travel-leg {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+}
+.travel-leg.active {
+  border-color: var(--accent);
+  background: rgba(79, 142, 247, 0.12);
+}
+.travel-leg.completed {
+  opacity: 0.45;
+}
+.travel-leg-label {
+  color: var(--text-primary);
+}
+.travel-leg-hours {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+.travel-leg-remove {
+  padding: 0 4px !important;
+  font-size: 10px !important;
+  opacity: 0;
+  transition: opacity 0.1s;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+.travel-leg:hover .travel-leg-remove {
+  opacity: 1;
+}
