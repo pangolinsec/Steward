@@ -114,6 +114,23 @@ const ENTITY_CONFIG = {
     relations: [],
     postProcess: 'remapLocationEdges',
   },
+  journal_notes: {
+    table: 'journal_notes',
+    exportKey: 'journal_notes',
+    displayName: 'Journal Notes',
+    nameField: 'title',
+    columns: [
+      { name: 'title',      type: 'text',     default: '' },
+      { name: 'content',    type: 'text',     default: '' },
+      { name: 'tags',       type: 'json',     default: [] },
+      { name: 'starred',    type: 'bool_int', default: false },
+      { name: 'created_at', type: 'text',     default: null },
+      { name: 'updated_at', type: 'text',     default: null },
+    ],
+    modifierColumns: [],
+    idMapKey: 'journalIdMap',
+    relations: [],
+  },
   rules: {
     table: 'rule_definitions',
     exportKey: 'rules',
@@ -143,6 +160,6 @@ const ENTITY_CONFIG = {
 // locations before encounters (encounter conditions reference location IDs),
 // encounters last (needs charIdMap for NPC remapping).
 // rules last — they're standalone, no cross-references.
-const IMPORT_ORDER = ['status_effects', 'items', 'characters', 'locations', 'encounters', 'rules'];
+const IMPORT_ORDER = ['status_effects', 'items', 'characters', 'locations', 'encounters', 'rules', 'journal_notes'];
 
 module.exports = { ENTITY_CONFIG, IMPORT_ORDER };

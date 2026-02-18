@@ -5,6 +5,7 @@ export default function SessionLogPage({ campaignId }) {
   const [logData, setLogData] = useState({ entries: [], total: 0 });
   const [offset, setOffset] = useState(0);
   const [typeFilter, setTypeFilter] = useState('');
+  const [hideDiceRolls, setHideDiceRolls] = useState(false);
   const [newMessage, setNewMessage] = useState('');
   const [newType, setNewType] = useState('manual');
   const limit = 50;
@@ -15,11 +16,12 @@ export default function SessionLogPage({ campaignId }) {
     params.set('limit', limit);
     params.set('offset', offset);
     if (typeFilter) params.set('entry_type', typeFilter);
+    if (hideDiceRolls && !typeFilter) params.set('exclude_type', 'dice_roll');
     const data = await api.getSessionLog(campaignId, params.toString());
     setLogData(data);
   };
 
-  useEffect(() => { load(); }, [campaignId, offset, typeFilter]);
+  useEffect(() => { load(); }, [campaignId, offset, typeFilter, hideDiceRolls]);
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -47,12 +49,13 @@ export default function SessionLogPage({ campaignId }) {
     URL.revokeObjectURL(url);
   };
 
-  const entryTypes = ['general', 'manual', 'effect_applied', 'effect_removed', 'item_assigned', 'item_removed', 'time_advance', 'environment', 'weather_change', 'encounter_roll', 'travel'];
+  const entryTypes = ['general', 'manual', 'effect_applied', 'effect_removed', 'item_assigned', 'item_removed', 'time_advance', 'environment', 'weather_change', 'encounter_roll', 'travel', 'dice_roll'];
 
   const typeColors = {
     weather_change: 'var(--accent)',
     encounter_roll: 'var(--yellow)',
     travel: 'var(--green)',
+    dice_roll: 'var(--text-muted)',
     time_advance: 'var(--text-secondary)',
     environment: 'var(--text-secondary)',
   };
@@ -80,6 +83,10 @@ export default function SessionLogPage({ campaignId }) {
           <option value="">All Types</option>
           {entryTypes.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-secondary)', cursor: 'pointer' }}>
+          <input type="checkbox" checked={hideDiceRolls} onChange={e => { setHideDiceRolls(e.target.checked); setOffset(0); }} />
+          Hide dice rolls
+        </label>
         <span style={{ color: 'var(--text-muted)', fontSize: 12, alignSelf: 'center' }}>{logData.total} entries</span>
       </div>
 

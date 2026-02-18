@@ -4,13 +4,17 @@ const db = require('../db');
 
 // GET session log (paginated)
 router.get('/', (req, res) => {
-  const { limit = 50, offset = 0, entry_type } = req.query;
+  const { limit = 50, offset = 0, entry_type, exclude_type } = req.query;
   let query = 'SELECT * FROM session_log WHERE campaign_id = ?';
   const params = [req.params.id];
 
   if (entry_type) {
     query += ' AND entry_type = ?';
     params.push(entry_type);
+  }
+  if (exclude_type) {
+    query += ' AND entry_type != ?';
+    params.push(exclude_type);
   }
 
   const countQuery = query.replace('SELECT *', 'SELECT COUNT(*) as total');

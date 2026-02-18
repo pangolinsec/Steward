@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import * as api from '../api';
 import ImportPreviewModal from '../components/ImportPreviewModal';
 import RuleRefBadge from '../components/RuleRefBadge';
+import { CombatSetupModal, CombatTracker } from '../components/CombatView';
 
 export default function CharactersPage({ campaignId, campaign }) {
   const [characters, setCharacters] = useState([]);
@@ -11,7 +12,17 @@ export default function CharactersPage({ campaignId, campaign }) {
   const [showForm, setShowForm] = useState(false);
   const [editChar, setEditChar] = useState(null);
   const [showImport, setShowImport] = useState(false);
+  const [combatState, setCombatState] = useState(null);
+  const [showCombatSetup, setShowCombatSetup] = useState(false);
   const navigate = useNavigate();
+
+  const loadCombat = async () => {
+    if (!campaignId) return;
+    try {
+      const state = await api.getCombatState(campaignId);
+      setCombatState(state.active ? state : null);
+    } catch { setCombatState(null); }
+  };
 
   const load = async () => {
     if (!campaignId) return;
@@ -22,7 +33,7 @@ export default function CharactersPage({ campaignId, campaign }) {
     setCharacters(data);
   };
 
-  useEffect(() => { load(); }, [campaignId, typeFilter, search]);
+  useEffect(() => { load(); loadCombat(); }, [campaignId, typeFilter, search]);
 
   const attrs = campaign?.attribute_definitions || [];
 
@@ -42,6 +53,11 @@ export default function CharactersPage({ campaignId, campaign }) {
       <div className="page-header">
         <h2>Characters</h2>
         <div className="inline-flex gap-sm">
+          {combatState ? (
+            <button className="btn btn-danger btn-sm" onClick={async () => { await api.endCombat(campaignId); setCombatState(null); }}>End Combat</button>
+          ) : (
+            <button className="btn btn-secondary btn-sm" onClick={() => setShowCombatSetup(true)}>Start Combat</button>
+          )}
           <button className="btn btn-secondary btn-sm" onClick={handleExport}>Export</button>
           <button className="btn btn-secondary btn-sm" onClick={() => setShowImport(true)}>Import</button>
           <button className="btn btn-primary" onClick={() => { setEditChar(null); setShowForm(true); }}>+ New Character</button>
@@ -55,7 +71,15 @@ export default function CharactersPage({ campaignId, campaign }) {
           <option value="NPC">NPCs</option>
         </select>
       </div>
-      {characters.length === 0 ? (
+      {combatState ? (
+        <CombatTracker
+          campaignId={campaignId}
+          campaign={campaign}
+          combatState={combatState}
+          onUpdate={loadCombat}
+          onEnd={() => setCombatState(null)}
+        />
+      ) : characters.length === 0 ? (
         <div className="empty-state">
           <p>No characters yet. Create one to get started.</p>
         </div>
@@ -112,6 +136,14 @@ export default function CharactersPage({ campaignId, campaign }) {
           onComplete={load}
           initialEntityTypes={['characters']}
           lockEntityTypes={true}
+        />
+      )}
+      {showCombatSetup && (
+        <CombatSetupModal
+          campaignId={campaignId}
+          characters={characters}
+          onStart={(state) => { setCombatState(state); setShowCombatSetup(false); }}
+          onClose={() => setShowCombatSetup(false)}
         />
       )}
     </div>

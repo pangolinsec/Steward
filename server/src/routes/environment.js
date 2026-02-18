@@ -14,6 +14,7 @@ function buildEnvResponse(env, campaignId) {
     month_name: resolveMonthName(config.calendarConfig, env.current_month),
     calendar_config: config.calendarConfig,
     current_location_name: locationName,
+    combat_state: env.combat_state ? JSON.parse(env.combat_state) : null,
   };
 }
 

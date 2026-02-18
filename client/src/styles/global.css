@@ -386,6 +386,13 @@ textarea {
   justify-content: flex-end;
   gap: 8px;
 }
+.modal > form {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+}
 
 /* Form */
 .form-group {
@@ -1042,3 +1049,266 @@ textarea {
 /* Rule Reference Badge */
 .rule-ref-badge { cursor: pointer; font-size: 11px; color: var(--accent); margin-left: 6px; position: relative; display: inline-flex; align-items: center; gap: 2px; }
 .rule-ref-popover { position: absolute; top: 100%; left: 0; z-index: 100; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px; min-width: 200px; font-size: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); color: var(--text-secondary); white-space: nowrap; }
+
+/* ===== Dice Roller ===== */
+.dice-roller {
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.dice-roller-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.dice-roller-header:hover { background: var(--bg-hover); }
+.dice-roller-body {
+  padding: 8px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.dice-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.dice-label {
+  width: 36px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.dice-qty-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  line-height: 1;
+}
+.dice-qty-btn:hover { background: var(--bg-hover); }
+.dice-qty {
+  width: 20px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 13px;
+}
+.dice-result {
+  margin-top: 8px;
+  padding: 8px;
+  background: var(--bg-input);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+.dice-result-total {
+  font-size: 24px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--accent);
+  text-align: center;
+}
+.dice-result-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+.dice-history {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.dice-history-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  padding: 2px 4px;
+}
+
+/* ===== Journal ===== */
+.journal-list {
+  width: 320px;
+  min-width: 320px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.journal-editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.journal-note-card {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  margin-bottom: 4px;
+  border: 1px solid transparent;
+  transition: background 0.1s, border-color 0.1s;
+}
+.journal-note-card:hover {
+  background: var(--bg-hover);
+}
+.journal-note-card.selected {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+}
+.journal-note-card.starred {
+  border-left: 2px solid var(--yellow);
+}
+
+/* Markdown content rendering */
+.markdown-content { font-size: 14px; line-height: 1.7; color: var(--text-primary); }
+.markdown-content h1 { font-size: 22px; font-weight: 700; margin: 16px 0 8px; }
+.markdown-content h2 { font-size: 18px; font-weight: 600; margin: 14px 0 6px; }
+.markdown-content h3 { font-size: 15px; font-weight: 600; margin: 12px 0 4px; }
+.markdown-content p { margin: 8px 0; }
+.markdown-content ul, .markdown-content ol { margin: 8px 0 8px 20px; }
+.markdown-content li { margin: 2px 0; }
+.markdown-content code { font-family: var(--font-mono); font-size: 12px; background: var(--bg-input); padding: 2px 6px; border-radius: 3px; }
+.markdown-content pre { background: var(--bg-input); padding: 12px; border-radius: var(--radius-sm); overflow-x: auto; margin: 8px 0; }
+.markdown-content pre code { padding: 0; background: none; }
+.markdown-content blockquote { border-left: 3px solid var(--accent); padding-left: 12px; margin: 8px 0; color: var(--text-secondary); }
+.markdown-content hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+.markdown-content a { color: var(--accent); }
+
+/* Wikilinks */
+.wikilink {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px dashed var(--accent);
+  cursor: pointer;
+}
+.wikilink:hover { text-decoration: none; border-bottom-style: solid; }
+
+.wikilink-autocomplete {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 12px var(--shadow);
+  z-index: 50;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.wikilink-autocomplete-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.wikilink-autocomplete-item:hover,
+.wikilink-autocomplete-item.active {
+  background: var(--bg-hover);
+}
+
+/* ===== Combat / Initiative Tracker ===== */
+.combat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.combat-round {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--red);
+  letter-spacing: 0.5px;
+}
+.combatant-row {
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: border-color 0.15s, background 0.15s;
+}
+.combatant-row.active-turn {
+  border-color: var(--accent);
+  background: rgba(79, 142, 247, 0.08);
+  box-shadow: 0 0 0 1px rgba(79, 142, 247, 0.2);
+}
+.combatant-initiative {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.combatant-attrs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.combatant-attr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 44px;
+  padding: 4px 6px;
+  background: var(--bg-input);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+.combatant-attr:hover { border-color: var(--accent); }
+.combatant-attr-label {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
+}
+.combatant-attr-value {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.combatant-effects {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  align-items: center;
+}

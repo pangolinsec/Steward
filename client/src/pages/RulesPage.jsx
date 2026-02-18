@@ -14,9 +14,10 @@ const TRIGGER_TYPES = [
   { value: 'on_rest', label: 'Rest' },
   { value: 'on_schedule', label: 'Scheduled' },
   { value: 'on_encounter', label: 'Encounter' },
+  { value: 'on_round_advance', label: 'Round Advance' },
 ];
 
-const NO_CONFIG_TRIGGERS = ['on_time_advance', 'on_rest', 'on_effect_change', 'on_item_change', 'on_location_change'];
+const NO_CONFIG_TRIGGERS = ['on_time_advance', 'on_rest', 'on_effect_change', 'on_item_change', 'on_location_change', 'on_round_advance'];
 
 const ACTION_MODES = [
   { value: 'auto', label: 'Auto-apply' },

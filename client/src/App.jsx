@@ -12,6 +12,8 @@ import RulesPage from './pages/RulesPage';
 import LocationsPage from './pages/LocationsPage';
 import EnvironmentSettingsPage from './pages/EnvironmentSettingsPage';
 import SessionLogPage from './pages/SessionLogPage';
+import JournalPage from './pages/JournalPage';
+import DiceRoller from './components/DiceRoller';
 
 export default function App() {
   const [campaigns, setCampaigns] = useState([]);
@@ -114,6 +116,10 @@ export default function App() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
               Locations
             </NavLink>
+            <NavLink to="/journal">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+              Journal
+            </NavLink>
             <NavLink to="/environment">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
               Settings
@@ -123,6 +129,7 @@ export default function App() {
               Session Log
             </NavLink>
           </nav>
+          <DiceRoller campaignId={activeCampaignId} campaign={activeCampaign} />
         </aside>
         <div className="main-content">
           {environment && <EnvironmentBar environment={environment} campaignId={activeCampaignId} onUpdate={refreshEnvironment} campaign={activeCampaign} />}
@@ -135,6 +142,7 @@ export default function App() {
             <Route path="/encounters" element={<EncountersPage campaignId={activeCampaignId} campaign={activeCampaign} />} />
             <Route path="/rules" element={<RulesPage campaignId={activeCampaignId} campaign={activeCampaign} />} />
             <Route path="/locations" element={<LocationsPage campaignId={activeCampaignId} campaign={activeCampaign} environment={environment} onUpdate={() => { refreshEnvironment(); }} />} />
+            <Route path="/journal" element={<JournalPage campaignId={activeCampaignId} />} />
             <Route path="/environment" element={<EnvironmentSettingsPage campaignId={activeCampaignId} campaign={activeCampaign} onUpdate={() => { refreshCampaign(); refreshEnvironment(); }} />} />
             <Route path="/session-log" element={<SessionLogPage campaignId={activeCampaignId} />} />
           </Routes>

@@ -229,6 +229,18 @@ function initialize() {
     CREATE INDEX IF NOT EXISTS idx_rule_action_log_campaign ON rule_action_log(campaign_id);
     CREATE INDEX IF NOT EXISTS idx_rule_action_log_batch ON rule_action_log(batch_id);
     CREATE INDEX IF NOT EXISTS idx_notifications_campaign ON notifications(campaign_id);
+
+    CREATE TABLE IF NOT EXISTS journal_notes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+      title TEXT NOT NULL DEFAULT '',
+      content TEXT NOT NULL DEFAULT '',
+      tags TEXT DEFAULT '[]',
+      starred INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_journal_notes_campaign ON journal_notes(campaign_id);
   `);
 }
 
@@ -250,6 +262,8 @@ const migrations = [
   `ALTER TABLE campaigns ADD COLUMN property_key_registry TEXT DEFAULT '[]'`,
   `ALTER TABLE campaigns ADD COLUMN season_options TEXT DEFAULT '["Spring","Summer","Autumn","Winter"]'`,
   `ALTER TABLE campaigns ADD COLUMN custom_tag_presets TEXT DEFAULT '[]'`,
+  `ALTER TABLE campaigns ADD COLUMN dice_settings TEXT DEFAULT '{"log_rolls":false}'`,
+  `ALTER TABLE environment_state ADD COLUMN combat_state TEXT DEFAULT NULL`,
 ];
 
 for (const sql of migrations) {

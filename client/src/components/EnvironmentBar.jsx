@@ -106,6 +106,13 @@ export default function EnvironmentBar({ environment, campaignId, onUpdate, camp
             <span className="env-bar-value" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{environment.environment_notes}</span>
           </div>
         )}
+        {environment.combat_state?.active && (
+          <div className="env-bar-item">
+            <span className="tag" style={{ background: 'var(--red-dim)', color: 'var(--red)', borderColor: '#991b1b', fontWeight: 600 }}>
+              COMBAT Round {environment.combat_state.round}
+            </span>
+          </div>
+        )}
         <div className="env-bar-item" style={{ marginLeft: 'auto' }}>
           <button className="btn btn-sm btn-secondary" onClick={() => handleAdvance(0, 10)}>+10m</button>
           <button className="btn btn-sm btn-secondary" onClick={() => handleAdvance(1, 0)}>+1h</button>

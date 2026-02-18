@@ -33,6 +33,9 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
   const [seasonOptions, setSeasonOptions] = useState([]);
   const [newSeason, setNewSeason] = useState('');
 
+  // Dice settings
+  const [diceSettings, setDiceSettings] = useState({ log_rolls: false });
+
   // Tag preset browser
   const [showTagPresets, setShowTagPresets] = useState(false);
   const [presetBuilderTagKey, setPresetBuilderTagKey] = useState(null);
@@ -53,10 +56,10 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
   const getCurrentSettings = useCallback(() => JSON.stringify({
     attrs, thresholds, calendarConfig, weatherOptions,
     weatherVolatility, transitionTable, encounterSettings,
-    rulesSettings, propertyKeyRegistry, seasonOptions,
+    rulesSettings, propertyKeyRegistry, seasonOptions, diceSettings,
   }), [attrs, thresholds, calendarConfig, weatherOptions,
     weatherVolatility, transitionTable, encounterSettings,
-    rulesSettings, propertyKeyRegistry, seasonOptions]);
+    rulesSettings, propertyKeyRegistry, seasonOptions, diceSettings]);
 
   const isDirty = savedSnapshot.current !== null && savedSnapshot.current !== getCurrentSettings();
 
@@ -91,6 +94,7 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
     setRulesSettings(campaign.rules_settings || { engine_enabled: true, cascade_depth_limit: 3 });
     setPropertyKeyRegistry(campaign.property_key_registry || []);
     setSeasonOptions(campaign.season_options || ["Spring", "Summer", "Autumn", "Winter"]);
+    setDiceSettings(campaign.dice_settings || { log_rolls: false });
     api.getEnvironment(campaignId).then(setEnv).catch(() => {});
     // Set saved snapshot after state settles
     requestAnimationFrame(() => {
@@ -105,6 +109,7 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
         rulesSettings: campaign.rules_settings || { engine_enabled: true, cascade_depth_limit: 3 },
         propertyKeyRegistry: campaign.property_key_registry || [],
         seasonOptions: campaign.season_options || ["Spring", "Summer", "Autumn", "Winter"],
+        diceSettings: campaign.dice_settings || { log_rolls: false },
       });
     });
   }, [campaignId, campaign]);
@@ -123,6 +128,7 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
         rules_settings: rulesSettings,
         property_key_registry: propertyKeyRegistry,
         season_options: seasonOptions,
+        dice_settings: diceSettings,
       });
       savedSnapshot.current = getCurrentSettings();
       onUpdate();
@@ -564,6 +570,18 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
               </span>
             </div>
           )}
+        </div>
+
+        {/* Dice Roller */}
+        <div className="card">
+          <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 12 }}>Dice Roller</h3>
+          <div className="form-group">
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input type="checkbox" checked={diceSettings.log_rolls}
+                onChange={e => setDiceSettings({ ...diceSettings, log_rolls: e.target.checked })} />
+              Log dice rolls to session log
+            </label>
+          </div>
         </div>
 
         {/* Property Key Registry */}

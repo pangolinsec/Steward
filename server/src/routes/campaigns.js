@@ -16,6 +16,7 @@ function parseCampaign(c) {
     property_key_registry: c.property_key_registry ? JSON.parse(c.property_key_registry) : [],
     season_options: c.season_options ? JSON.parse(c.season_options) : ["Spring", "Summer", "Autumn", "Winter"],
     custom_tag_presets: JSON.parse(c.custom_tag_presets || '[]'),
+    dice_settings: c.dice_settings ? JSON.parse(c.dice_settings) : { log_rolls: false },
   };
 }
 
@@ -63,7 +64,7 @@ router.put('/:id', (req, res) => {
 
   const { name, attribute_definitions, time_of_day_thresholds, calendar_config, weather_options,
     encounter_settings, weather_volatility, weather_transition_table, rules_settings, property_key_registry,
-    season_options, custom_tag_presets } = req.body;
+    season_options, custom_tag_presets, dice_settings } = req.body;
 
   db.prepare(`
     UPDATE campaigns SET
@@ -78,7 +79,8 @@ router.put('/:id', (req, res) => {
       rules_settings = COALESCE(?, rules_settings),
       property_key_registry = COALESCE(?, property_key_registry),
       season_options = COALESCE(?, season_options),
-      custom_tag_presets = COALESCE(?, custom_tag_presets)
+      custom_tag_presets = COALESCE(?, custom_tag_presets),
+      dice_settings = COALESCE(?, dice_settings)
     WHERE id = ?
   `).run(
     name || null,
@@ -93,6 +95,7 @@ router.put('/:id', (req, res) => {
     property_key_registry ? JSON.stringify(property_key_registry) : null,
     season_options ? JSON.stringify(season_options) : null,
     custom_tag_presets ? JSON.stringify(custom_tag_presets) : null,
+    dice_settings ? JSON.stringify(dice_settings) : null,
     req.params.id,
   );
 

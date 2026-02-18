@@ -392,14 +392,21 @@ function EncounterForm({ campaignId, campaign, encounter, onClose, onSave }) {
               {locations.length > 0 && (
                 <div className="form-group">
                   <label style={{ fontSize: 12 }}>Locations</label>
-                  <div className="inline-flex gap-sm flex-wrap">
-                    {locations.map(loc => (
-                      <label key={loc.id} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, cursor: 'pointer' }}>
-                        <input type="checkbox" checked={condLocationIds.includes(loc.id)}
-                          onChange={() => toggleArrayItem(condLocationIds, setCondLocationIds, loc.id)} />
-                        {loc.name}
-                      </label>
-                    ))}
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {locations.map(loc => {
+                      const isOn = condLocationIds.includes(loc.id);
+                      return (
+                        <button key={loc.id} type="button" className="btn btn-sm"
+                          style={{
+                            fontSize: 11, padding: '2px 8px',
+                            background: isOn ? 'var(--accent)' : 'var(--bg-input)',
+                            color: isOn ? '#fff' : 'var(--text-muted)',
+                            border: `1px solid ${isOn ? 'var(--accent)' : 'var(--border)'}`,
+                          }}
+                          onClick={() => toggleArrayItem(condLocationIds, setCondLocationIds, loc.id)}
+                        >{loc.name}</button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -407,17 +414,22 @@ function EncounterForm({ campaignId, campaign, encounter, onClose, onSave }) {
               {edges.length > 0 && (
                 <div className="form-group">
                   <label style={{ fontSize: 12 }}>Paths</label>
-                  <div className="inline-flex gap-sm flex-wrap">
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     {edges.map(edge => {
                       const fromName = locations.find(l => l.id === edge.from_location_id)?.name || '?';
                       const toName = locations.find(l => l.id === edge.to_location_id)?.name || '?';
                       const display = edge.label ? `${edge.label} (${fromName} \u2194 ${toName})` : `${fromName} \u2194 ${toName}`;
+                      const isOn = condEdgeIds.includes(edge.id);
                       return (
-                        <label key={edge.id} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, cursor: 'pointer' }}>
-                          <input type="checkbox" checked={condEdgeIds.includes(edge.id)}
-                            onChange={() => toggleArrayItem(condEdgeIds, setCondEdgeIds, edge.id)} />
-                          {display}
-                        </label>
+                        <button key={edge.id} type="button" className="btn btn-sm"
+                          style={{
+                            fontSize: 11, padding: '2px 8px',
+                            background: isOn ? 'var(--accent)' : 'var(--bg-input)',
+                            color: isOn ? '#fff' : 'var(--text-muted)',
+                            border: `1px solid ${isOn ? 'var(--accent)' : 'var(--border)'}`,
+                          }}
+                          onClick={() => toggleArrayItem(condEdgeIds, setCondEdgeIds, edge.id)}
+                        >{display}</button>
                       );
                     })}
                   </div>
@@ -427,14 +439,21 @@ function EncounterForm({ campaignId, campaign, encounter, onClose, onSave }) {
               {timeLabels.length > 0 && (
                 <div className="form-group">
                   <label style={{ fontSize: 12 }}>Time of Day</label>
-                  <div className="inline-flex gap-sm flex-wrap">
-                    {timeLabels.map(t => (
-                      <label key={t} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, cursor: 'pointer' }}>
-                        <input type="checkbox" checked={condTimeOfDay.includes(t)}
-                          onChange={() => toggleArrayItem(condTimeOfDay, setCondTimeOfDay, t)} />
-                        {t}
-                      </label>
-                    ))}
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {timeLabels.map(t => {
+                      const isOn = condTimeOfDay.includes(t);
+                      return (
+                        <button key={t} type="button" className="btn btn-sm"
+                          style={{
+                            fontSize: 11, padding: '2px 8px',
+                            background: isOn ? 'var(--accent)' : 'var(--bg-input)',
+                            color: isOn ? '#fff' : 'var(--text-muted)',
+                            border: `1px solid ${isOn ? 'var(--accent)' : 'var(--border)'}`,
+                          }}
+                          onClick={() => toggleArrayItem(condTimeOfDay, setCondTimeOfDay, t)}
+                        >{t}</button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -442,14 +461,21 @@ function EncounterForm({ campaignId, campaign, encounter, onClose, onSave }) {
               {weatherOptions.length > 0 && (
                 <div className="form-group">
                   <label style={{ fontSize: 12 }}>Weather</label>
-                  <div className="inline-flex gap-sm flex-wrap">
-                    {weatherOptions.map(w => (
-                      <label key={w} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, cursor: 'pointer' }}>
-                        <input type="checkbox" checked={condWeather.includes(w)}
-                          onChange={() => toggleArrayItem(condWeather, setCondWeather, w)} />
-                        {w}
-                      </label>
-                    ))}
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {weatherOptions.map(w => {
+                      const isOn = condWeather.includes(w);
+                      return (
+                        <button key={w} type="button" className="btn btn-sm"
+                          style={{
+                            fontSize: 11, padding: '2px 8px',
+                            background: isOn ? 'var(--accent)' : 'var(--bg-input)',
+                            color: isOn ? '#fff' : 'var(--text-muted)',
+                            border: `1px solid ${isOn ? 'var(--accent)' : 'var(--border)'}`,
+                          }}
+                          onClick={() => toggleArrayItem(condWeather, setCondWeather, w)}
+                        >{w}</button>
+                      );
+                    })}
                   </div>
                 </div>
               )}

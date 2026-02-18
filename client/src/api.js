@@ -114,6 +114,21 @@ export const applyNotification = (cId, nId) => request(`/campaigns/${cId}/notifi
 export const undoNotification = (cId, nId) => request(`/campaigns/${cId}/notifications/${nId}/undo`, { method: 'POST' });
 export const clearNotifications = (cId) => request(`/campaigns/${cId}/notifications`, { method: 'DELETE' });
 
+// Journal
+export const getJournalNotes = (cId, params = '') => request(`/campaigns/${cId}/journal${params ? '?' + params : ''}`);
+export const getJournalNote = (cId, noteId) => request(`/campaigns/${cId}/journal/${noteId}`);
+export const createJournalNote = (cId, data) => request(`/campaigns/${cId}/journal`, { method: 'POST', body: JSON.stringify(data) });
+export const updateJournalNote = (cId, noteId, data) => request(`/campaigns/${cId}/journal/${noteId}`, { method: 'PUT', body: JSON.stringify(data) });
+export const deleteJournalNote = (cId, noteId) => request(`/campaigns/${cId}/journal/${noteId}`, { method: 'DELETE' });
+export const searchEntities = (cId, query) => request(`/campaigns/${cId}/journal/search-entities?q=${encodeURIComponent(query)}`);
+
+// Combat
+export const getCombatState = (cId) => request(`/campaigns/${cId}/combat`);
+export const startCombat = (cId, data) => request(`/campaigns/${cId}/combat/start`, { method: 'POST', body: JSON.stringify(data) });
+export const endCombat = (cId) => request(`/campaigns/${cId}/combat/end`, { method: 'POST' });
+export const nextTurn = (cId) => request(`/campaigns/${cId}/combat/next-turn`, { method: 'POST' });
+export const updateCombat = (cId, data) => request(`/campaigns/${cId}/combat`, { method: 'PATCH', body: JSON.stringify(data) });
+
 // Export / Import
 export const exportCampaign = (cId) => request(`/campaigns/${cId}/export`);
 export const importCampaign = (cId, data) => request(`/campaigns/${cId}/import`, { method: 'POST', body: JSON.stringify(data) });
