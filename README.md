@@ -14,6 +14,7 @@ A self-hosted web application for tabletop RPG Dungeon Masters to manage homebre
 - **Random Encounters** — Configurable base rates, location/edge modifiers, condition-filtered weighted selection
 - **Notifications & Undo** — Rule-generated notifications with undo for auto-applied changes and approve/dismiss for suggestions
 - **Resting** — Short and long rest with time advancement and rule triggers
+- **Session Prep** — Structured session planning (strong start, scenes, secrets) with location linking and carry-forward
 - **Session Log** — Automatic logging of all DM actions with manual entries, filtering, and export
 - **Import & Export** — Full campaign backup, partial merge import with conflict resolution, per-entity export/import
 - **Tag Presets** — Bundled attribute definitions with associated rules for easy reuse

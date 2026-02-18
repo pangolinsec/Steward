@@ -37,6 +37,9 @@ Configure encounter rates per location with base probability, location modifiers
 **Import & Export**
 Export full campaigns as JSON for backup or sharing. Import with conflict detection and merge resolution — choose to skip, overwrite, or duplicate conflicting entities. Export and import individual entity types (characters, effects, items, encounters, rules).
 
+**Session Prep**
+Plan sessions using a structured format inspired by the Lazy DM method: strong start, potential scenes, secrets & clues, and notes. Link scenes and secrets to map locations for arrival notifications. Carry unrevealed secrets forward between sessions. The active prep appears on the dashboard.
+
 **Session Log**
 Every action is logged automatically. Add manual entries, filter by type, and export the log for session recaps.
 

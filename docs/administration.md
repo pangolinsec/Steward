@@ -117,7 +117,7 @@ All data is stored in a single SQLite file: `almanac.db` in the configured data 
 
 ### Schema
 
-The database has 17 tables:
+The database has 18 tables:
 
 | Table | Purpose |
 |-------|---------|
@@ -138,6 +138,7 @@ The database has 17 tables:
 | `notifications` | Rule-generated notifications |
 | `journal_notes` | DM journal entries with tags, starring, and wikilinks |
 | `random_table_definitions` | Random table metadata and type (weighted/sequential) |
+| `session_preps` | Session prep sheets with structured scenes, secrets, and location links |
 
 ### Migrations
 
@@ -412,6 +413,21 @@ Journal notes support wikilinks (`[[Character Name]]`) that link to campaign ent
 | POST | `/api/campaigns/:id/random-tables/:tableId/roll` | Roll on table (result logged to session log) |
 
 Tables can be `weighted` (entries have weights) or `sequential` (equal probability).
+
+### Session Prep
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/campaigns/:id/session-preps` | List preps (query: `status`, `limit`, `offset`) |
+| GET | `/api/campaigns/:id/session-preps/active` | Get the currently active prep |
+| GET | `/api/campaigns/:id/session-preps/:prepId` | Get a prep |
+| POST | `/api/campaigns/:id/session-preps` | Create prep (`title`, `strong_start`, `scenes`, `secrets`, `notes`, `carry_forward`) |
+| PUT | `/api/campaigns/:id/session-preps/:prepId` | Update prep (partial update supported) |
+| PUT | `/api/campaigns/:id/session-preps/:prepId/activate` | Set prep as active (completes any previously active prep) |
+| PUT | `/api/campaigns/:id/session-preps/:prepId/complete` | Mark prep as completed |
+| DELETE | `/api/campaigns/:id/session-preps/:prepId` | Delete prep |
+
+Scenes and secrets are JSON arrays with `text`, `done`/`revealed` flags, and optional `location_ids` for location linking. When the party arrives at a linked location, a notification fires.
 
 ### Export / Import
 

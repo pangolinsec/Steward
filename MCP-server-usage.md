@@ -101,11 +101,11 @@ If you don't know your campaign ID, you can omit `ALMANAC_CAMPAIGN_ID` and ask t
 
 ## Toolbox: dynamic tool loading
 
-The server has 74 tools total, but to keep context overhead low, only **39 tools** are visible by default — the session play tools plus two meta-tools. The remaining tools are organized into loadable **toolsets** that the AI agent can open on demand:
+The server has 82 tools total, but to keep context overhead low, only **44 tools** are visible by default — the session play tools plus two meta-tools. The remaining tools are organized into loadable **toolsets** that the AI agent can open on demand:
 
 | Toolset | Tools | Contents |
 |---|---|---|
-| `world_building` | 25 | Campaign settings, character/effect/item/location/path/encounter/journal/random-table CRUD |
+| `world_building` | 28 | Campaign settings, character/effect/item/location/path/encounter/journal/random-table/session-prep CRUD |
 | `rules` | 8 | Rule CRUD, enable/disable, dry-run testing, entity reference scanning |
 | `import_export` | 2 | Full campaign JSON export and import |
 
@@ -120,7 +120,7 @@ When the agent needs to create a location or edit a rule, it calls `almanac_open
 
 ## Available tools (74 total)
 
-### Always available: Session Play (39 tools)
+### Always available: Session Play (44 tools)
 
 These tools are always visible — they power a live game session plus toolbox management.
 
@@ -202,6 +202,16 @@ These tools are always visible — they power a live game session plus toolbox m
 | `almanac_list_random_tables` | List random tables (filterable by name) |
 | `almanac_roll_random_table` | Roll on a random table (result logged to session log) |
 
+#### Session Prep
+
+| Tool | Description |
+|---|---|
+| `almanac_list_session_preps` | List session prep sheets (filterable by status: prep, active, completed) |
+| `almanac_get_session_prep` | Get full session prep details |
+| `almanac_get_active_session_prep` | Get the currently active session prep |
+| `almanac_activate_session_prep` | Set a prep as active (completes any previously active prep) |
+| `almanac_complete_session_prep` | Mark a prep as completed |
+
 #### Reference (read-only)
 
 | Tool | Description |
@@ -213,7 +223,7 @@ These tools are always visible — they power a live game session plus toolbox m
 | `almanac_list_locations` | Get all locations and edges (the map) |
 | `almanac_list_encounters` | List encounter definitions |
 
-### Toolset: `world_building` (25 tools)
+### Toolset: `world_building` (28 tools)
 
 Loaded via `almanac_open_toolbox({ toolset: "world_building" })`. Create and manage campaign content.
 
@@ -244,6 +254,9 @@ Loaded via `almanac_open_toolbox({ toolset: "world_building" })`. Create and man
 | `almanac_create_random_table` | Create a random table (weighted or sequential) |
 | `almanac_update_random_table` | Update a random table |
 | `almanac_delete_random_table` | Delete a random table |
+| `almanac_create_session_prep` | Create a session prep sheet (with optional carry_forward for unrevealed secrets) |
+| `almanac_update_session_prep` | Update a session prep sheet |
+| `almanac_delete_session_prep` | Delete a session prep sheet |
 
 ### Toolset: `rules` (8 tools)
 
@@ -310,6 +323,12 @@ Once configured, you can interact with your campaign naturally through the AI as
 > "Roll on the Random Encounters table"
 > "Create a loot table with weighted entries for gems, gold, and magic items"
 
+**Session prep:**
+> "Create a session prep for tonight's game"
+> "What's the active session prep?"
+> "Mark the goblin ambush scene as done"
+> "Carry forward unrevealed secrets to a new prep"
+
 **Campaign management:**
 > "Export the full campaign so I can back it up"
 > "What campaigns do I have?"
@@ -368,6 +387,7 @@ mcp-server/
 │       ├── notifications.ts  # Rule notification management
 │       ├── random-tables.ts  # Random table CRUD + rolling
 │       ├── rules.ts          # Rule CRUD + test + toggle + references
-│       └── session-log.ts    # Session log read/write
+│       ├── session-log.ts    # Session log read/write
+│       └── session-prep.ts   # Session prep CRUD + activate/complete
 └── dist/                     # Compiled output (after npm run build)
 ```

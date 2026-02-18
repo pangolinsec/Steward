@@ -255,7 +255,7 @@ The environment bar at the top of the page shows the current game state: time, d
 
 Use the environment bar controls to advance time:
 
-- **Quick buttons** — +10m, +30m, +1h, +4h
+- **Quick buttons** — customizable presets (defaults: +10m, +30m, +1h, +4h). See [Time Advance Presets](#time-advance-presets) in Settings.
 - **Custom** — enter hours and minutes
 
 When time advances:
@@ -438,6 +438,44 @@ Define the property keys available for locations and edges. Each key has a name 
 Bundle a tag attribute definition with associated rules into a reusable preset. Almanac includes built-in presets for common fantasy archetypes (Race, Class, Creature Type, Alignment), and you can create custom presets from your campaign's existing attributes and rules. Custom presets can be exported as JSON files and shared between campaigns.
 
 Click **Presets** in the Attribute Definitions section to open the preset browser. See the [Tag Presets](rules-engine.md#tag-presets) section of the Rules Engine Guide for full details.
+
+---
+
+### Time Advance Presets
+
+Customize the quick-advance buttons in two independent places:
+
+- **Banner presets** — configured in Settings. These drive the environment bar's quick buttons (defaults: +10m, +30m, +1h, +4h). Each preset has a label, hours, and minutes.
+- **Dashboard presets** — editable inline on the Dashboard's Quick Advance card. Click the gear icon to enter edit mode, where you can add, remove, rename, and drag-to-reorder presets. The dashboard card also includes Short Rest and Long Rest buttons.
+
+Both preset sets are stored per-campaign.
+
+---
+
+## Session Prep
+
+Session prep sheets help you plan sessions using the [Return of the Lazy Dungeon Master](https://slyflourish.com/returnofthelazydm/) methodology. Each prep has a structured format:
+
+- **Strong Start** — the opening scene to kick off the session with momentum (supports [[wikilinks]])
+- **Scenes** — potential scenes that might occur, each optionally linked to one or more map locations. Check them off as they play out.
+- **Secrets & Clues** — information the players might discover, each optionally linked to locations. Mark them as revealed during play. Unrevealed secrets can be carried forward to the next session's prep.
+- **Notes** — freeform DM notes (supports [[wikilinks]])
+
+### Workflow
+
+1. **Create** a new session prep from the Session Prep page
+2. **Edit** — fill in your strong start, add scenes and secrets, link them to locations
+3. **Activate** — set the prep as active when the session begins. Any previously active prep is automatically completed.
+4. **During play** — check off scenes as they happen, reveal secrets as players discover them
+5. **Complete** — mark the prep as done. When creating the next prep, use **Carry Forward** to copy unrevealed secrets.
+
+### Location Linking
+
+Scenes and secrets can be linked to map locations. When the party arrives at a linked location during travel, a notification reminds you of the relevant scenes and secrets. This integrates session prep with the travel system.
+
+### Dashboard Integration
+
+The active session prep appears on the Dashboard, showing the strong start and notes with rendered markdown and clickable wikilinks.
 
 ---
 
