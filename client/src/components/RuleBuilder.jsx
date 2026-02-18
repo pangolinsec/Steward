@@ -98,7 +98,7 @@ export function ConditionBuilder({ value, onChange, entityLists, campaign }) {
           <option value="all">ALL conditions</option>
           <option value="any">ANY condition</option>
         </select>
-        <button className="btn btn-secondary btn-sm" onClick={addCondition} style={{ marginLeft: 'auto' }}>
+        <button type="button" className="btn btn-secondary btn-sm" onClick={addCondition} style={{ marginLeft: 'auto' }}>
           + Condition
         </button>
       </div>
@@ -183,7 +183,7 @@ function ConditionRow({ condition, onChange, onRemove, entityLists, registry }) 
           );
         })}
       </div>
-      <button className="btn btn-danger btn-sm" style={{ padding: '2px 6px', fontSize: 10 }} onClick={onRemove}>&#x2715;</button>
+      <button type="button" className="btn btn-danger btn-sm" style={{ padding: '2px 6px', fontSize: 10 }} onClick={onRemove}>&#x2715;</button>
     </div>
   );
 }
@@ -222,7 +222,7 @@ export function ActionBuilder({ value, onChange, entityLists, campaign }) {
     <div style={{ padding: 10, background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Actions (executed in order)</span>
-        <button className="btn btn-secondary btn-sm" onClick={addAction}>+ Action</button>
+        <button type="button" className="btn btn-secondary btn-sm" onClick={addAction}>+ Action</button>
       </div>
       <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 6 }}>
         Variables: {'{character.name}'}, {'{character.<attr>}'}, {'{environment.weather}'}, {'{var.<name>}'}
@@ -266,9 +266,9 @@ function ActionRow({ action, index, total, onChange, onRemove, onMove, entityLis
   return (
     <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 6, padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <button className="btn btn-ghost" style={{ padding: '0 4px', fontSize: 9, lineHeight: 1 }}
+        <button type="button" className="btn btn-ghost" style={{ padding: '0 4px', fontSize: 9, lineHeight: 1 }}
           onClick={() => onMove(-1)} disabled={index === 0}>&uarr;</button>
-        <button className="btn btn-ghost" style={{ padding: '0 4px', fontSize: 9, lineHeight: 1 }}
+        <button type="button" className="btn btn-ghost" style={{ padding: '0 4px', fontSize: 9, lineHeight: 1 }}
           onClick={() => onMove(1)} disabled={index === total - 1}>&darr;</button>
       </div>
       <select value={action.type} onChange={e => onChange({ type: e.target.value })}
@@ -297,7 +297,7 @@ function ActionRow({ action, index, total, onChange, onRemove, onMove, entityLis
           );
         })}
       </div>
-      <button className="btn btn-danger btn-sm" style={{ padding: '2px 6px', fontSize: 10 }} onClick={onRemove}>&#x2715;</button>
+      <button type="button" className="btn btn-danger btn-sm" style={{ padding: '2px 6px', fontSize: 10 }} onClick={onRemove}>&#x2715;</button>
     </div>
   );
 }
