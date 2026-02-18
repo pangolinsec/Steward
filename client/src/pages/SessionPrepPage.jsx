@@ -37,7 +37,7 @@ function LocationPickerDropdown({ locations, selectedIds, onChange, onClose }) {
 
   return (
     <div ref={ref} className="location-picker-dropdown" style={{
-      position: 'absolute', top: '100%', left: 0, zIndex: 50,
+      position: 'absolute', top: '100%', right: 0, zIndex: 50,
       background: 'var(--bg-card)', border: '1px solid var(--border)',
       borderRadius: 'var(--radius-sm)', boxShadow: '0 4px 12px var(--shadow)',
       maxHeight: 200, overflowY: 'auto', minWidth: 200, padding: 4,
@@ -295,7 +295,7 @@ export default function SessionPrepPage({ campaignId }) {
       {/* Right pane: Structured editor */}
       <div className="journal-editor">
         {selectedPrep ? (
-          <div style={{ padding: 20, display: 'flex', flexDirection: 'column', flex: 1, overflow: 'auto' }}>
+          <div style={{ padding: 20, display: 'flex', flexDirection: 'column', flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 8 }}>
               <span className="tag" style={{
@@ -327,7 +327,7 @@ export default function SessionPrepPage({ campaignId }) {
             />
 
             {/* Strong Start */}
-            <div style={{ marginBottom: 20 }}>
+            <div style={{ marginBottom: 20, paddingBottom: 20, borderBottom: '1px solid var(--border)' }}>
               <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 6, display: 'block' }}>
                 Strong Start
               </label>
@@ -337,7 +337,7 @@ export default function SessionPrepPage({ campaignId }) {
                   placeholder="How does the session kick off? Use [[Name]] to link entities."
                   value={selectedPrep.strong_start}
                   onChange={e => updateField('strong_start', e.target.value)}
-                  style={{ minHeight: 120, resize: 'vertical', fontSize: 13 }}
+                  style={{ minHeight: 120, resize: 'vertical', fontSize: 13, width: '100%' }}
                 />
                 <WikilinkAutocomplete
                   campaignId={campaignId}
@@ -349,7 +349,7 @@ export default function SessionPrepPage({ campaignId }) {
             </div>
 
             {/* Scenes */}
-            <div style={{ marginBottom: 20 }}>
+            <div style={{ marginBottom: 20, paddingBottom: 20, borderBottom: '1px solid var(--border)' }}>
               <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 6, display: 'block' }}>
                 Potential Scenes
                 {selectedPrep.scenes?.length > 0 && (
@@ -383,7 +383,7 @@ export default function SessionPrepPage({ campaignId }) {
                         onChange={e => updateScene(idx, 'text', e.target.value)}
                         placeholder="Scene description..."
                         style={{
-                          flex: 1, fontSize: 13,
+                          flex: 1, minWidth: 0, fontSize: 13,
                           textDecoration: scene.done ? 'line-through' : 'none',
                           opacity: scene.done ? 0.5 : 1,
                         }}
@@ -429,7 +429,7 @@ export default function SessionPrepPage({ campaignId }) {
             </div>
 
             {/* Secrets & Clues */}
-            <div style={{ marginBottom: 20 }}>
+            <div style={{ marginBottom: 20, paddingBottom: 20, borderBottom: '1px solid var(--border)' }}>
               <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 6, display: 'block' }}>
                 Secrets &amp; Clues
                 {selectedPrep.secrets?.length > 0 && (
@@ -438,9 +438,6 @@ export default function SessionPrepPage({ campaignId }) {
                   </span>
                 )}
               </label>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>
-                Linked locations trigger a reminder when the party arrives, until this item is resolved.
-              </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {(selectedPrep.secrets || []).map((secret, idx) => (
                   <div key={idx}>
@@ -470,7 +467,7 @@ export default function SessionPrepPage({ campaignId }) {
                         onChange={e => updateSecret(idx, 'text', e.target.value)}
                         placeholder="Secret or clue..."
                         style={{
-                          flex: 1, fontSize: 13,
+                          flex: 1, minWidth: 0, fontSize: 13,
                           textDecoration: secret.revealed ? 'line-through' : 'none',
                           opacity: secret.revealed ? 0.5 : 1,
                         }}
@@ -526,7 +523,7 @@ export default function SessionPrepPage({ campaignId }) {
                   placeholder="General notes, ideas, reminders... Use [[Name]] to link entities."
                   value={selectedPrep.notes}
                   onChange={e => updateField('notes', e.target.value)}
-                  style={{ minHeight: 160, resize: 'vertical', fontSize: 13 }}
+                  style={{ minHeight: 160, resize: 'vertical', fontSize: 13, width: '100%' }}
                 />
                 <WikilinkAutocomplete
                   campaignId={campaignId}
