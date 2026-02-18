@@ -3,6 +3,7 @@ import { UNSAFE_NavigationContext as NavigationContext } from 'react-router-dom'
 import * as api from '../api';
 import RuleRefBadge from '../components/RuleRefBadge';
 import TagPresetBrowser from '../components/TagPresetBrowser';
+import PresetBuilder from '../components/PresetBuilder';
 
 export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate }) {
   const [env, setEnv] = useState(null);
@@ -34,6 +35,7 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
 
   // Tag preset browser
   const [showTagPresets, setShowTagPresets] = useState(false);
+  const [presetBuilderTagKey, setPresetBuilderTagKey] = useState(null);
 
   // Property key registry — normalized to {key, values}[] format
   const [propertyKeyRegistry, setPropertyKeyRegistry] = useState([]);
@@ -223,6 +225,7 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
                     const updated = [...attrs]; updated[realIdx] = { ...a, options: opts }; setAttrs(updated);
                   }} placeholder="Option1, Option2, ..." style={{ flex: 1, fontSize: 12 }} />
                   <RuleRefBadge campaignId={campaignId} entityType="attribute" entityName={a.key} />
+                  <button className="btn btn-ghost btn-sm" style={{ fontSize: 11 }} onClick={() => setPresetBuilderTagKey(a.key)}>Preset</button>
                   <button className="btn btn-danger btn-sm" onClick={() => setAttrs(attrs.filter((_, idx) => idx !== realIdx))}>&#x2715;</button>
                 </div>
               );
@@ -566,8 +569,18 @@ export default function EnvironmentSettingsPage({ campaignId, campaign, onUpdate
       {showTagPresets && (
         <TagPresetBrowser
           campaignId={campaignId}
+          campaign={campaign}
           onClose={() => setShowTagPresets(false)}
           onImported={() => { setShowTagPresets(false); onUpdate(); }}
+        />
+      )}
+      {presetBuilderTagKey && (
+        <PresetBuilder
+          campaignId={campaignId}
+          campaign={campaign}
+          initialTagKey={presetBuilderTagKey}
+          onClose={() => setPresetBuilderTagKey(null)}
+          onSaved={() => { setPresetBuilderTagKey(null); onUpdate(); }}
         />
       )}
       {pendingNavigation && (

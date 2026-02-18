@@ -90,6 +90,9 @@ export const getRuleTemplates = (cId) => request(`/campaigns/${cId}/rules/templa
 export const importRuleTemplate = (cId, templateName) => request(`/campaigns/${cId}/rules/templates/${templateName}`, { method: 'POST' });
 export const getTagPresets = (cId) => request(`/campaigns/${cId}/rules/tag-presets`);
 export const importTagPreset = (cId, presetName) => request(`/campaigns/${cId}/rules/tag-presets/${presetName}`, { method: 'POST' });
+export const createCustomPreset = (cId, data) => request(`/campaigns/${cId}/rules/tag-presets/custom`, { method: 'POST', body: JSON.stringify(data) });
+export const deleteCustomPreset = (cId, key) => request(`/campaigns/${cId}/rules/tag-presets/custom/${key}`, { method: 'DELETE' });
+export const exportCustomPreset = (cId, key) => request(`/campaigns/${cId}/rules/tag-presets/custom/${key}/export`);
 export const testRule = (cId, ruleId, characterId) => request(`/campaigns/${cId}/rules/${ruleId}/test`, { method: 'POST', body: JSON.stringify({ character_id: characterId || null }) });
 export const getRuleReferences = (cId, entityType, entityName, entityId) => {
   const params = new URLSearchParams();

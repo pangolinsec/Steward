@@ -112,17 +112,92 @@ function scanForReferences(conditions, actions, targetConfig, entityType, entity
   return refs;
 }
 
-// GET tag presets
+// GET tag presets — built-in + custom
 router.get('/tag-presets', (req, res) => {
-  const presets = Object.entries(TAG_PRESETS).map(([key, preset]) => ({
-    key, ...preset, category_label: TAG_PRESET_CATEGORIES[preset.category] || preset.category,
+  const builtIn = Object.entries(TAG_PRESETS).map(([key, preset]) => ({
+    key, ...preset, source: 'built_in',
+    category_label: TAG_PRESET_CATEGORIES[preset.category] || preset.category,
   }));
-  res.json({ presets, categories: TAG_PRESET_CATEGORIES });
+
+  const campaign = db.prepare('SELECT custom_tag_presets FROM campaigns WHERE id = ?').get(req.params.id);
+  const customPresets = JSON.parse(campaign?.custom_tag_presets || '[]').map(p => ({
+    ...p, source: 'custom', category: 'custom', category_label: 'Custom',
+  }));
+
+  const categories = { ...TAG_PRESET_CATEGORIES };
+  if (customPresets.length > 0) categories.custom = 'Custom';
+
+  res.json({ presets: [...builtIn, ...customPresets], categories });
 });
 
-// POST import tag preset
+// POST save custom preset
+router.post('/tag-presets/custom', (req, res) => {
+  const campaignId = req.params.id;
+  const campaign = db.prepare('SELECT custom_tag_presets FROM campaigns WHERE id = ?').get(campaignId);
+  if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
+
+  const { name, description, attribute, rules } = req.body;
+  if (!name || !attribute) return res.status(400).json({ error: 'name and attribute are required' });
+
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+  const key = `${slug}_${Date.now()}`;
+  const preset = { key, name, description: description || '', attribute, rules: rules || [] };
+
+  const existing = JSON.parse(campaign.custom_tag_presets || '[]');
+  existing.push(preset);
+  db.prepare('UPDATE campaigns SET custom_tag_presets = ? WHERE id = ?')
+    .run(JSON.stringify(existing), campaignId);
+
+  res.status(201).json({ key, preset });
+});
+
+// DELETE custom preset
+router.delete('/tag-presets/custom/:key', (req, res) => {
+  const campaignId = req.params.id;
+  const campaign = db.prepare('SELECT custom_tag_presets FROM campaigns WHERE id = ?').get(campaignId);
+  if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
+
+  const existing = JSON.parse(campaign.custom_tag_presets || '[]');
+  const filtered = existing.filter(p => p.key !== req.params.key);
+  db.prepare('UPDATE campaigns SET custom_tag_presets = ? WHERE id = ?')
+    .run(JSON.stringify(filtered), campaignId);
+
+  res.json({ success: true });
+});
+
+// GET export custom preset
+router.get('/tag-presets/custom/:key/export', (req, res) => {
+  const campaign = db.prepare('SELECT custom_tag_presets FROM campaigns WHERE id = ?').get(req.params.id);
+  if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
+
+  const presets = JSON.parse(campaign.custom_tag_presets || '[]');
+  const preset = presets.find(p => p.key === req.params.key);
+  if (!preset) return res.status(404).json({ error: 'Preset not found' });
+
+  res.json({
+    dndapp_preset: '1.0',
+    name: preset.name,
+    description: preset.description,
+    category: 'custom',
+    attribute: preset.attribute,
+    rules: preset.rules,
+    effects: [],
+    items: [],
+    weather_options: [],
+  });
+});
+
+// POST import tag preset (built-in or custom)
 router.post('/tag-presets/:name', (req, res) => {
-  const preset = TAG_PRESETS[req.params.name];
+  let preset = TAG_PRESETS[req.params.name];
+
+  // Check custom presets if not found in built-in
+  if (!preset) {
+    const campaign = db.prepare('SELECT custom_tag_presets FROM campaigns WHERE id = ?').get(req.params.id);
+    const customPresets = JSON.parse(campaign?.custom_tag_presets || '[]');
+    preset = customPresets.find(p => p.key === req.params.name);
+  }
+
   if (!preset) return res.status(404).json({ error: 'Preset not found' });
 
   const campaignId = req.params.id;
